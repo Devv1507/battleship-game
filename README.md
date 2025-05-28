@@ -1,6 +1,6 @@
 Naval battle based on Java!
 
-TeDeSoft University of Valley
+TeDeSoft Univalle.
 
 Authors:
 * David Esteban Valencia
