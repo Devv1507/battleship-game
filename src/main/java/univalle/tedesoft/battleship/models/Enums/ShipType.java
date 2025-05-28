@@ -14,5 +14,5 @@ public enum ShipType {
     /** Embarcacion de tipo Destructor*/
     DESTROYER,
     /** Embarcacion de tipo Fragata*/
-    FRIGATES
+    FRIGATE
 }
