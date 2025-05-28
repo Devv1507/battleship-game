@@ -1,6 +1,5 @@
 package univalle.tedesoft.battleship.models.Ships;
 
-
 import univalle.tedesoft.battleship.models.Enums.ShipType;
 
 /**
