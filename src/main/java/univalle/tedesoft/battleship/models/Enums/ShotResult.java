@@ -8,9 +8,9 @@ package univalle.tedesoft.battleship.models.Enums;
 public enum ShotResult {
     /**Disparo al agua*/
     WATER,
-    /**Disparo ataco un barco*/
+    /**Disparo toca una embarcacion*/
     TOUCHED,
-    /**Disparo hundio el barco */
+    /**Disparo hundio la embarcacion */
     SUNKEN,
     /**Disparo a una casilla ya golpeada*/
     ALREADY_HIT
