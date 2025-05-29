@@ -51,7 +51,34 @@ public class Board {
      * @throws OverlapException si el barco se superpone con otro ya existente.
      */
     public boolean placeShip(Ship ship, Coordinate startCoordinate, Orientation orientation) throws OutOfBoundsException, OverlapException {
-        return false;
+        if (orientation == Orientation.HORIZONTAL && startCoordinate.getX() + ship.getValueShip() > DEFAULT_SIZE) {
+            throw new OutOfBoundsException("Esta embarcacion no entra en el tablero!!");
+        }
+        if (orientation == Orientation.VERTICAL && startCoordinate.getY() + ship.getValueShip() > DEFAULT_SIZE) {
+            throw new OutOfBoundsException("Esta embarcacion no entra en el tablero!!");
+        }
+        List<Coordinate> coordsToPlace = new ArrayList<>();
+        //Recorre las celdas para verificar si estas estan vacias.
+        for (int i = 0; i < ship.getValueShip(); i++) {
+            int row = startCoordinate.getY();
+            int col = startCoordinate.getX();
+            if(orientation == Orientation.VERTICAL){
+                row += i + startCoordinate.getY();
+            }else if(orientation == Orientation.HORIZONTAL){
+                col += i + startCoordinate.getX();
+            }
+            if (grid[row][col] != CellState.EMPTY) {
+                throw new OverlapException("Casilla Ocupada"); // Ya hay algo allí
+            }
+            //grid[row][col] = CellState.SHIP;
+            coordsToPlace.add(new Coordinate(row, col));
+        }
+        for (Coordinate coord : coordsToPlace) {
+            grid[coord.getY()][coord.getX()] = CellState.SHIP;
+            ship.addCoordinates(coord);
+        }
+        ships.add(ship);
+        return true;
     }
     /**
      * Procesa un disparo en una coordenada específica del tablero.
@@ -61,14 +88,31 @@ public class Board {
      * @throws OutOfBoundsException si la coordenada está fuera del tablero.
      */
     public ShotResult receiveShot(Coordinate targetCoordinate) throws OutOfBoundsException {
-        return ShotResult.WATER;
+        if (!isValidCoordinate(targetCoordinate)) {
+            throw new OutOfBoundsException("El coordinate debe ser entre 0 y 10");
+        }
+        if (grid[targetCoordinate.getY()][targetCoordinate.getX()] == CellState.EMPTY) {
+            grid[targetCoordinate.getY()][targetCoordinate.getX()] = CellState.SHOT_LOST_IN_WATER;
+            return ShotResult.WATER;
+        } else if (grid[targetCoordinate.getY()][targetCoordinate.getX()] == CellState.SHIP) {
+            grid[targetCoordinate.getY()][targetCoordinate.getX()] = CellState.HIT_SHIP;
+            return ShotResult.TOUCHED;
+        }
+        /*
+        else if (grid[targetCoordinate.getY()][targetCoordinate.getX()] == CellState.SHOT_LOST_IN_WATER) {
+            return ShotResult.ALREADY_HIT;
+        } else if (grid[targetCoordinate.getY()][targetCoordinate.getX()] == CellState.HIT_SHIP) {
+            return ShotResult.ALREADY_HIT;
+        }
+        */
+        return ShotResult.ALREADY_HIT;
     }
     /**
      * Obtiene el estado de una celda específica.
      * @param row La fila de la celda.
      * @param col La columna de la celda.
      * @return El estado de la celda.
-     * @throws OutOfBoundsException si la coordenada está fuera del tablero.
+     * @throws OutOfBoundsException si la coordenada esta fuera del tablero.
      */
     public CellState getCellState(int row, int col) throws OutOfBoundsException {
         if (!isValidCoordinate(row, col)) {
@@ -77,7 +121,7 @@ public class Board {
         return grid[row][col];
     }
     /**
-     * Establece el estado de una celda específica,
+     * Establece el estado de una celda especifica,
      * generalmente los estados se manejan por placeShip y receiveShot.
      * @param row La fila de la celda.
      * @param col La columna de la celda.
@@ -135,7 +179,7 @@ public class Board {
      * @param coordinate La coordenada a verificar.
      * @return true si la coordenada es válida, false en caso contrario.
      */
-    public boolean isValidCoordinateClass(Coordinate coordinate) {
+    public boolean isValidCoordinate(Coordinate coordinate) {
         if (coordinate == null) {
             return false;
         }
