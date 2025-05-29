@@ -7,7 +7,7 @@ package univalle.tedesoft.battleship.models.Players;
  */
 public abstract class Player {
     /**Nombre del jugador*/
-    private final String name;
+    private String name;
     /**Constructor de la clase*/
     public Player(String name) {
         this.name = name;
@@ -15,5 +15,9 @@ public abstract class Player {
     /**Metodo para obtener el nombre del jugador*/
     public String getName() {
         return name;
+    }
+    /**Metodo para obtener el nombre del jugador*/
+    public void setName(String name) {
+        this.name= name;
     }
 }
