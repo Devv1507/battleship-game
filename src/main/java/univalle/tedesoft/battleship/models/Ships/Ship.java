@@ -84,4 +84,10 @@ public abstract class Ship {
     public int getValueShip() {
         return valueShip;
     }
+    /**
+     * Metodo que edita el arreglo de coordenadas ocupadas por el barco.
+     */
+    public void addCoordinates(Coordinate occupiedCoordinate) {
+        occupiedCoordinates.add(occupiedCoordinate);
+    }
 }
