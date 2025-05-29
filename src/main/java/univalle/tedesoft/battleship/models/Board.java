@@ -10,9 +10,18 @@ import univalle.tedesoft.battleship.models.Ships.Ship;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Clase que representa los tableros del juego.
+ * @author David Esteban Valencia
+ * @author Santiago David Guerrero
+ * @author Juan Pablo Escamilla
+ */
 public class Board {
+    /** Tamaño estandar del tablero*/
     private static final int DEFAULT_SIZE = 10; // Tamaño estándar del tablero 10x10
+    /** Matriz de celdas, para guardar los estados de cada celda de forma ordenada por coordenadas*/
     private CellState[][] grid;
+    /** Lista de barcos alojados en el tablero*/
     private List<Ship> ships;
     /**
      * Constructor que inicializa un tablero vacío con un tamaño específico.
