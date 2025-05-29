@@ -13,7 +13,7 @@ public enum CellState {
     EMPTY,
     /** Estado en el que una celda vacia, se encuentra al recibir un ataque*/
     SHOT_LOST_IN_WATER,
-    /** Estado en el que la celda se encuentra ocupada por un barco parte uno, pero impactado por un ataque enemigo*/
+    /** Estado en el que la celda se encuentra ocupada por una embarcacion impactada por un ataque enemigo*/
     HIT_SHIP,
     /** Estado en el que una celda con un barco o parte de uno impactado se encuentra, al declararse hundido*/
     SUNK_SHIP_PART
