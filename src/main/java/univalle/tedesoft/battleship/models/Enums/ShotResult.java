@@ -10,8 +10,6 @@ public enum ShotResult {
     WATER,
     /**Disparo toca una embarcacion*/
     TOUCHED,
-    /**Disparo hundio la embarcacion */
-    SUNKEN,
     /**Disparo a una casilla ya golpeada*/
     ALREADY_HIT
 }
