@@ -7,7 +7,7 @@ package univalle.tedesoft.battleship.models.Players;
  */
 public class MachinePlayer extends Player {
     /**Constructor de la clase*/
-    public MachinePlayer(String name) {
-        super(name);
+    public MachinePlayer() {
+        super("Machine Player");
     }
 }
