@@ -11,7 +11,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Clase que representa los tableros del juego.
+ * Clase que representa un tablero de juego.
  * @author David Esteban Valencia
  * @author Santiago David Guerrero
  * @author Juan Pablo Escamilla
@@ -136,7 +136,7 @@ public class Board {
     }
     /**
      * Verifica si todos los barcos en este tablero han sido hundidos.
-     * @return true si todos los barcos están hundidos, false en caso contrario.
+     * @return true si todos los barcos están hundidos, false en caso contrario.(REVISAR ESTO)
      */
     public boolean areAllShipsSunk() {
         if (ships.isEmpty()) {
