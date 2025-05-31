@@ -90,4 +90,10 @@ public abstract class Ship {
     public void addCoordinates(Coordinate occupiedCoordinate) {
         occupiedCoordinates.add(occupiedCoordinate);
     }
+    /**
+     * Metodo que permite editar la orientacion del barco.
+     */
+    public void setOrientation(Orientation orientation) {
+        this.orientation = orientation;
+    }
 }
