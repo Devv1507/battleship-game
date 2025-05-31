@@ -8,7 +8,7 @@ import univalle.tedesoft.battleship.models.Enums.ShipType;
  * @author Santiago David Guerrero
  * @author Juan Pablo Escamilla
  */
-public abstract class AirCraftCarrier extends Ship {
+public class AirCraftCarrier extends Ship {
     /**Constructor de la clase*/
     public AirCraftCarrier() {
         super(ShipType.AIR_CRAFT_CARRIER, 4);

@@ -8,7 +8,7 @@ import univalle.tedesoft.battleship.models.Enums.ShipType;
  * @author Santiago David Guerrero
  * @author Juan Pablo Escamilla
  */
-public abstract class Frigate extends Ship {
+public class Frigate extends Ship {
     /**Constructor de la clase*/
     public Frigate() {
         super(ShipType.FRIGATE, 1);
