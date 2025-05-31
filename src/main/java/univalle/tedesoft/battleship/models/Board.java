@@ -42,19 +42,19 @@ public class Board {
         }
     }
     /**
-     * Intenta colocar un barco en el tablero.
+     * Intenta colocar un barco en el tablero, si lo logra llena las casillas en la tabla
+     * y en el arreglo del jugador, tambien agrega el barco al arreglo dentro de la clase Board.
      * @param ship El barco a colocar.
      * @param startCoordinate La coordenada de inicio del barco (esquina superior-izquierda).
-     * @param orientation La orientación del barco (HORIZONTAL o VERTICAL).
      * @return true si el barco fue colocado exitosamente, false en caso contrario.
      * @throws OutOfBoundsException si alguna parte del barco queda fuera del tablero.
      * @throws OverlapException si el barco se superpone con otro ya existente.
      */
-    public boolean placeShip(Ship ship, Coordinate startCoordinate, Orientation orientation) throws OutOfBoundsException, OverlapException {
-        if (orientation == Orientation.HORIZONTAL && startCoordinate.getX() + ship.getValueShip() > DEFAULT_SIZE) {
+    public boolean placeShip(Ship ship, Coordinate startCoordinate) throws OutOfBoundsException, OverlapException {
+        if (ship.getOrientation() == Orientation.HORIZONTAL && startCoordinate.getX() + ship.getValueShip() > DEFAULT_SIZE) {
             throw new OutOfBoundsException("Esta embarcacion no entra en el tablero!!");
         }
-        if (orientation == Orientation.VERTICAL && startCoordinate.getY() + ship.getValueShip() > DEFAULT_SIZE) {
+        if (ship.getOrientation() == Orientation.VERTICAL && startCoordinate.getY() + ship.getValueShip() > DEFAULT_SIZE) {
             throw new OutOfBoundsException("Esta embarcacion no entra en el tablero!!");
         }
         List<Coordinate> coordsToPlace = new ArrayList<>();
@@ -62,10 +62,10 @@ public class Board {
         for (int i = 0; i < ship.getValueShip(); i++) {
             int row = startCoordinate.getY();
             int col = startCoordinate.getX();
-            if(orientation == Orientation.VERTICAL){
-                row += i + startCoordinate.getY();
-            }else if(orientation == Orientation.HORIZONTAL){
-                col += i + startCoordinate.getX();
+            if(ship.getOrientation() == Orientation.VERTICAL){
+                row += i;
+            }else if(ship.getOrientation() == Orientation.HORIZONTAL){
+                col += i;
             }
             if (grid[row][col] != CellState.EMPTY) {
                 throw new OverlapException("Casilla Ocupada"); // Ya hay algo allí
