@@ -4,41 +4,52 @@ import univalle.tedesoft.battleship.Exceptions.InvalidShipPlacementException;
 import univalle.tedesoft.battleship.Exceptions.OutOfBoundsException;
 import univalle.tedesoft.battleship.Exceptions.OverlapException;
 import univalle.tedesoft.battleship.models.Board;
-import univalle.tedesoft.battleship.models.Enums.GamePhase;
-import univalle.tedesoft.battleship.models.Enums.Orientation;
-import univalle.tedesoft.battleship.models.Enums.ShipType;
-import univalle.tedesoft.battleship.models.Enums.ShotResult;
+import univalle.tedesoft.battleship.models.Coordinate;
+import univalle.tedesoft.battleship.models.Enums.*;
 import univalle.tedesoft.battleship.models.Players.HumanPlayer;
 import univalle.tedesoft.battleship.models.Players.MachinePlayer;
 import univalle.tedesoft.battleship.models.Players.Player;
+import univalle.tedesoft.battleship.models.Ships.*;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 
+/**
+ * Clase que representa la instancia del juego.
+ * @author David Esteban Valencia
+ * @author Santiago David Guerrero
+ * @author Juan Pablo Escamilla
+ */
 public abstract class GameState implements IGameState {
-    //Tableros de juego.
+    /**Tableros de juego*/
     private Board humanPlayerBoard;
-    private Board machineBoard;
-    private Board machineTerritoryBoard;
-    //Jugadores.
+    private Board machinePlayerBoard;
+    private Board machinePlayerTerritoryBoard;
+    /**Jugadores*/
     private Player humanPlayer;
     private Player machinePlayer;
     private Player currentPlayer;
-    //Contadores para indicar cuantas naves quedan en el tablero de cada jugador.
+    /**Contadores para indicar cuantas naves quedan en el tablero de cada jugador*/
     private int humanPlayerSunkShipCount;
     private int computerPlayerSunkShipCount;
-    //Fase actual del juego.
+    /**Fase actual del juego*/
     private GamePhase currentPhase;
+    /**Cantidad de Barcos que el humano tiene a su disposicion para colocar en la tabla*/
+    private List<Ship> pendingShipsToPlaceForHuman;
 
-    /***/
-    public GameState(String nameHumanPlayer) {
+    /** Constructor de la Clase*/
+    public GameState() {
         //Tableros de juego necesarios.
         this.humanPlayerBoard = new Board();
-        this.machineBoard = new Board();
-        this.machineTerritoryBoard = new Board();
-        //Cantidad de Barcos que posee cada jugador al inicio.
+        this.machinePlayerBoard = new Board();
+        this.machinePlayerTerritoryBoard = new Board();
+        //Cantidad de Barcos hundidos de cada jugador al inicio del juego.
         this.humanPlayerSunkShipCount = 0;
         this.computerPlayerSunkShipCount = 0;
+        //Fase inicial del juego.
         this.currentPhase = GamePhase.INITIAL;
+        this.pendingShipsToPlaceForHuman = new ArrayList<>();
     }
     /**
      * Inicia una nueva partida.
@@ -52,19 +63,35 @@ public abstract class GameState implements IGameState {
         this.humanPlayer = humanPlayer;
         this.machinePlayer = new MachinePlayer();
         this.currentPlayer = humanPlayer;
+        //Se inicializa las tablas.
+        this.humanPlayerBoard.resetBoard();
+        this.machinePlayerBoard.resetBoard();
+        this.machinePlayerTerritoryBoard.resetBoard();
+        //El juego empieza en su fase inicial.
+        this.currentPhase = GamePhase.PLACEMENT;
+        //Barcos que el humano ha colocado.
+        this.pendingShipsToPlaceForHuman.clear();
+        //Barcos que el humano debe movilizar en la tabla.
+        this.pendingShipsToPlaceForHuman = this.createFleet();
+        this.humanPlayerSunkShipCount = 0;
+        this.computerPlayerSunkShipCount = 0;
+
     }
     /**
-     * Intenta colocar un barco para el jugador humano en su tablero de posición.
-     * @param shipType El tipo de barco a colocar (ej. PORTAAVIONES, SUBMARINO).
-     * @param row La fila (0-9) de la casilla de inicio del barco.
-     * @param col La columna (0-9) de la casilla de inicio del barco.
-     * @param orientation La orientación del barco (HORIZONTAL o VERTICAL).
+     * Intenta colocar un barco para el jugador humano en su tablero de posición, la mayor parte
+     * de esta tarea se realiza en Board.
+     * @param ship El barco a colocar (ej. PORTAAVIONES, SUBMARINO).
+     * @param coordinate coordenada donde se piensa ubicar el ship.
      * @throws InvalidShipPlacementException si la colocación es inválida por superposición,
      *         salirse del tablero o tipo de barco ya colocado.
      */
     @Override
-    public void placeHumanPlayerShip(ShipType shipType, int row, int col, Orientation orientation) throws InvalidShipPlacementException, OverlapException, OutOfBoundsException{
-
+    public void placeHumanPlayerShip(Ship ship, Coordinate coordinate) throws InvalidShipPlacementException, OverlapException, OutOfBoundsException{
+        if(humanPlayerBoard.placeShip(ship, coordinate)) {
+            pendingShipsToPlaceForHuman.remove(ship);
+        } else {
+            throw new OutOfBoundsException("No fue posible agregar esta embarcacion!!");
+        }
     };
 
     /**
@@ -74,18 +101,22 @@ public abstract class GameState implements IGameState {
      */
     @Override
     public void finalizeShipPlacement() {
+        if(pendingShipsToPlaceForHuman.isEmpty()) {
+            currentPhase = GamePhase.FIRING;
+        } else {
+            currentPhase = GamePhase.PLACEMENT;
+        }
     }
 
     /**
      * Procesa un disparo realizado por el jugador humano en el tablero principal (de la máquina).
-     * @param row La fila (0-9) del disparo.
-     * @param col La columna (0-9) del disparo.
+     * @param coordinate Coordenada entre la fila (0-9) y la columna (0-9), donde se realiza un disparo.
      * @return Un objeto ShotResult que indica las coordenadas del disparo y su resultado (AGUA, TOCADO, HUNDIDO).
      * @throws OutOfBoundsException si el disparo es fuera del tablero.
      */
     @Override
-    public ShotResult handleHumanPlayerShot(int row, int col) throws OutOfBoundsException {
-        return null;
+    public ShotResult handleHumanPlayerShot(Coordinate coordinate) throws OutOfBoundsException {
+        return machinePlayerBoard.receiveShot(coordinate);
     }
 
     /**
@@ -95,7 +126,46 @@ public abstract class GameState implements IGameState {
      */
     @Override
     public ShotResult handleComputerPlayerTurn() {
-        return null;
+        if (this.currentPhase != GamePhase.FIRING || this.currentPlayer != this.machinePlayer) {
+            System.err.println("Advertencia: handleComputerPlayerTurn llamado fuera de turno/fase.");
+            return null;
+        }
+        Random random = new Random();
+        Coordinate shotCoordinate;
+        ShotResult result;
+        boolean validShotChosen = false;
+        int attempts = 0;
+        final int MAX_SHOT_ATTEMPTS = 100;
+
+        CellState cellStateAtTarget;
+        do {
+            int row = random.nextInt(this.humanPlayerBoard.getSize());
+            int col = random.nextInt(this.humanPlayerBoard.getSize());
+            shotCoordinate = new Coordinate(col, row);
+            try {
+                cellStateAtTarget = this.humanPlayerBoard.getCellState(row, col);
+                if (cellStateAtTarget == CellState.EMPTY || cellStateAtTarget == CellState.SHIP) {
+                    validShotChosen = true;
+                }
+            } catch (OutOfBoundsException e) {
+                validShotChosen = false;
+            }
+            attempts++;
+        } while (!validShotChosen && attempts < MAX_SHOT_ATTEMPTS);
+        if (!validShotChosen) {
+            if (!isGameOver()) {
+                System.err.println("Error crítico: La IA no pudo encontrar una celda válida para disparar, pero el juego no ha terminado.");
+            }
+            return ShotResult.ALREADY_HIT;
+        }
+        try {
+            result = this.humanPlayerBoard.receiveShot(shotCoordinate);
+        } catch( OutOfBoundsException e) {
+            System.err.println("Error inesperado: Disparo de la IA fuera de límites después de validación.");
+            result = ShotResult.WATER;
+        }
+        this.saveGame();
+        return result;
     }
 
     /**
@@ -218,5 +288,57 @@ public abstract class GameState implements IGameState {
         return 0;
     }
 
+    /**
+     * Metodo que crea la cantidad de barcos que cada jugador debe poseer en su tablero.
+     * @return fleet flota de barcos especificada en los requerimientos.
+     */
+    public List<Ship> createFleet() {
+        List<Ship> fleet = new ArrayList<>();
+        fleet.add(new AirCraftCarrier());
+        fleet.add(new Submarine());
+        fleet.add(new Submarine());
+        fleet.add(new Destroyer());
+        fleet.add(new Destroyer());
+        fleet.add(new Destroyer());
+        fleet.add(new Frigate());
+        fleet.add(new Frigate());
+        fleet.add(new Frigate());
+        fleet.add(new Frigate());
+        return fleet;
+    }
+
+    /**
+     * Metodo que crea y asigna en su sitio los barcos del jugador maquina.
+     */
+    private void placeMachinePlayerShips() {
+        List<Ship> machineFleet = createFleet();
+        Random random = new Random();
+        for (Ship ship : machineFleet) {
+            boolean placedSuccessfully = false;
+            int attempts = 0;
+            final int MAX_PLACEMENT_ATTEMPTS_PER_SHIP = 100;
+            while (!placedSuccessfully && attempts < MAX_PLACEMENT_ATTEMPTS_PER_SHIP) {
+                int row = random.nextInt(this.machinePlayerBoard.getSize());
+                int col = random.nextInt(this.machinePlayerBoard.getSize());
+                Coordinate startCoordinate = new Coordinate(col, row);
+                Orientation orientation = random.nextBoolean() ? Orientation.HORIZONTAL : Orientation.VERTICAL;
+                ship.setOrientation(orientation);
+                try {
+                    if (this.machinePlayerBoard.placeShip(ship, startCoordinate)) {
+                        placedSuccessfully = true;
+                    }
+                } catch (OutOfBoundsException e) {
+                    placedSuccessfully = false;
+                }
+                attempts++;
+            }
+            if (!placedSuccessfully) {
+                System.err.println("Error crítico: No se pudo colocar el barco de la máquina: " +
+                        ship.getShipType() + " después de " + MAX_PLACEMENT_ATTEMPTS_PER_SHIP + " intentos.");
+            }
+            
+        }
+
+    }
 
 }
