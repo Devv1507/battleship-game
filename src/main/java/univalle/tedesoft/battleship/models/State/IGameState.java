@@ -31,12 +31,17 @@ public interface IGameState {
 
     /**
      * Intenta colocar un barco para el jugador humano en su tablero de posición.
-     * @param ship El barco a colocar (ej. PORTAAVIONES, SUBMARINO).
-     * @param coordinate coordenada donde se piensa ubicar el ship.
-     * @throws InvalidShipPlacementException si la colocación es inválida por superposición,
-     *         salirse del tablero o tipo de barco ya colocado.
+     * Esta es la firma corregida que acepta los datos directamente desde la UI.
+     *
+     * @param shipType El tipo de barco a colocar (ej. AIRCRAFT_CARRIER).
+     * @param row La fila (0-9) de la casilla de inicio del barco.
+     * @param col La columna (0-9) de la casilla de inicio del barco.
+     * @param orientation La orientación del barco (HORIZONTAL o VERTICAL).
+     * @throws InvalidShipPlacementException si la colocación es inválida.
+     * @throws OverlapException si el barco se superpone con otro.
+     * @throws OutOfBoundsException si el barco se sale del tablero.
      */
-    void placeHumanPlayerShip(Ship ship, Coordinate coordinate) throws InvalidShipPlacementException, OverlapException, OutOfBoundsException;
+    void placeHumanPlayerShip(ShipType shipType, int row, int col, Orientation orientation) throws InvalidShipPlacementException, OverlapException, OutOfBoundsException;
 
     /**
      * Indica que el jugador humano ha terminado de colocar todos sus barcos.
