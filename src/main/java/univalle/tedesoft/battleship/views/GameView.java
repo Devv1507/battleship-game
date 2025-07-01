@@ -15,11 +15,15 @@ import univalle.tedesoft.battleship.controllers.GameController;
 import univalle.tedesoft.battleship.models.Board;
 import univalle.tedesoft.battleship.models.Enums.CellState;
 import univalle.tedesoft.battleship.models.Enums.ShipType;
+import univalle.tedesoft.battleship.models.Players.HumanPlayer;
+import univalle.tedesoft.battleship.models.State.GameState;
+import univalle.tedesoft.battleship.models.State.IGameState;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * Gestiona la ventana principal y todos los elementos de la interfaz de usuario del juego.
@@ -33,6 +37,9 @@ public class GameView extends Stage {
     // ------------ Constantes
     private static final int CELL_SIZE = 40;
     private final Map<ShipType, Image> shipImages;
+    /** Prefijo de la ruta donde se encuentran las imágenes de las cartas. */
+    private static final String IMAGE_PATH_PREFIX = "/univalle/tedesoft/battleship/images/";
+
 
     /**
      * Constructor privado Singleton.
@@ -49,14 +56,24 @@ public class GameView extends Stage {
         if (this.controller == null) {
             throw new IllegalStateException("El controlador no se pudo cargar desde el FXML. Revisa el campo fx:controller.");
         }
-        this.controller.setGameView(this);
 
         this.shipImages = Map.of(
-                ShipType.AIR_CRAFT_CARRIER, this.loadImage("images/aircraft_carrier.png"),
-                ShipType.SUBMARINE, this.loadImage("images/submarine.png"),
-                ShipType.DESTROYER, this.loadImage("images/destroyer.png"),
-                ShipType.FRIGATE, this.loadImage("images/frigate.png")
+                ShipType.AIR_CRAFT_CARRIER, Objects.requireNonNull(loadImage("aircraft_carrier.png"), "aircraft_carrier.png no encontrada"),
+                ShipType.SUBMARINE, Objects.requireNonNull(loadImage("submarine.png"), "submarine.png no encontrada"),
+                ShipType.DESTROYER, Objects.requireNonNull(loadImage("destroyer.png"), "destroyer.png no encontrada"),
+                ShipType.FRIGATE, Objects.requireNonNull(loadImage("frigate.png"), "frigate.png no encontrada")
         );
+        IGameState gameState = new GameState() {};
+        this.controller.setGameView(this);
+        this.controller.setGameState(gameState);
+
+        this.controller.initializeUI(this);
+        gameState.startNewGame(new HumanPlayer("Capitán")); // Inicia el modelo con un jugador por defecto
+        this.showShipPlacementPhase(
+                gameState.getHumanPlayerPositionBoard(),
+                gameState.getPendingShipsToPlace()
+        );
+
         this.setTitle("Battleship Game");
         this.setScene(scene);
     }
@@ -183,13 +200,25 @@ public class GameView extends Stage {
         return null;
     }
 
-    private Image loadImage(String path) {
-        InputStream stream = getClass().getResourceAsStream("/univalle/tedesoft/battleship/" + path);
-        if (stream == null) {
-            System.err.println("Error: No se pudo cargar el recurso de imagen: " + path);
+    /**
+     * Carga una imagen desde la ruta de recursos correcta, usando Main.class como ancla.
+     * @param filename el nombre del archivo de imagen (ej. "barco.png").
+     * @return el objeto Image cargado, o null si no se encuentra.
+     */
+    private Image loadImage(String filename) {
+        String resourcePath = IMAGE_PATH_PREFIX + filename;
+        try {
+            // Usamos Main.class.getResourceAsStream como en tu ejemplo de UNO. ¡Excelente idea!
+            InputStream stream = Main.class.getResourceAsStream(resourcePath);
+            if (stream == null) {
+                System.err.println("No se pudo encontrar la imagen: " + resourcePath);
+                return null;
+            }
+            return new Image(stream);
+        } catch (Exception e) {
+            System.err.println("Error al cargar la imagen: " + resourcePath);
             return null;
         }
-        return new Image(stream);
     }
 
 
