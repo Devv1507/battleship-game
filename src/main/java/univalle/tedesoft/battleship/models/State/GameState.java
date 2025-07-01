@@ -36,7 +36,7 @@ public abstract class GameState implements IGameState {
     /**Fase actual del juego*/
     private GamePhase currentPhase;
     /**Cantidad de Barcos que el humano tiene a su disposicion para colocar en la tabla*/
-    private List<Ship> pendingShipsToPlaceForHuman;
+    private List<ShipType> pendingShipsToPlaceForHuman;
 
     /** Constructor de la Clase*/
     public GameState() {
@@ -72,7 +72,7 @@ public abstract class GameState implements IGameState {
         //Barcos que el humano ha colocado.
         this.pendingShipsToPlaceForHuman.clear();
         //Barcos que el humano debe movilizar en la tabla.
-        this.pendingShipsToPlaceForHuman = this.createFleet();
+        this.pendingShipsToPlaceForHuman.addAll(createFleetShipTypes());
         this.humanPlayerSunkShipCount = 0;
         this.computerPlayerSunkShipCount = 0;
 
@@ -80,19 +80,76 @@ public abstract class GameState implements IGameState {
     /**
      * Intenta colocar un barco para el jugador humano en su tablero de posición, la mayor parte
      * de esta tarea se realiza en Board.
-     * @param ship El barco a colocar (ej. PORTAAVIONES, SUBMARINO).
-     * @param coordinate coordenada donde se piensa ubicar el ship.
+     * @param shipType El barco a colocar (ej. PORTAAVIONES, SUBMARINO).
+     * @param row coordenada en fila donde se piensa ubicar el ship.
+     * @param col coordenada en columna
      * @throws InvalidShipPlacementException si la colocación es inválida por superposición,
      *         salirse del tablero o tipo de barco ya colocado.
      */
     @Override
-    public void placeHumanPlayerShip(Ship ship, Coordinate coordinate) throws InvalidShipPlacementException, OverlapException, OutOfBoundsException{
-        if(humanPlayerBoard.placeShip(ship, coordinate)) {
-            pendingShipsToPlaceForHuman.remove(ship);
+    public void placeHumanPlayerShip(ShipType shipType, int row, int col, Orientation orientation) throws InvalidShipPlacementException, OverlapException, OutOfBoundsException {
+
+        // 1. Validar que el tipo de barco está pendiente de ser colocado.
+        if (!this.pendingShipsToPlaceForHuman.contains(shipType)) {
+            throw new InvalidShipPlacementException("Ya has colocado todos los barcos de tipo: " + shipType);
+        }
+
+        // 2. Crear los objetos de dominio necesarios.
+        Ship newShip = createShipFromType(shipType);
+        newShip.setOrientation(orientation);
+        Coordinate coordinate = new Coordinate(col, row); // Recordar que Coordinate(x, y) -> (col, row)
+
+        // 3. Delegar la colocación al tablero.
+        if (this.humanPlayerBoard.placeShip(newShip, coordinate)) {
+            // 4. Si la colocación fue exitosa, remover el tipo de barco de la lista de pendientes.
+            this.pendingShipsToPlaceForHuman.remove(shipType);
         } else {
-            throw new OutOfBoundsException("No fue posible agregar esta embarcacion!!");
+            // Esta línea es teóricamente inalcanzable si placeShip lanza excepciones, pero es una buena práctica.
+            throw new InvalidShipPlacementException("No fue posible agregar esta embarcacion!!");
         }
     };
+
+    /**
+     * Metodo de fábrica privado para crear una instancia de Ship a partir de su tipo.
+     * Esto centraliza la lógica de creación de barcos.
+     * @param type El enum ShipType del barco a crear.
+     * @return una nueva instancia del barco correspondiente.
+     */
+    private Ship createShipFromType(ShipType type) {
+        switch (type) {
+            case AIR_CRAFT_CARRIER:
+                return new AirCraftCarrier();
+            case SUBMARINE:
+                return new Submarine();
+            case DESTROYER:
+                return new Destroyer();
+            case FRIGATE:
+                return new Frigate();
+            default:
+                // Esto no debería ocurrir si el enum está completo.
+                throw new IllegalArgumentException("Tipo de barco desconocido: " + type);
+        }
+    }
+
+
+    /**
+     * Este metodo crea la lista de TIPOS de barcos que cada jugador debe poseer.
+     * @return una lista de ShipType con la flota completa.
+     */
+    public List<ShipType> createFleetShipTypes() {
+        List<ShipType> fleetTypes = new ArrayList<>();
+        fleetTypes.add(ShipType.AIR_CRAFT_CARRIER); // 1
+        fleetTypes.add(ShipType.SUBMARINE);        // 2
+        fleetTypes.add(ShipType.SUBMARINE);
+        fleetTypes.add(ShipType.DESTROYER);        // 3
+        fleetTypes.add(ShipType.DESTROYER);
+        fleetTypes.add(ShipType.DESTROYER);
+        fleetTypes.add(ShipType.FRIGATE);          // 4
+        fleetTypes.add(ShipType.FRIGATE);
+        fleetTypes.add(ShipType.FRIGATE);
+        fleetTypes.add(ShipType.FRIGATE);
+        return fleetTypes;
+    }
 
     /**
      * Indica que el jugador humano ha terminado de colocar todos sus barcos.
@@ -258,7 +315,7 @@ public abstract class GameState implements IGameState {
      */
     @Override
     public List<ShipType> getPendingShipsToPlace() {
-        return null;
+        return new ArrayList<>(this.pendingShipsToPlaceForHuman);
     }
 
     /**
