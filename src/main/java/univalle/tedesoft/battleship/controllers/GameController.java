@@ -6,6 +6,10 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.VBox;
+import univalle.tedesoft.battleship.Exceptions.InvalidShipPlacementException;
+import univalle.tedesoft.battleship.Exceptions.OutOfBoundsException;
+import univalle.tedesoft.battleship.Exceptions.OverlapException;
+import univalle.tedesoft.battleship.models.Enums.Orientation;
 import univalle.tedesoft.battleship.models.Enums.ShipType;
 import univalle.tedesoft.battleship.models.State.IGameState;
 import univalle.tedesoft.battleship.views.GameView;
@@ -33,6 +37,16 @@ public class GameController {
      */
     @FXML
     public void initialize() {}
+
+    /**
+     * Inicializa la UI a través de la GameView. Se llama desde la vista
+     * una vez que todo está conectado.
+     * @param gameView La instancia de la vista que hará el trabajo.
+     */
+    public void initializeUI(GameView gameView) {
+        // El controlador le pide a la vista que configure los listeners de los tableros.
+        gameView.initializeUI(this);
+    }
 
     // --------- Setters y getters
 
@@ -102,23 +116,32 @@ public class GameController {
         }
 
         try {
-            // TODO: Necesitamos una forma para que el jugador elija la orientación.
-            // Por ahora, lo dejamos en vertical por defecto.
-            this.gameState.placeHumanPlayerShip(this.selectedShipToPlace, row, col, null); // Orientation.VERTICAL
+            // TODO: Crear un mecanismo en la UI (ej. clic derecho, un botón 'Rotar')
+            // para que el jugador elija la orientación. Por ahora, usamos HORIZONTAL por defecto.
+            Orientation chosenOrientation = Orientation.HORIZONTAL;
+
+            // La llamada ahora coincide con la firma de la interfaz IGameState
+            this.gameState.placeHumanPlayerShip(this.selectedShipToPlace, row, col, chosenOrientation);
 
             // Actualizar la vista del tablero
             this.gameView.drawBoard(this.humanPlayerBoardGrid, this.gameState.getHumanPlayerPositionBoard(), true);
             this.gameView.displayMessage("Barco " + this.selectedShipToPlace + " colocado.", false);
+
             this.selectedShipToPlace = null; // Deseleccionar para la siguiente colocación
 
-            // Actualizar la lista de barcos a colocar
+            // Actualizar la lista de barcos a colocar en el panel izquierdo
             this.gameView.showShipPlacementPhase(
                     this.gameState.getHumanPlayerPositionBoard(),
                     this.gameState.getPendingShipsToPlace()
             );
 
+        } catch (InvalidShipPlacementException | OverlapException | OutOfBoundsException e) {
+            // Capturamos las excepciones específicas y mostramos un mensaje de error claro.
+            this.gameView.displayMessage("Error: " + e.getMessage(), true);
         } catch (Exception e) {
-            this.gameView.displayMessage("Error al colocar el barco: " + e.getMessage(), true);
+            // Captura de cualquier otro error inesperado.
+            this.gameView.displayMessage("Ocurrió un error inesperado.", true);
+            e.printStackTrace();
         }
     }
 
