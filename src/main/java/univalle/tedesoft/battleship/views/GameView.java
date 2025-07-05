@@ -147,7 +147,7 @@ public class GameView extends Stage {
         for (int row = 0; row < board.getSize(); row++) {
             for (int col = 0; col < board.getSize(); col++) {
                 CellState state = board.getCellState(row, col);
-                Pane cellPane = getCellPane(gridPane, row, col);
+                Pane cellPane = this.getCellPane(gridPane, row, col);
                 if (cellPane == null) continue;
 
                 cellPane.getChildren().clear();
@@ -191,13 +191,33 @@ public class GameView extends Stage {
 
     // ------------ Métodos auxiliares
 
+    /**
+     * Obtiene el Pane de una celda específica en un GridPane de forma segura.
+     * Maneja el caso en que los índices de fila/columna son nulos (interpretándolos como 0).
+     * @param gridPane El GridPane del cual obtener la celda.
+     * @param row La fila deseada.
+     * @param col La columna deseada.
+     * @return El nodo Pane en esa posición, o null si no se encuentra.
+     */
     private Pane getCellPane(GridPane gridPane, int row, int col) {
         for (Node node : gridPane.getChildren()) {
-            if (GridPane.getRowIndex(node) == row && GridPane.getColumnIndex(node) == col) {
-                return (Pane) node;
+            // Obtener los índices. Pueden ser null.
+            Integer rowIndex = GridPane.getRowIndex(node);
+            Integer colIndex = GridPane.getColumnIndex(node);
+
+            // Convertir los índices nulos a 0.
+            int r = (rowIndex == null) ? 0 : rowIndex;
+            int c = (colIndex == null) ? 0 : colIndex;
+
+            // Comparar los índices calculados.
+            if (r == row && c == col) {
+                // Asegurarse de que el nodo es un Pane antes de hacer el cast.
+                if (node instanceof Pane) {
+                    return (Pane) node;
+                }
             }
         }
-        return null;
+        return null; // No se encontró la celda.
     }
 
     /**
