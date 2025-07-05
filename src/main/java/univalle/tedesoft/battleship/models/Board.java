@@ -29,7 +29,7 @@ public class Board {
     public Board() {
         this.grid = new CellState[DEFAULT_SIZE][DEFAULT_SIZE];
         this.ships = new ArrayList<>();
-        initializeGrid();
+        this.initializeGrid();
     }
     /**
      * Inicializa todas las celdas del tablero a EMPTY.
@@ -51,35 +51,48 @@ public class Board {
      * @throws OverlapException si el barco se superpone con otro ya existente.
      */
     public boolean placeShip(Ship ship, Coordinate startCoordinate) throws OutOfBoundsException, OverlapException {
+        // Validación de límites
         if (ship.getOrientation() == Orientation.HORIZONTAL && startCoordinate.getX() + ship.getValueShip() > DEFAULT_SIZE) {
-            throw new OutOfBoundsException("Esta embarcacion no entra en el tablero!!");
+            throw new OutOfBoundsException("Esta embarcacion no cabe horizontalmente en el tablero!");
         }
         if (ship.getOrientation() == Orientation.VERTICAL && startCoordinate.getY() + ship.getValueShip() > DEFAULT_SIZE) {
-            throw new OutOfBoundsException("Esta embarcacion no entra en el tablero!!");
+            throw new OutOfBoundsException("Esta embarcacion no cabe verticalmente en el tablero!");
         }
+
         List<Coordinate> coordsToPlace = new ArrayList<>();
-        //Recorre las celdas para verificar si estas estan vacias.
+
+        // Primero, verificar todas las celdas antes de modificar nada.
         for (int i = 0; i < ship.getValueShip(); i++) {
-            int row = startCoordinate.getY();
-            int col = startCoordinate.getX();
-            if(ship.getOrientation() == Orientation.VERTICAL){
-                row += i;
-            }else if(ship.getOrientation() == Orientation.HORIZONTAL){
-                col += i;
+            int current_row = startCoordinate.getY();
+            int current_col = startCoordinate.getX();
+
+            if (ship.getOrientation() == Orientation.VERTICAL) {
+                current_row += i;
+            } else { // Si es HORIZONTAL
+                current_col += i;
             }
-            if (grid[row][col] != CellState.EMPTY) {
-                throw new OverlapException("Casilla Ocupada"); // Ya hay algo allí
+
+            if (grid[current_row][current_col] != CellState.EMPTY) {
+                throw new OverlapException("Casilla (" + current_row + "," + current_col + ") Ocupada");
             }
-            //grid[row][col] = CellState.SHIP;
-            coordsToPlace.add(new Coordinate(row, col));
+
+            // Guardamos la coordenada que vamos a ocupar.
+            coordsToPlace.add(new Coordinate(current_col, current_row));
         }
+
+        // Si todas las verificaciones pasaron, ahora sí colocamos el barco.
         for (Coordinate coord : coordsToPlace) {
+            // Accedemos a la grid con Y,X (fila, columna)
             grid[coord.getY()][coord.getX()] = CellState.SHIP;
+
+            // Añadimos la coordenada al propio barco para que sepa dónde está.
             ship.addCoordinates(coord);
         }
+
         ships.add(ship);
         return true;
     }
+
     /**
      * Procesa un disparo en una coordenada específica del tablero.
      * Actualiza el estado de la celda y del barco (si lo hay).
@@ -115,7 +128,7 @@ public class Board {
      * @throws OutOfBoundsException si la coordenada esta fuera del tablero.
      */
     public CellState getCellState(int row, int col) throws OutOfBoundsException {
-        if (!isValidCoordinate(row, col)) {
+        if (row < 0 || row >= DEFAULT_SIZE || col < 0 || col >= DEFAULT_SIZE) {
             throw new OutOfBoundsException("Coordenada (" + row + "," + col + ") está fuera del tablero.");
         }
         return grid[row][col];
