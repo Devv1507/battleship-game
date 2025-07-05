@@ -3,6 +3,8 @@ package univalle.tedesoft.battleship.models.Ships;
 import univalle.tedesoft.battleship.models.Coordinate;
 import univalle.tedesoft.battleship.models.Enums.Orientation;
 import univalle.tedesoft.battleship.models.Enums.ShipType;
+
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -35,6 +37,7 @@ public abstract class Ship {
         this.orientation= Orientation.VERTICAL;
         this.sunk = false;
         this.valueShip = valueShip;
+        this.occupiedCoordinates = new ArrayList<>();
     }
     /**
      * Metodo que retorna el tipo de barco.

@@ -232,7 +232,7 @@ public abstract class GameState implements IGameState {
      */
     @Override
     public Board getHumanPlayerPositionBoard() {
-        return null;
+        return this.humanPlayerBoard;
     }
 
     /**
@@ -242,7 +242,7 @@ public abstract class GameState implements IGameState {
      */
     @Override
     public Board getMachinePlayerTerritoryBoard() {
-        return null;
+        return this.machinePlayerTerritoryBoard;
     }
 
     /**
@@ -253,7 +253,7 @@ public abstract class GameState implements IGameState {
      */
     @Override
     public Board getMachinePlayerActualPositionBoard() {
-        return null;
+        return this.machinePlayerBoard;
     }
 
     /**
