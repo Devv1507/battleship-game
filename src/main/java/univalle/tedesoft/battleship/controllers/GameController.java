@@ -23,6 +23,9 @@ public class GameController {
     @FXML public Label messageLabel;
     @FXML public VBox shipPlacementPane;
     @FXML public Button toggleOpponentBoardButton;
+    @FXML public VBox orientationControlPane; // Contenedor de los botones
+    @FXML public Button horizontalButton;
+    @FXML public Button verticalButton;
 
     // --- Referencias principales ---
     private IGameState gameState;
@@ -30,6 +33,7 @@ public class GameController {
 
     // --- Estado interno del controlador ---
     private ShipType selectedShipToPlace;
+    private Orientation chosenOrientation = Orientation.HORIZONTAL;
 
     /**
      * Inicialización de JavaFX.
@@ -97,6 +101,29 @@ public class GameController {
         }
     }
 
+
+    /**
+     * Se activa cuando el jugador hace clic en el botón "Horizontal".
+     * @param event El evento de la acción.
+     */
+    @FXML
+    void onHorizontalClick(ActionEvent event) {
+        this.chosenOrientation = Orientation.HORIZONTAL;
+        this.gameView.updateOrientationButtons(this.chosenOrientation);
+        this.gameView.displayMessage("Orientación seleccionada: Horizontal.", false);
+    }
+
+    /**
+     * Se activa cuando el jugador hace clic en el botón "Vertical".
+     * @param event El evento de la acción.
+     */
+    @FXML
+    void onVerticalClick(ActionEvent event) {
+        this.chosenOrientation = Orientation.VERTICAL;
+        this.gameView.updateOrientationButtons(this.chosenOrientation);
+        this.gameView.displayMessage("Orientación seleccionada: Vertical.", false);
+    }
+
     @FXML
     void onToggleOpponentBoardClick(ActionEvent event) {
         // TODO:  Lógica para el botón de
@@ -116,32 +143,24 @@ public class GameController {
         }
 
         try {
-            // TODO: Crear un mecanismo en la UI (ej. clic derecho, un botón 'Rotar')
-            // para que el jugador elija la orientación. Por ahora, usamos HORIZONTAL por defecto.
-            Orientation chosenOrientation = Orientation.HORIZONTAL;
-
-            // La llamada ahora coincide con la firma de la interfaz IGameState
-            this.gameState.placeHumanPlayerShip(this.selectedShipToPlace, row, col, chosenOrientation);
+            // Ya no usamos un valor por defecto, usamos la variable 'chosenOrientation'
+            this.gameState.placeHumanPlayerShip(this.selectedShipToPlace, row, col, this.chosenOrientation);
 
             // Actualizar la vista del tablero
             this.gameView.drawBoard(this.humanPlayerBoardGrid, this.gameState.getHumanPlayerPositionBoard(), true);
             this.gameView.displayMessage("Barco " + this.selectedShipToPlace + " colocado.", false);
 
-            this.selectedShipToPlace = null; // Deseleccionar para la siguiente colocación
+            this.selectedShipToPlace = null; // Deseleccionar
+            this.gameView.showOrientationControls(false); // Ocultar controles de orientación
 
-            // Actualizar la lista de barcos a colocar en el panel izquierdo
+            // Actualizar la lista de barcos a colocar
             this.gameView.showShipPlacementPhase(
                     this.gameState.getHumanPlayerPositionBoard(),
                     this.gameState.getPendingShipsToPlace()
             );
 
-        } catch (InvalidShipPlacementException | OverlapException | OutOfBoundsException e) {
-            // Capturamos las excepciones específicas y mostramos un mensaje de error claro.
-            this.gameView.displayMessage("Error: " + e.getMessage(), true);
         } catch (Exception e) {
-            // Captura de cualquier otro error inesperado.
-            this.gameView.displayMessage("Ocurrió un error inesperado.", true);
-            e.printStackTrace();
+            this.gameView.displayMessage("Error: " + e.getMessage(), true);
         }
     }
 
@@ -161,6 +180,8 @@ public class GameController {
      */
     public void handleShipSelection(ShipType shipType) {
         this.selectedShipToPlace = shipType;
+        this.gameView.showOrientationControls(true); // Mostrar controles
+        this.gameView.updateOrientationButtons(this.chosenOrientation); // Resaltar el botón actual
         this.gameView.displayMessage("Seleccionado: " + shipType + ". Haz clic en tu tablero para colocarlo.", false);
     }
 }
