@@ -1,8 +1,8 @@
 package univalle.tedesoft.battleship.models.State;
 
-import univalle.tedesoft.battleship.Exceptions.InvalidShipPlacementException;
-import univalle.tedesoft.battleship.Exceptions.OutOfBoundsException;
-import univalle.tedesoft.battleship.Exceptions.OverlapException;
+import univalle.tedesoft.battleship.exceptions.InvalidShipPlacementException;
+import univalle.tedesoft.battleship.exceptions.OutOfBoundsException;
+import univalle.tedesoft.battleship.exceptions.OverlapException;
 import univalle.tedesoft.battleship.models.Board;
 import univalle.tedesoft.battleship.models.Coordinate;
 import univalle.tedesoft.battleship.models.Enums.*;
@@ -10,6 +10,8 @@ import univalle.tedesoft.battleship.models.Players.HumanPlayer;
 import univalle.tedesoft.battleship.models.Players.MachinePlayer;
 import univalle.tedesoft.battleship.models.Players.Player;
 import univalle.tedesoft.battleship.models.Ships.*;
+import univalle.tedesoft.battleship.models.ShotOutcome;
+
 
 import java.util.ArrayList;
 import java.util.List;
@@ -21,7 +23,7 @@ import java.util.Random;
  * @author Santiago David Guerrero
  * @author Juan Pablo Escamilla
  */
-public abstract class GameState implements IGameState {
+public class GameState implements IGameState {
     /**Tableros de juego*/
     private Board humanPlayerBoard;
     private Board machinePlayerBoard;
@@ -30,9 +32,6 @@ public abstract class GameState implements IGameState {
     private Player humanPlayer;
     private Player machinePlayer;
     private Player currentPlayer;
-    /**Contadores para indicar cuantas naves quedan en el tablero de cada jugador*/
-    private int humanPlayerSunkShipCount;
-    private int computerPlayerSunkShipCount;
     /**Fase actual del juego*/
     private GamePhase currentPhase;
     /**Cantidad de Barcos que el humano tiene a su disposicion para colocar en la tabla*/
@@ -44,9 +43,6 @@ public abstract class GameState implements IGameState {
         this.humanPlayerBoard = new Board();
         this.machinePlayerBoard = new Board();
         this.machinePlayerTerritoryBoard = new Board();
-        //Cantidad de Barcos hundidos de cada jugador al inicio del juego.
-        this.humanPlayerSunkShipCount = 0;
-        this.computerPlayerSunkShipCount = 0;
         //Fase inicial del juego.
         this.currentPhase = GamePhase.INITIAL;
         this.pendingShipsToPlaceForHuman = new ArrayList<>();
@@ -62,7 +58,7 @@ public abstract class GameState implements IGameState {
         //Jugadores.
         this.humanPlayer = humanPlayer;
         this.machinePlayer = new MachinePlayer();
-        this.currentPlayer = humanPlayer;
+        this.currentPlayer = this.humanPlayer;
         //Se inicializa las tablas.
         this.humanPlayerBoard.resetBoard();
         this.machinePlayerBoard.resetBoard();
@@ -73,9 +69,6 @@ public abstract class GameState implements IGameState {
         this.pendingShipsToPlaceForHuman.clear();
         //Barcos que el humano debe movilizar en la tabla.
         this.pendingShipsToPlaceForHuman.addAll(createFleetShipTypes());
-        this.humanPlayerSunkShipCount = 0;
-        this.computerPlayerSunkShipCount = 0;
-
     }
     /**
      * Intenta colocar un barco para el jugador humano en su tablero de posición, la mayor parte
@@ -159,74 +152,79 @@ public abstract class GameState implements IGameState {
     @Override
     public void finalizeShipPlacement() {
         if (!this.pendingShipsToPlaceForHuman.isEmpty()) {
-            // No se puede finalizar si aún faltan barcos por colocar.
             return;
         }
-
-        // Si la colocación del jugador está completa, la máquina coloca su flota.
         this.placeMachinePlayerShips();
-
         this.currentPhase = GamePhase.FIRING;
     }
 
     /**
-     * Procesa un disparo realizado por el jugador humano en el tablero principal (de la máquina).
-     * @param coordinate Coordenada entre la fila (0-9) y la columna (0-9), donde se realiza un disparo.
-     * @return Un objeto ShotResult que indica las coordenadas del disparo y su resultado (AGUA, TOCADO, HUNDIDO).
+     * Procesa un disparo realizado por el jugador humano en el tablero de la máquina.
+     * @param row Fila del disparo.
+     * @param col Columna del disparo.
+     * @return Un objeto ShotResult que indica el resultado del disparo.
      * @throws OutOfBoundsException si el disparo es fuera del tablero.
      */
     @Override
-    public ShotResult handleHumanPlayerShot(Coordinate coordinate) throws OutOfBoundsException {
-        return machinePlayerBoard.receiveShot(coordinate);
+    public ShotOutcome handleHumanPlayerShot(int row, int col) throws OutOfBoundsException, OverlapException {
+        Coordinate coordinate = new Coordinate(col, row);
+        try {
+            ShotOutcome outcome = this.machinePlayerBoard.receiveShot(coordinate);
+            this.machinePlayerTerritoryBoard.setCellState(row, col, this.machinePlayerBoard.getCellState(row, col));
+            return outcome;
+        } catch (OverlapException e) {
+            // Relanzar la excepción para que el controlador la maneje.
+            throw e;
+        }
     }
 
     /**
      * Ejecuta el turno de la máquina. La máquina elige una casilla para disparar
      * en el tablero del jugador humano.
-     * @return Un objeto ShotResult que indica las coordenadas del disparo y su resultado.
+     * @return Un objeto ShotOutcome que indica las coordenadas del disparo y su resultado.
      */
-    @Override
-    public ShotResult handleComputerPlayerTurn() {
-        if (this.currentPhase != GamePhase.FIRING || this.currentPlayer != this.machinePlayer) {
-            System.err.println("Advertencia: handleComputerPlayerTurn llamado fuera de turno/fase.");
-            return null;
-        }
+    public ShotOutcome handleMachinePlayerTurn() {
         Random random = new Random();
         Coordinate shotCoordinate;
-        ShotResult result;
-        boolean validShotChosen = false;
-        int attempts = 0;
-        final int MAX_SHOT_ATTEMPTS = 100;
+        int maxAttempts = 100; // Evita bucles infinitos
 
-        CellState cellStateAtTarget;
+        // Bucle para encontrar una celda válida que no haya sido disparada
         do {
             int row = random.nextInt(this.humanPlayerBoard.getSize());
             int col = random.nextInt(this.humanPlayerBoard.getSize());
             shotCoordinate = new Coordinate(col, row);
-            try {
-                cellStateAtTarget = this.humanPlayerBoard.getCellState(row, col);
-                if (cellStateAtTarget == CellState.EMPTY || cellStateAtTarget == CellState.SHIP) {
-                    validShotChosen = true;
-                }
-            } catch (OutOfBoundsException e) {
-                validShotChosen = false;
-            }
-            attempts++;
-        } while (!validShotChosen && attempts < MAX_SHOT_ATTEMPTS);
-        if (!validShotChosen) {
-            if (!isGameOver()) {
-                System.err.println("Error crítico: La IA no pudo encontrar una celda válida para disparar, pero el juego no ha terminado.");
-            }
-            return ShotResult.ALREADY_HIT;
+            maxAttempts--;
+        } while (isCellAlreadyShotByMachine(shotCoordinate) && maxAttempts > 0);
+
+        // Si después de 100 intentos no se encontró una celda (muy improbable),
+        // se devuelve un resultado que el controlador pueda interpretar.
+        if (isCellAlreadyShotByMachine(shotCoordinate)) {
+            return new ShotOutcome(shotCoordinate, ShotResult.ALREADY_HIT);
         }
+
         try {
-            result = this.humanPlayerBoard.receiveShot(shotCoordinate);
-        } catch( OutOfBoundsException e) {
-            System.err.println("Error inesperado: Disparo de la IA fuera de límites después de validación.");
-            result = ShotResult.WATER;
+            // La IA no debe lanzar la excepción, sino obtener un resultado simple.
+            // Por eso no llamamos a receiveShot directamente sino que manejamos el caso internamente.
+            return this.humanPlayerBoard.receiveShot(shotCoordinate);
+
+        } catch(OutOfBoundsException | OverlapException e) {
+            System.err.println("Error inesperado en el turno de la IA: " + e.getMessage());
+            return new ShotOutcome(shotCoordinate, ShotResult.WATER);
         }
-        this.saveGame();
-        return result;
+    }
+
+    /**
+     * Verifica si una celda en el tablero del jugador humano ya ha sido objetivo de un disparo.
+     * @param coordinate La coordenada a verificar.
+     * @return true si la celda ya fue disparada, false en caso contrario.
+     */
+    private boolean isCellAlreadyShotByMachine(Coordinate coordinate) {
+        try {
+            CellState state = this.humanPlayerBoard.getCellState(coordinate.getY(), coordinate.getX());
+            return state == CellState.HIT_SHIP || state == CellState.SUNK_SHIP_PART || state == CellState.SHOT_LOST_IN_WATER;
+        } catch (OutOfBoundsException e) {
+            return true; // Considerar fuera de límites como "ya disparado" para evitarlo.
+        }
     }
 
     /**
@@ -266,88 +264,69 @@ public abstract class GameState implements IGameState {
      */
     @Override
     public boolean isGameOver() {
-        return false;
+        boolean isGameOver = this.humanPlayerBoard.areAllShipsSunk() || this.machinePlayerBoard.areAllShipsSunk();
+        if (isGameOver) {
+            this.currentPhase = GamePhase.GAME_OVER;
+        }
+        return isGameOver;
     }
 
     /**
      * Obtiene el ganador del juego.
-     * @return El PlayerType del ganador (HUMAN o COMPUTER), o null si el juego no ha terminado.
+     * @return El Player del ganador, o null si el juego no ha terminado.
      */
     @Override
     public Player getWinner() {
-        return null;
+        if (!isGameOver()) {
+            return null;
+        }
+        if (this.machinePlayerBoard.areAllShipsSunk()) {
+            return this.humanPlayer;
+        }
+        if (this.humanPlayerBoard.areAllShipsSunk()) {
+            return this.machinePlayer;
+        }
+        return null; // En caso de empate o estado inesperado.
     }
     /**
      * Obtiene el jugador cuyo turno es actualmente.
-     * @return El PlayerType del jugador actual.
+     * @return El Player del jugador actual.
      */
     @Override
     public Player getCurrentTurnPlayer() {
-        return null;
+        return this.currentPlayer;
     }
 
     /**
-     * Guarda el estado actual del juego (tableros, turno, etc.) para poder reanudarlo.
-     * Incluye la serialización del tablero y la información del jugador en archivos planos.
+     * Cambia el turno al siguiente jugador.
      */
     @Override
-    public void saveGame() {
-
+    public void switchTurn() {
+        if (this.currentPlayer == this.humanPlayer) {
+            this.currentPlayer = this.machinePlayer;
+        } else {
+            this.currentPlayer = this.humanPlayer;
+        }
     }
 
-    /**
-     * Carga un estado de juego previamente guardado.
-     * @return true si se cargó un juego exitosamente, false si no hay juego guardado o hay un error.
-     */
-    @Override
-     public boolean loadGame() {
-         return false;
-     }
-
-    /**
-     * Verifica si existe un juego guardado que se pueda cargar.
-     * @return true si hay un juego guardado, false en caso contrario.
-     */
-    @Override
-    public boolean isSavedGameAvailable() {
-        return false;
-    }
-
-    /**
-     * Obtiene la lista de barcos que el jugador humano aún necesita colocar.
-     * @return Una lista de ShipType.
-     */
     @Override
     public List<ShipType> getPendingShipsToPlace() {
         return new ArrayList<>(this.pendingShipsToPlaceForHuman);
     }
 
-    /**
-     * Devuelve el nickname del jugador humano.
-     * @return El nickname.
-     */
+    // Métodos no implementados (guardar/cargar, contadores, etc.)
     @Override
-    public String getHumanPlayerNickname() {
-        return null;
-    }
-
-    /**
-     * Devuelve la cantidad de barcos hundidos por el jugador humano.
-     * @return Número de barcos de la máquina hundidos.
-     */
+    public void saveGame() {}
     @Override
-    public int getHumanPlayerSunkShipCount() {
-        return 0;
-    }
-
-    /**
-     * Devuelve la cantidad de barcos hundidos por la máquina.
-     * @return Número de barcos del humano hundidos.
-     */
+    public boolean loadGame() { return false; }
     @Override
-    public int getComputerPlayerSunkShipCount() {
-        return 0;
-    }
+    public boolean isSavedGameAvailable() { return false; }
+    @Override
+    public String getHumanPlayerNickname() { return null; }
+    @Override
+    public int getHumanPlayerSunkShipCount() { return 0; }
+    @Override
+    public int getComputerPlayerSunkShipCount() { return 0; }
 
     /**
      * Metodo que crea la cantidad de barcos que cada jugador debe poseer en su tablero.
@@ -389,8 +368,6 @@ public abstract class GameState implements IGameState {
                 ship.setOrientation(orientation);
 
                 try {
-                    // Usamos una versión simplificada de placeShip que no necesita
-                    // la lógica compleja de movimiento.
                     this.machinePlayerBoard.placeShip(ship, new Coordinate(col, row));
                     placedSuccessfully = true; // Si no lanza excepción, se colocó bien.
                 } catch (OutOfBoundsException | OverlapException e) {
@@ -402,12 +379,8 @@ public abstract class GameState implements IGameState {
 
             if (!placedSuccessfully) {
                 System.err.println("Error crítico: No se pudo colocar el barco de la máquina: " + ship.getShipType());
-                // En un juego real, aquí podríamos reiniciar el proceso o lanzar una excepción.
             }
         }
-        System.out.println("--- Flota de la Máquina Colocada ---");
-        System.out.println(this.machinePlayerBoard.toString());
-        System.out.println("----------------------------------");
     }
 
 }
