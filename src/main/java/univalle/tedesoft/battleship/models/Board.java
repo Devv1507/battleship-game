@@ -169,6 +169,32 @@ public class Board {
     public List<Ship> getShips() {
         return new ArrayList<>(ships); // Devuelve una copia para evitar modificaciones externas
     }
+
+
+    /**
+     * Encuentra y devuelve el barco que ocupa una coordenada específica.
+     * Esencial para saber qué barco colorear en la vista.
+     *
+     * @param row La fila a verificar.
+     * @param col La columna a verificar.
+     * @return El objeto Ship en esa coordenada, o null si no hay ninguno.
+     */
+    public Ship getShipAt(int row, int col) {
+        // Itera sobre todos los barcos en el tablero
+        for (Ship ship : this.ships) {
+            // Para cada barco, itera sobre sus coordenadas ocupadas
+            for (Coordinate coord : ship.getOccupiedCoordinates()) {
+                // Si la coordenada del barco coincide con la que buscamos...
+                if (coord.getY() == row && coord.getX() == col) {
+                    return ship;
+                }
+            }
+        }
+        // Si recorrimos todos los barcos y ninguno ocupa esa celda, devolvemos null.
+        return null;
+    }
+
+
     /**
      * Obtiene el tamaño del tablero.
      * @return El tamaño (número de filas/columnas).
