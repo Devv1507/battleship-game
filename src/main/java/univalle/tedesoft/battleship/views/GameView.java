@@ -65,7 +65,7 @@ public class GameView extends Stage {
                 ShipType.DESTROYER, Objects.requireNonNull(loadImage("destroyer.png"), "destroyer.png no encontrada"),
                 ShipType.FRIGATE, Objects.requireNonNull(loadImage("frigate.png"), "frigate.png no encontrada")
         );
-        IGameState gameState = new GameState() {};
+        IGameState gameState = new GameState();
         this.controller.setGameView(this);
         this.controller.setGameState(gameState);
 
@@ -117,8 +117,10 @@ public class GameView extends Stage {
 
     public void showShipPlacementPhase(Board playerPositionBoard, List<ShipType> shipsToPlace) {
         this.controller.shipPlacementPane.setVisible(true);
-        this.controller.finalizePlacementButton.setDisable(false);
+        // El botón solo se habilita si no quedan barcos por colocar.
+        this.controller.finalizePlacementButton.setDisable(!shipsToPlace.isEmpty());
         this.controller.machinePlayerBoardGrid.setDisable(true);
+        this.controller.humanPlayerBoardGrid.setDisable(false);
 
         this.controller.shipPlacementPane.getChildren().remove(1, this.controller.shipPlacementPane.getChildren().size());
 
@@ -126,23 +128,9 @@ public class GameView extends Stage {
             ImageView shipImageView = new ImageView(this.shipImages.get(type));
             shipImageView.setPreserveRatio(true);
             shipImageView.setFitWidth(150);
-
-            shipImageView.setOnMouseClicked(event -> {
-                this.controller.handleShipSelection(type);
-            });
+            shipImageView.setOnMouseClicked(event -> this.controller.handleShipSelection(type));
             this.controller.shipPlacementPane.getChildren().add(shipImageView);
         }
-    }
-
-    public void showFiringPhase(Board playerPositionBoard, Board machineTerritoryBoard) {
-        this.controller.shipPlacementPane.setVisible(false);
-        this.controller.finalizePlacementButton.setDisable(true);
-        this.controller.humanPlayerBoardGrid.setDisable(true);
-        this.controller.machinePlayerBoardGrid.setDisable(false);
-
-        displayMessage("¡Comienza la batalla! Haz clic en el tablero enemigo para disparar.", false);
-        drawBoard(this.controller.humanPlayerBoardGrid, playerPositionBoard, true);
-        drawBoard(this.controller.machinePlayerBoardGrid, machineTerritoryBoard, false);
     }
 
     /**
@@ -245,7 +233,6 @@ public class GameView extends Stage {
         this.controller.orientationControlPane.setVisible(show);
     }
 
-
     /**
      * Transiciona la UI a la fase de disparos.
      * Oculta los controles de colocación y habilita la interacción con el tablero enemigo.
@@ -255,8 +242,8 @@ public class GameView extends Stage {
         this.controller.shipPlacementPane.setVisible(false);
         this.controller.orientationControlPane.setVisible(false);
 
-        // Deshabilitar el botón de finalizar, ya se usó
-        this.controller.finalizePlacementButton.setDisable(true);
+        // Ocultar el botón de finalizar
+        this.controller.finalizePlacementButton.setVisible(false);
 
         // Habilitar el botón para ver el tablero del oponente
         this.controller.toggleOpponentBoardButton.setDisable(false);
@@ -288,6 +275,16 @@ public class GameView extends Stage {
             this.controller.horizontalButton.setStyle(baseStyle);
             this.controller.verticalButton.setStyle(activeStyle);
         }
+    }
+
+
+    /**
+     * Habilita o deshabilita la interacción con un tablero específico.
+     * @param gridPane El tablero (GridPane) a modificar.
+     * @param enabled  true para habilitar la interacción, false para deshabilitarla.
+     */
+    public void setBoardInteraction(GridPane gridPane, boolean enabled) {
+        gridPane.setDisable(!enabled);
     }
 
 
