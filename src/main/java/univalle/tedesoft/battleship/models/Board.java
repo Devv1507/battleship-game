@@ -1,7 +1,7 @@
 package univalle.tedesoft.battleship.models;
 
-import univalle.tedesoft.battleship.Exceptions.OutOfBoundsException;
-import univalle.tedesoft.battleship.Exceptions.OverlapException;
+import univalle.tedesoft.battleship.exceptions.OutOfBoundsException;
+import univalle.tedesoft.battleship.exceptions.OverlapException;
 import univalle.tedesoft.battleship.models.Enums.CellState;
 import univalle.tedesoft.battleship.models.Enums.Orientation;
 import univalle.tedesoft.battleship.models.Enums.ShotResult;

@@ -5,11 +5,10 @@ import univalle.tedesoft.battleship.models.Enums.Orientation;
 import univalle.tedesoft.battleship.models.Enums.ShipType;
 import univalle.tedesoft.battleship.models.Players.Player; // Necesitará ser definida
 import univalle.tedesoft.battleship.models.Enums.ShotResult; // Necesitará ser definida
-import univalle.tedesoft.battleship.Exceptions.InvalidShipPlacementException;
-import univalle.tedesoft.battleship.Exceptions.OverlapException;
-import univalle.tedesoft.battleship.Exceptions.OutOfBoundsException;
+import univalle.tedesoft.battleship.exceptions.InvalidShipPlacementException;
+import univalle.tedesoft.battleship.exceptions.OverlapException;
+import univalle.tedesoft.battleship.exceptions.OutOfBoundsException;
 import univalle.tedesoft.battleship.models.Board;
-import univalle.tedesoft.battleship.models.Ships.Ship;
 
 
 import java.util.List;

@@ -1,4 +1,4 @@
-package univalle.tedesoft.battleship.Exceptions;
+package univalle.tedesoft.battleship.exceptions;
 
 public class OutOfBoundsException extends RuntimeException {
     public OutOfBoundsException(String message) {

@@ -1,12 +1,11 @@
 package univalle.tedesoft.battleship.models.State;
 
-import univalle.tedesoft.battleship.Exceptions.InvalidShipPlacementException;
-import univalle.tedesoft.battleship.Exceptions.OutOfBoundsException;
-import univalle.tedesoft.battleship.Exceptions.OverlapException;
+import univalle.tedesoft.battleship.exceptions.InvalidShipPlacementException;
+import univalle.tedesoft.battleship.exceptions.OutOfBoundsException;
+import univalle.tedesoft.battleship.exceptions.OverlapException;
 import univalle.tedesoft.battleship.models.Board;
 import univalle.tedesoft.battleship.models.Coordinate;
 import univalle.tedesoft.battleship.models.Enums.*;
-import univalle.tedesoft.battleship.models.Players.HumanPlayer;
 import univalle.tedesoft.battleship.models.Players.MachinePlayer;
 import univalle.tedesoft.battleship.models.Players.Player;
 import univalle.tedesoft.battleship.models.Ships.*;
