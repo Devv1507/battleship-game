@@ -17,6 +17,7 @@ import univalle.tedesoft.battleship.models.Enums.CellState;
 import univalle.tedesoft.battleship.models.Enums.Orientation;
 import univalle.tedesoft.battleship.models.Enums.ShipType;
 import univalle.tedesoft.battleship.models.Players.HumanPlayer;
+import univalle.tedesoft.battleship.models.Ships.Ship;
 import univalle.tedesoft.battleship.models.State.GameState;
 import univalle.tedesoft.battleship.models.State.IGameState;
 
@@ -144,15 +145,34 @@ public class GameView extends Stage {
         drawBoard(this.controller.machinePlayerBoardGrid, machineTerritoryBoard, false);
     }
 
+    /**
+     * Dibuja el estado completo de un tablero.
+     * En esta versión, se ha modificado para dibujar los segmentos de los barcos
+     * con colores específicos según su tipo.
+     *
+     * @param gridPane  El GridPane de fondo sobre el cual dibujar.
+     * @param board     El objeto Board del modelo que contiene el estado a dibujar.
+     * @param showShips Un booleano que indica si los barcos deben ser visibles.
+     */
     public void drawBoard(GridPane gridPane, Board board, boolean showShips) {
+        // Limpiar el tablero antes de redibujar para evitar artefactos visuales.
+        for (int row = 0; row < board.getSize(); row++) {
+            for (int col = 0; col < board.getSize(); col++) {
+                Pane cellPane = this.getCellPane(gridPane, row, col);
+                if (cellPane != null) {
+                    cellPane.getChildren().clear();
+                }
+            }
+        }
+
+        // Iterar sobre cada celda del modelo para dibujar su estado.
         for (int row = 0; row < board.getSize(); row++) {
             for (int col = 0; col < board.getSize(); col++) {
                 CellState state = board.getCellState(row, col);
                 Pane cellPane = this.getCellPane(gridPane, row, col);
                 if (cellPane == null) continue;
 
-                cellPane.getChildren().clear();
-
+                // Crear el marcador visual (un rectángulo)
                 Rectangle marker = new Rectangle(CELL_SIZE - 2, CELL_SIZE - 2);
                 marker.setArcWidth(10);
                 marker.setArcHeight(10);
@@ -160,8 +180,30 @@ public class GameView extends Stage {
                 switch (state) {
                     case SHIP:
                         if (showShips) {
-                            marker.setFill(Color.DIMGRAY);
-                            cellPane.getChildren().add(marker);
+                            // --- LÓGICA DE COLORACIÓN ---
+                            // Si la celda contiene un barco, encontrar qué barco es para saber su color.
+                            Ship occupyingShip = board.getShipAt(row, col);
+                            if (occupyingShip != null) {
+                                // Asignar color basado en el tipo de barco.
+                                switch (occupyingShip.getShipType()) {
+                                    case AIR_CRAFT_CARRIER:
+                                        marker.setFill(Color.ORANGE);
+                                        break;
+                                    case SUBMARINE:
+                                        marker.setFill(Color.GREEN);
+                                        break;
+                                    case DESTROYER:
+                                        marker.setFill(Color.ROYALBLUE);
+                                        break;
+                                    case FRIGATE:
+                                        marker.setFill(Color.CRIMSON);
+                                        break;
+                                    default:
+                                        marker.setFill(Color.DIMGRAY);
+                                        break;
+                                }
+                                cellPane.getChildren().add(marker);
+                            }
                         }
                         break;
                     case HIT_SHIP:
@@ -169,12 +211,16 @@ public class GameView extends Stage {
                         cellPane.getChildren().add(marker);
                         break;
                     case SHOT_LOST_IN_WATER:
-                        marker.setFill(Color.ROYALBLUE);
+                        marker.setFill(Color.LIGHTSKYBLUE);
                         cellPane.getChildren().add(marker);
                         break;
                     case SUNK_SHIP_PART:
                         marker.setFill(Color.DARKRED);
                         cellPane.getChildren().add(marker);
+                        break;
+                    case EMPTY:
+                    default:
+                        // No se dibuja nada en las celdas vacías.
                         break;
                 }
             }
