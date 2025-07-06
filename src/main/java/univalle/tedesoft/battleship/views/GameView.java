@@ -14,6 +14,7 @@ import univalle.tedesoft.battleship.Main;
 import univalle.tedesoft.battleship.controllers.GameController;
 import univalle.tedesoft.battleship.models.Board;
 import univalle.tedesoft.battleship.models.Enums.CellState;
+import univalle.tedesoft.battleship.models.Enums.Orientation;
 import univalle.tedesoft.battleship.models.Enums.ShipType;
 import univalle.tedesoft.battleship.models.Players.HumanPlayer;
 import univalle.tedesoft.battleship.models.State.GameState;
@@ -186,6 +187,34 @@ public class GameView extends Stage {
             this.controller.messageLabel.setStyle("-fx-text-fill: red;");
         } else {
             this.controller.messageLabel.setStyle("-fx-text-fill: black;");
+        }
+    }
+
+
+    /**
+     * Muestra u oculta el panel de control de orientación.
+     * @param show True para mostrar, false para ocultar.
+     */
+    public void showOrientationControls(boolean show) {
+        this.controller.orientationControlPane.setVisible(show);
+    }
+
+    /**
+     * Actualiza el estilo de los botones de orientación para resaltar el que está activo.
+     * @param activeOrientation La orientación actualmente seleccionada.
+     */
+    public void updateOrientationButtons(Orientation activeOrientation) {
+        // Estilo base para los botones
+        String baseStyle = "-fx-background-color: lightgray; -fx-border-color: gray;";
+        // Estilo para el botón activo
+        String activeStyle = "-fx-background-color: lightblue; -fx-border-color: darkblue; -fx-font-weight: bold;";
+
+        if (activeOrientation == Orientation.HORIZONTAL) {
+            this.controller.horizontalButton.setStyle(activeStyle);
+            this.controller.verticalButton.setStyle(baseStyle);
+        } else {
+            this.controller.horizontalButton.setStyle(baseStyle);
+            this.controller.verticalButton.setStyle(activeStyle);
         }
     }
 
