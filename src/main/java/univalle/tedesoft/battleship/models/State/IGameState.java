@@ -9,6 +9,7 @@ import univalle.tedesoft.battleship.exceptions.InvalidShipPlacementException;
 import univalle.tedesoft.battleship.exceptions.OverlapException;
 import univalle.tedesoft.battleship.exceptions.OutOfBoundsException;
 import univalle.tedesoft.battleship.models.Board;
+import univalle.tedesoft.battleship.models.ShotOutcome;
 
 
 import java.util.List;
@@ -51,18 +52,17 @@ public interface IGameState {
 
     /**
      * Procesa un disparo realizado por el jugador humano en el tablero principal (de la máquina).
-     * @param coordinate Coordenada entre la fila (0-9) y la columna (0-9), donde se realiza un disparo.
      * @return Un objeto ShotResult que indica las coordenadas del disparo y su resultado (AGUA, TOCADO, HUNDIDO).
      * @throws OutOfBoundsException si el disparo es fuera del tablero.
      */
-    ShotResult handleHumanPlayerShot(Coordinate coordinate) throws OutOfBoundsException;
+    ShotOutcome handleHumanPlayerShot(int row, int col) throws OutOfBoundsException, OverlapException;
 
     /**
      * Ejecuta el turno de la máquina. La máquina elige una casilla para disparar
      * en el tablero del jugador humano.
      * @return Un objeto ShotResult que indica las coordenadas del disparo y su resultado.
      */
-    ShotResult handleComputerPlayerTurn();
+    ShotOutcome handleMachinePlayerTurn();
 
     /**
      * Obtiene el tablero de posición del jugador humano.
@@ -145,4 +145,10 @@ public interface IGameState {
      * @return Número de barcos del humano hundidos.
      */
     int getComputerPlayerSunkShipCount();
+
+    /**
+     * Cambia el turno al siguiente jugador.
+     */
+    void switchTurn();
+
 }
