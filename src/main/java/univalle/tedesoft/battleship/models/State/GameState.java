@@ -158,11 +158,15 @@ public abstract class GameState implements IGameState {
      */
     @Override
     public void finalizeShipPlacement() {
-        if(pendingShipsToPlaceForHuman.isEmpty()) {
-            currentPhase = GamePhase.FIRING;
-        } else {
-            currentPhase = GamePhase.PLACEMENT;
+        if (!this.pendingShipsToPlaceForHuman.isEmpty()) {
+            // No se puede finalizar si aún faltan barcos por colocar.
+            return;
         }
+
+        // Si la colocación del jugador está completa, la máquina coloca su flota.
+        this.placeMachinePlayerShips();
+
+        this.currentPhase = GamePhase.FIRING;
     }
 
     /**
@@ -368,34 +372,42 @@ public abstract class GameState implements IGameState {
      * Metodo que crea y asigna en su sitio los barcos del jugador maquina.
      */
     private void placeMachinePlayerShips() {
-        List<Ship> machineFleet = createFleet();
+        this.machinePlayerBoard.resetBoard(); // Asegurarse que el tablero esté limpio
+        List<Ship> machineFleet = this.createFleet();
         Random random = new Random();
+
         for (Ship ship : machineFleet) {
             boolean placedSuccessfully = false;
             int attempts = 0;
-            final int MAX_PLACEMENT_ATTEMPTS_PER_SHIP = 100;
-            while (!placedSuccessfully && attempts < MAX_PLACEMENT_ATTEMPTS_PER_SHIP) {
+            final int MAX_PLACEMENT_ATTEMPTS = 100; // Para evitar bucles infinitos
+
+            while (!placedSuccessfully && attempts < MAX_PLACEMENT_ATTEMPTS) {
                 int row = random.nextInt(this.machinePlayerBoard.getSize());
                 int col = random.nextInt(this.machinePlayerBoard.getSize());
-                Coordinate startCoordinate = new Coordinate(col, row);
                 Orientation orientation = random.nextBoolean() ? Orientation.HORIZONTAL : Orientation.VERTICAL;
+
                 ship.setOrientation(orientation);
+
                 try {
-                    if (this.machinePlayerBoard.placeShip(ship, startCoordinate)) {
-                        placedSuccessfully = true;
-                    }
-                } catch (OutOfBoundsException e) {
+                    // Usamos una versión simplificada de placeShip que no necesita
+                    // la lógica compleja de movimiento.
+                    this.machinePlayerBoard.placeShip(ship, new Coordinate(col, row));
+                    placedSuccessfully = true; // Si no lanza excepción, se colocó bien.
+                } catch (OutOfBoundsException | OverlapException e) {
+                    // Si falla, simplemente lo intentamos de nuevo en otra posición.
                     placedSuccessfully = false;
                 }
                 attempts++;
             }
-            if (!placedSuccessfully) {
-                System.err.println("Error crítico: No se pudo colocar el barco de la máquina: " +
-                        ship.getShipType() + " después de " + MAX_PLACEMENT_ATTEMPTS_PER_SHIP + " intentos.");
-            }
-            
-        }
 
+            if (!placedSuccessfully) {
+                System.err.println("Error crítico: No se pudo colocar el barco de la máquina: " + ship.getShipType());
+                // En un juego real, aquí podríamos reiniciar el proceso o lanzar una excepción.
+            }
+        }
+        System.out.println("--- Flota de la Máquina Colocada ---");
+        System.out.println(this.machinePlayerBoard.toString());
+        System.out.println("----------------------------------");
     }
 
 }
