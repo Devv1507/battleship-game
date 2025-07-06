@@ -38,7 +38,9 @@ public abstract class Ship {
         this.sunk = false;
         this.valueShip = valueShip;
         this.occupiedCoordinates = new ArrayList<>();
+        this.hitCount = 0;
     }
+
     /**
      * Metodo que retorna el tipo de barco.
      * @return tipo de embarcacion.
@@ -46,6 +48,7 @@ public abstract class Ship {
     public ShipType getShipType() {
         return shipType;
     }
+
     /**
      * Metodo que retorna la orientacion del barco.
      * @return orientacion de la embarcacion.
@@ -53,6 +56,7 @@ public abstract class Ship {
     public Orientation getOrientation() {
         return orientation;
     }
+
     /**
      * Metodo que retorna las casillas ocupadas por la embarcacion.
      * @return arreglo con las casillas que ocupa la embarcacion.
@@ -60,6 +64,7 @@ public abstract class Ship {
     public List<Coordinate> getOccupiedCoordinates() {
         return occupiedCoordinates;
     }
+
     /**
      * Metodo que retorna la cantidad de veces que la embarcacion ha recibido un ataque.
      * @return cantidad de ataques recibidos almacenados en hitCount.
@@ -67,19 +72,24 @@ public abstract class Ship {
     public int getHitCount() {
         return hitCount;
     }
+
     /**
      * Metodo que retorna el booleano, que indica si el barco se ha hundido.
+     * Un barco está hundido si el número de impactos es igual a su tamaño.
      * @return un booleano que por defecto es falso, pero si se da el caso se declara como true al ser atacadas todas sus coordenadas.
      */
     public boolean isSunk() {
-        return sunk;
+        // Un barco está hundido si la cantidad de impactos es igual a su tamaño
+        return this.hitCount >= this.valueShip;
     }
+
     /**
      * Metodo que cambia es valor del booleano sunk a true.
      */
     public void sunkTheShip() {
-       sunk= true;
+       this.sunk = true;
     }
+
     /**
      * Metodo que retorna la cantidad de coordenadas que ocupa la embarcacion(puede que se borre, no le veo uso).
      * @return Cantidad de casillas que ocupa la embarcacion.
@@ -87,16 +97,29 @@ public abstract class Ship {
     public int getValueShip() {
         return valueShip;
     }
+
     /**
      * Metodo que edita el arreglo de coordenadas ocupadas por el barco.
      */
     public void addCoordinates(Coordinate occupiedCoordinate) {
         occupiedCoordinates.add(occupiedCoordinate);
     }
+
     /**
      * Metodo que permite editar la orientacion del barco.
      */
     public void setOrientation(Orientation orientation) {
         this.orientation = orientation;
+    }
+
+
+    /**
+     * Registra un impacto en el barco. Incrementa el contador de impactos.
+     */
+    public void registerHit() {
+        this.hitCount++;
+        if (this.isSunk()) {
+            this.sunkTheShip();
+        }
     }
 }
