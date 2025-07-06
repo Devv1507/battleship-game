@@ -199,6 +199,32 @@ public class GameView extends Stage {
         this.controller.orientationControlPane.setVisible(show);
     }
 
+
+    /**
+     * Transiciona la UI a la fase de disparos.
+     * Oculta los controles de colocación y habilita la interacción con el tablero enemigo.
+     */
+    public void showFiringPhase() {
+        // Ocultar panel de colocación y botones de orientación
+        this.controller.shipPlacementPane.setVisible(false);
+        this.controller.orientationControlPane.setVisible(false);
+
+        // Deshabilitar el botón de finalizar, ya se usó
+        this.controller.finalizePlacementButton.setDisable(true);
+
+        // Habilitar el botón para ver el tablero del oponente
+        this.controller.toggleOpponentBoardButton.setDisable(false);
+
+        // Deshabilitar clics en el tablero propio y habilitarlos en el del enemigo
+        this.controller.humanPlayerBoardGrid.setDisable(true);
+        this.controller.machinePlayerBoardGrid.setDisable(false);
+
+        this.displayMessage("¡Comienza la batalla! Haz clic en el tablero enemigo para disparar.", false);
+
+        // Dibujar el tablero enemigo vacío inicialmente (la vista normal)
+        this.drawBoard(this.controller.machinePlayerBoardGrid, this.controller.getGameState().getMachinePlayerTerritoryBoard(), false);
+    }
+
     /**
      * Actualiza el estilo de los botones de orientación para resaltar el que está activo.
      * @param activeOrientation La orientación actualmente seleccionada.
@@ -216,6 +242,15 @@ public class GameView extends Stage {
             this.controller.horizontalButton.setStyle(baseStyle);
             this.controller.verticalButton.setStyle(activeStyle);
         }
+    }
+
+
+    /**
+     * Actualiza el texto del botón para ver/ocultar el tablero del oponente.
+     * @param text El nuevo texto para el botón.
+     */
+    public void updateToggleButtonText(String text) {
+        this.controller.toggleOpponentBoardButton.setText(text);
     }
 
     // ------------ Métodos auxiliares

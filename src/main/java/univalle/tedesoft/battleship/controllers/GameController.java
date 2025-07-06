@@ -34,6 +34,7 @@ public class GameController {
     // --- Estado interno del controlador ---
     private ShipType selectedShipToPlace;
     private Orientation chosenOrientation = Orientation.HORIZONTAL;
+    private boolean isOpponentBoardVisible = false;
 
     /**
      * Inicialización de JavaFX.
@@ -78,6 +79,16 @@ public class GameController {
     }
 
 
+    /**
+     * Devuelve la instancia actual del estado del juego.
+     * Permite a la vista acceder al modelo cuando sea necesario.
+     * @return la instancia de IGameState.
+     */
+    public IGameState getGameState() {
+        return this.gameState;
+    }
+
+
     // --------- Event handlers con FXML
 
     /**
@@ -88,16 +99,15 @@ public class GameController {
     @FXML
     void onFinalizePlacementClick(ActionEvent event) {
         if (this.gameState != null && this.gameView != null) {
-            // Verificar si aún quedan barcos por colocar
             if (!this.gameState.getPendingShipsToPlace().isEmpty()) {
                 this.gameView.displayMessage("Aún debes colocar todos tus barcos.", true);
                 return;
             }
+            // Notificar al modelo para que coloque los barcos de la máquina
             this.gameState.finalizeShipPlacement();
-            this.gameView.showFiringPhase(
-                    this.gameState.getHumanPlayerPositionBoard(),
-                    this.gameState.getMachinePlayerTerritoryBoard()
-            );
+
+            // Actualizar la vista para reflejar el cambio a la fase de disparos
+            this.gameView.showFiringPhase();
         }
     }
 
@@ -124,10 +134,35 @@ public class GameController {
         this.gameView.displayMessage("Orientación seleccionada: Vertical.", false);
     }
 
+    /**
+     * Maneja el clic en el botón para ver/ocultar el tablero del oponente.
+     */
     @FXML
     void onToggleOpponentBoardClick(ActionEvent event) {
-        // TODO:  Lógica para el botón de
+        if (this.gameState == null || this.gameView == null) return;
+
+        this.isOpponentBoardVisible = !this.isOpponentBoardVisible; // Invertir el estado
+
+        if (this.isOpponentBoardVisible) {
+            // Pedir a la vista que muestre el tablero real de la máquina
+            this.gameView.drawBoard(
+                    this.machinePlayerBoardGrid,
+                    this.gameState.getMachinePlayerActualPositionBoard(),
+                    true // true para mostrar los barcos
+            );
+            this.gameView.updateToggleButtonText("Ocultar Tablero Oponente");
+        } else {
+            // Pedir a la vista que muestre la vista normal del territorio enemigo (sin barcos visibles)
+            this.gameView.drawBoard(
+                    this.machinePlayerBoardGrid,
+                    this.gameState.getMachinePlayerTerritoryBoard(),
+                    false // false para ocultar los barcos
+            );
+            this.gameView.updateToggleButtonText("Ver Tablero Oponente (Profesor)");
+        }
     }
+
+
 
     // ------------ Métodos auxiliares
     /**
