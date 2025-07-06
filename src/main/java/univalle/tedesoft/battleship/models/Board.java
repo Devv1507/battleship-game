@@ -95,31 +95,51 @@ public class Board {
 
     /**
      * Procesa un disparo en una coordenada específica del tablero.
-     * Actualiza el estado de la celda y del barco (si lo hay).
      * @param targetCoordinate La coordenada donde se realiza el disparo.
-     * @return El resultado del disparo (WATER, TOUCHED, SUNKEN, ALREADY_HIT).
+     * @return Un objeto ShotOutcome con todos los detalles del resultado.
      * @throws OutOfBoundsException si la coordenada está fuera del tablero.
+     * @throws OverlapException si se intenta disparar a una celda ya atacada.
      */
-    public ShotResult receiveShot(Coordinate targetCoordinate) throws OutOfBoundsException {
-        if (!isValidCoordinate(targetCoordinate)) {
-            throw new OutOfBoundsException("El coordinate debe ser entre 0 y 10");
+    public ShotOutcome receiveShot(Coordinate targetCoordinate) throws OutOfBoundsException, OverlapException {
+        if (!isValidCoordinate(targetCoordinate.getY(), targetCoordinate.getX())) {
+            throw new OutOfBoundsException("Coordenada fuera de los límites del tablero.");
         }
-        if (grid[targetCoordinate.getY()][targetCoordinate.getX()] == CellState.EMPTY) {
-            grid[targetCoordinate.getY()][targetCoordinate.getX()] = CellState.SHOT_LOST_IN_WATER;
-            return ShotResult.WATER;
-        } else if (grid[targetCoordinate.getY()][targetCoordinate.getX()] == CellState.SHIP) {
-            grid[targetCoordinate.getY()][targetCoordinate.getX()] = CellState.HIT_SHIP;
-            return ShotResult.TOUCHED;
+
+        int row = targetCoordinate.getY();
+        int col = targetCoordinate.getX();
+        CellState currentState = this.grid[row][col];
+
+        switch (currentState) {
+            case EMPTY:
+                this.grid[row][col] = CellState.SHOT_LOST_IN_WATER;
+                return new ShotOutcome(targetCoordinate, ShotResult.WATER);
+            case SHIP:
+                Ship hitShip = this.getShipAt(row, col);
+                if (hitShip != null) {
+                    hitShip.registerHit();
+                    if (hitShip.isSunk()) {
+                        for (Coordinate coord : hitShip.getOccupiedCoordinates()) {
+                            this.grid[coord.getY()][coord.getX()] = CellState.SUNK_SHIP_PART;
+                        }
+                        return new ShotOutcome(targetCoordinate, ShotResult.SUNKEN, hitShip);
+                    } else {
+                        this.grid[row][col] = CellState.HIT_SHIP;
+                        return new ShotOutcome(targetCoordinate, ShotResult.TOUCHED);
+                    }
+                }
+                this.grid[row][col] = CellState.HIT_SHIP;
+                return new ShotOutcome(targetCoordinate, ShotResult.TOUCHED);
+
+            case HIT_SHIP:
+            case SHOT_LOST_IN_WATER:
+            case SUNK_SHIP_PART:
+                throw new OverlapException("Ya has disparado en la casilla " + targetCoordinate.toAlgebraicNotation() + ".");
+
+            default:
+                throw new IllegalStateException("Estado de celda desconocido: " + currentState);
         }
-        /*
-        else if (grid[targetCoordinate.getY()][targetCoordinate.getX()] == CellState.SHOT_LOST_IN_WATER) {
-            return ShotResult.ALREADY_HIT;
-        } else if (grid[targetCoordinate.getY()][targetCoordinate.getX()] == CellState.HIT_SHIP) {
-            return ShotResult.ALREADY_HIT;
-        }
-        */
-        return ShotResult.ALREADY_HIT;
     }
+
     /**
      * Obtiene el estado de una celda específica.
      * @param row La fila de la celda.
