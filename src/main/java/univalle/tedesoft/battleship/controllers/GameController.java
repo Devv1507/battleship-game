@@ -6,9 +6,15 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.VBox;
+import univalle.tedesoft.battleship.exceptions.OutOfBoundsException;
+import univalle.tedesoft.battleship.exceptions.OverlapException;
 import univalle.tedesoft.battleship.models.Enums.Orientation;
 import univalle.tedesoft.battleship.models.Enums.ShipType;
+import univalle.tedesoft.battleship.models.Players.HumanPlayer;
+import univalle.tedesoft.battleship.models.Players.Player;
+import univalle.tedesoft.battleship.models.ShotOutcome;
 import univalle.tedesoft.battleship.models.State.IGameState;
+import univalle.tedesoft.battleship.threads.MachineTurnRunnable;
 import univalle.tedesoft.battleship.views.GameView;
 
 public class GameController {
@@ -28,21 +34,26 @@ public class GameController {
     private IGameState gameState;
     private GameView gameView;
 
+    private Thread machineTurnThread;
+
     // --- Estado interno del controlador ---
     private ShipType selectedShipToPlace;
     private Orientation chosenOrientation = Orientation.HORIZONTAL;
     private boolean isOpponentBoardVisible = false;
+    private static final long MACHINE_TURN_THINK_DELAY_MS = 1500;
 
     /**
      * Inicialización de JavaFX.
      * Se llama automáticamente después de que los campos @FXML han sido inyectados.
      */
     @FXML
-    public void initialize() {}
+    public void initialize() {
+    }
 
     /**
      * Inicializa la UI a través de la GameView. Se llama desde la vista
      * una vez que todo está conectado.
+     *
      * @param gameView La instancia de la vista que hará el trabajo.
      */
     public void initializeUI(GameView gameView) {
@@ -55,6 +66,7 @@ public class GameController {
     /**
      * Establece la referencia a la GameView y arranca la configuración inicial de la UI.
      * Es el puente que une al controlador con su vista.
+     *
      * @param gameView La instancia de GameView que maneja la ventana.
      */
     public void setGameView(GameView gameView) {
@@ -69,6 +81,7 @@ public class GameController {
 
     /**
      * Establece la referencia al modelo del juego.
+     *
      * @param gameState La instancia del estado del juego.
      */
     public void setGameState(IGameState gameState) {
@@ -79,6 +92,7 @@ public class GameController {
     /**
      * Devuelve la instancia actual del estado del juego.
      * Permite a la vista acceder al modelo cuando sea necesario.
+     *
      * @return la instancia de IGameState.
      */
     public IGameState getGameState() {
@@ -91,6 +105,7 @@ public class GameController {
     /**
      * Se activa cuando el jugador hace clic en el botón "Finalizar Colocación".
      * Notifica al modelo y actualiza la vista para pasar a la fase de disparos.
+     *
      * @param event El evento de la acción.
      */
     @FXML
@@ -111,6 +126,7 @@ public class GameController {
 
     /**
      * Se activa cuando el jugador hace clic en el botón "Horizontal".
+     *
      * @param event El evento de la acción.
      */
     @FXML
@@ -122,6 +138,7 @@ public class GameController {
 
     /**
      * Se activa cuando el jugador hace clic en el botón "Vertical".
+     *
      * @param event El evento de la acción.
      */
     @FXML
@@ -159,12 +176,100 @@ public class GameController {
         }
     }
 
+    // ------------ Métodos con lógica central del juego
+
+
+    private void scheduleMachineTurn() {
+        if (this.gameState.isGameOver()) return;
+
+        this.gameView.displayMessage("Turno de la máquina. Pensando...", false);
+        this.gameView.setBoardInteraction(this.machinePlayerBoardGrid, false);
+
+        if (this.machineTurnThread != null && this.machineTurnThread.isAlive()) {
+            this.machineTurnThread.interrupt();
+        }
+
+        MachineTurnRunnable machineRunnable = new MachineTurnRunnable(this, MACHINE_TURN_THINK_DELAY_MS);
+        this.machineTurnThread = new Thread(machineRunnable);
+        this.machineTurnThread.setDaemon(true);
+        this.machineTurnThread.start();
+    }
+
+    public void executeMachineTurnLogic() {
+        if (this.gameState.isGameOver()) return;
+
+        ShotOutcome outcome = this.gameState.handleMachinePlayerTurn();
+
+        String message = this.buildShotMessage("Máquina disparó a " + outcome.getCoordinate().toAlgebraicNotation(), outcome);
+        this.gameView.displayMessage(message, false);
+
+        this.gameView.drawBoard(this.humanPlayerBoardGrid, this.gameState.getHumanPlayerPositionBoard(), true);
+
+        if (this.checkAndHandleGameOver()) {
+            return;
+        }
+
+        this.gameState.switchTurn();
+        this.gameView.displayMessage("¡Es tu turno!", false);
+        this.gameView.setBoardInteraction(this.machinePlayerBoardGrid, true);
+    }
+
+    private boolean checkAndHandleGameOver() {
+        if (this.gameState.isGameOver()) {
+            Player winner = this.gameState.getWinner();
+            this.gameView.displayMessage("¡Juego Terminado! El ganador es: " + winner.getName(), false);
+            this.gameView.setBoardInteraction(this.humanPlayerBoardGrid, false);
+            this.gameView.setBoardInteraction(this.machinePlayerBoardGrid, false);
+            return true;
+        }
+        return false;
+    }
+
+
+    /**
+     * Maneja el clic en una celda del tablero principal (territorio enemigo).
+     * Se usa durante la fase de disparos.
+     *
+     * @param row La fila de la celda clickeada.
+     * @param col La columna de la celda clickeada.
+     */
+    public void handleFiringCellClick(int row, int col) {
+        if (this.gameState.isGameOver() || !(this.gameState.getCurrentTurnPlayer() instanceof HumanPlayer)) {
+            this.gameView.displayMessage("Espera tu turno.", true);
+            return;
+        }
+
+        try {
+            ShotOutcome outcome = this.gameState.handleHumanPlayerShot(row, col);
+
+            String message = this.buildShotMessage("Disparo a " + outcome.getCoordinate().toAlgebraicNotation(), outcome);
+            this.gameView.displayMessage(message, false);
+
+            this.gameView.drawBoard(this.machinePlayerBoardGrid, this.gameState.getMachinePlayerTerritoryBoard(), false);
+
+            if (this.checkAndHandleGameOver()) {
+                return;
+            }
+
+            this.gameState.switchTurn();
+            this.scheduleMachineTurn();
+
+        } catch (OverlapException e) {
+            // El jugador disparó a una casilla repetida. Mostramos el error y le permitimos disparar de nuevo.
+            this.gameView.displayMessage(e.getMessage() + " Por favor, selecciona otra casilla.", true);
+            // IMPORTANTE: No cambiamos de turno.
+        } catch (OutOfBoundsException e) {
+            this.gameView.displayMessage("Error: " + e.getMessage(), true);
+        }
+    }
 
 
     // ------------ Métodos auxiliares
+
     /**
      * Maneja el clic en una celda del tablero de posición del jugador humano.
      * Se usa durante la fase de colocación de barcos.
+     *
      * @param row La fila de la celda clickeada.
      * @param col La columna de la celda clickeada.
      */
@@ -197,17 +302,8 @@ public class GameController {
     }
 
     /**
-     * Maneja el clic en una celda del tablero principal (territorio enemigo).
-     * Se usa durante la fase de disparos.
-     * @param row La fila de la celda clickeada.
-     * @param col La columna de la celda clickeada.
-     */
-    public void handleFiringCellClick(int row, int col) {
-        // Lógica de disparo
-    }
-
-    /**
      * Registra el tipo de barco que el jugador ha seleccionado del panel de colocación.
+     *
      * @param shipType El tipo de barco seleccionado.
      */
     public void handleShipSelection(ShipType shipType) {
@@ -215,5 +311,23 @@ public class GameController {
         this.gameView.showOrientationControls(true); // Mostrar controles
         this.gameView.updateOrientationButtons(this.chosenOrientation); // Resaltar el botón actual
         this.gameView.displayMessage("Seleccionado: " + shipType + ". Haz clic en tu tablero para colocarlo.", false);
+    }
+
+    /**
+     * Construye un mensaje detallado basado en el resultado de un disparo.
+     * @param baseMessage El inicio del mensaje (ej. "Disparo a A1").
+     * @param outcome El resultado del disparo.
+     * @return El mensaje completo y formateado.
+     */
+    private String buildShotMessage(String baseMessage, ShotOutcome outcome) {
+        String message = switch (outcome.getResult()) {
+            case WATER -> baseMessage + ", ¡Falla!";
+            case TOUCHED -> baseMessage + ", ¡Acierto!";
+            case SUNKEN -> baseMessage + ", ¡Acierto! Hundiste un " + outcome.getSunkenShip().getShipType() + " del enemigo.";
+            case ALREADY_HIT -> baseMessage + ", ¡disparo repetido!";
+        };
+        // Impresión en consola para depuración
+        System.out.println("Mensaje generado: " + message);
+        return message;
     }
 }
