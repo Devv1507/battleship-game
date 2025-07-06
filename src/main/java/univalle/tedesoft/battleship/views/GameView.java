@@ -1,14 +1,18 @@
 package univalle.tedesoft.battleship.views;
 
+
+import javafx.application.Platform;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
 import javafx.scene.Scene;
+import javafx.scene.control.Label;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
+import javafx.scene.text.Font;
 import javafx.stage.Stage;
 import univalle.tedesoft.battleship.Main;
 import univalle.tedesoft.battleship.controllers.GameController;
@@ -41,6 +45,7 @@ public class GameView extends Stage {
     private final Map<ShipType, Image> shipImages;
     /** Prefijo de la ruta donde se encuentran las imágenes de las cartas. */
     private static final String IMAGE_PATH_PREFIX = "/univalle/tedesoft/battleship/images/";
+    private static final int MAX_MESSAGES = 2; // Mostrar los últimos 2 mensajes
 
 
     /**
@@ -215,13 +220,51 @@ public class GameView extends Stage {
         }
     }
 
+    /**
+     * Muestra un mensaje en el contenedor de mensajes de la UI.
+     * Añade el nuevo mensaje en la parte superior y gestiona el historial.
+     * @param message El texto del mensaje a mostrar.
+     * @param isError Si el mensaje es un error (se mostrará en rojo).
+     */
     public void displayMessage(String message, boolean isError) {
-        this.controller.messageLabel.setText(message);
-        if (isError) {
-            this.controller.messageLabel.setStyle("-fx-text-fill: red;");
-        } else {
-            this.controller.messageLabel.setStyle("-fx-text-fill: black;");
-        }
+        Platform.runLater(() -> {
+            if (controller.messageContainer == null) {
+                return;
+            }
+
+            // Crear una nueva etiqueta para el mensaje
+            Label newLabel = new Label(message);
+            newLabel.setFont(new Font("Arial", 16.0));
+            newLabel.setWrapText(true);
+
+            // Añadir el nuevo mensaje al principio del VBox
+            controller.messageContainer.getChildren().add(0, newLabel);
+
+            // Limitar el número de mensajes visibles
+            if (controller.messageContainer.getChildren().size() > MAX_MESSAGES) {
+                controller.messageContainer.getChildren().remove(MAX_MESSAGES);
+            }
+
+            // Aplicar estilos a todos los mensajes en el contenedor
+            for (int i = 0; i < controller.messageContainer.getChildren().size(); i++) {
+                Node node = controller.messageContainer.getChildren().get(i);
+                if (node instanceof Label label) {
+                    // El mensaje más reciente (i=0) tiene opacidad completa
+                    if (i == 0) {
+                        label.setOpacity(1.0);
+                        if (isError) {
+                            label.setStyle("-fx-text-fill: red; -fx-font-weight: bold;");
+                        } else {
+                            label.setStyle("-fx-text-fill: black; -fx-font-weight: normal;");
+                        }
+                    } else {
+                        // Los mensajes más antiguos se desvanecen
+                        label.setOpacity(0.6); // Opacidad para el mensaje anterior
+                        label.setStyle("-fx-text-fill: dimgray; -fx-font-weight: normal;");
+                    }
+                }
+            }
+        });
     }
 
 

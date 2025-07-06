@@ -3,7 +3,6 @@ package univalle.tedesoft.battleship.controllers;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
-import javafx.scene.control.Label;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.VBox;
 import univalle.tedesoft.battleship.exceptions.OutOfBoundsException;
@@ -23,7 +22,7 @@ public class GameController {
     @FXML public Button finalizePlacementButton;
     @FXML public GridPane humanPlayerBoardGrid;
     @FXML public GridPane machinePlayerBoardGrid;
-    @FXML public Label messageLabel;
+    @FXML public VBox messageContainer;
     @FXML public VBox shipPlacementPane;
     @FXML public Button toggleOpponentBoardButton;
     @FXML public VBox orientationControlPane; // Contenedor de los botones
@@ -57,6 +56,10 @@ public class GameController {
      * @param gameView La instancia de la vista que hará el trabajo.
      */
     public void initializeUI(GameView gameView) {
+        // Limpiar el contenedor de mensajes al inicio
+        if (this.messageContainer != null) {
+            this.messageContainer.getChildren().clear();
+        }
         // El controlador le pide a la vista que configure los listeners de los tableros.
         gameView.initializeUI(this);
     }
