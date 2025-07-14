@@ -339,6 +339,33 @@ public class GameView extends Stage {
         this.controller.toggleOpponentBoardButton.setText(text);
     }
 
+    /**
+     * Actualiza la UI después de cargar un juego guardado.
+     * Redibuja los tableros y actualiza el estado de la interfaz.
+     */
+    public void refreshUI() {
+        if (this.controller.getGameState() == null) {
+            return;
+        }
+
+        // Redibujar el tablero del jugador humano
+        this.drawBoard(
+            this.controller.humanPlayerBoardGrid,
+            this.controller.getGameState().getHumanPlayerPositionBoard(),
+            true
+        );
+
+        // Redibujar el tablero del territorio enemigo
+        this.drawBoard(
+            this.controller.machinePlayerBoardGrid,
+            this.controller.getGameState().getMachinePlayerTerritoryBoard(),
+            false
+        );
+
+        // Actualizar mensaje de estado
+        this.displayMessage("Juego cargado exitosamente. Estado restaurado.", false);
+    }
+
     // ------------ Métodos auxiliares
 
     /**
