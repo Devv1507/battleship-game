@@ -38,4 +38,4 @@ build/
 .DS_Store
 
 ### Save Files ###
-src/main/resources/saves/
+src/main/resources/univalle/tedesoft/battleship/saves/
