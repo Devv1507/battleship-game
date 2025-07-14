@@ -363,6 +363,36 @@ public class GameState implements IGameState {
     }
     
     /**
+     * Recalcula la lista de barcos pendientes basándose en los barcos ya colocados
+     * en el tablero del jugador humano.
+     */
+    private void recalculatePendingShips() {
+        // Crear una lista completa de todos los barcos que deberían estar en el tablero
+        List<ShipType> allShipTypes = createFleetShipTypes();
+        
+        // Obtener los tipos de barcos ya colocados en el tablero
+        List<ShipType> placedShipTypes = new ArrayList<>();
+        for (Ship ship : humanPlayerBoard.getShips()) {
+            placedShipTypes.add(ship.getShipType());
+        }
+        
+        // Limpiar la lista de pendientes y recalcular
+        pendingShipsToPlaceForHuman.clear();
+        
+        // Para cada tipo de barco en la flota completa
+        for (ShipType shipType : allShipTypes) {
+            // Si no está en la lista de barcos colocados, agregarlo a pendientes
+            if (!placedShipTypes.isEmpty() && placedShipTypes.contains(shipType)) {
+                placedShipTypes.remove(shipType); // Remover una ocurrencia
+            } else {
+                pendingShipsToPlaceForHuman.add(shipType);
+            }
+        }
+        
+        System.out.println("Barcos pendientes recalculados: " + pendingShipsToPlaceForHuman.size() + " barcos por colocar");
+    }
+    
+    /**
      * Cuenta los barcos hundidos en un tablero
      * @param board El tablero a revisar
      * @return El número de barcos hundidos
@@ -393,6 +423,8 @@ public class GameState implements IGameState {
         // Cargar el estado completo del juego incluyendo barcos y tableros
         boolean loaded = gameCaretaker.loadCompleteGame(this);
         if (loaded) {
+            // Recalcular los barcos pendientes basándose en los barcos ya colocados
+            recalculatePendingShips();
             System.out.println("Juego cargado exitosamente con estado completo");
             return true;
         }
