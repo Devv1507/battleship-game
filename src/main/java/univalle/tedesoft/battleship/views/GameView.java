@@ -20,6 +20,7 @@ import univalle.tedesoft.battleship.models.Board;
 import univalle.tedesoft.battleship.models.Enums.CellState;
 import univalle.tedesoft.battleship.models.Enums.Orientation;
 import univalle.tedesoft.battleship.models.Enums.ShipType;
+import univalle.tedesoft.battleship.models.Enums.GamePhase;
 import univalle.tedesoft.battleship.models.Players.HumanPlayer;
 import univalle.tedesoft.battleship.models.Ships.Ship;
 import univalle.tedesoft.battleship.models.State.GameState;
@@ -362,8 +363,37 @@ public class GameView extends Stage {
             false
         );
 
-        // Actualizar mensaje de estado
-        this.displayMessage("Juego cargado exitosamente. Estado restaurado.", false);
+        // Sincronizar la UI según la fase del juego
+        switch (this.controller.getGameState().getCurrentPhase()) {
+            case PLACEMENT:
+                // Mostrar solo los barcos que faltan por colocar
+                this.showShipPlacementPhase(
+                    this.controller.getGameState().getHumanPlayerPositionBoard(),
+                    this.controller.getGameState().getPendingShipsToPlace()
+                );
+                this.controller.finalizePlacementButton.setDisable(
+                    !this.controller.getGameState().getPendingShipsToPlace().isEmpty()
+                );
+                this.controller.shipPlacementPane.setVisible(true);
+                this.controller.finalizePlacementButton.setVisible(true);
+                this.controller.machinePlayerBoardGrid.setDisable(true);
+                this.controller.humanPlayerBoardGrid.setDisable(false);
+                break;
+            case FIRING:
+                // Saltar la parte de colocación y mostrar la fase de disparos
+                this.showFiringPhase();
+                break;
+            case GAME_OVER:
+                // Mostrar mensaje de fin de juego
+                this.displayMessage("¡La partida ha terminado!", false);
+                this.controller.shipPlacementPane.setVisible(false);
+                this.controller.finalizePlacementButton.setVisible(false);
+                this.controller.machinePlayerBoardGrid.setDisable(true);
+                this.controller.humanPlayerBoardGrid.setDisable(true);
+                break;
+            default:
+                break;
+        }
     }
 
     // ------------ Métodos auxiliares
