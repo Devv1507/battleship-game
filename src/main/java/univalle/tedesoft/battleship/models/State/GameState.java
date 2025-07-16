@@ -17,6 +17,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
+// Imports para el patrón Memento
+import univalle.tedesoft.battleship.models.State.GameCaretaker;
+import univalle.tedesoft.battleship.models.State.GameMemento;
+
 /**
  * Clase que representa la instancia del juego.
  * @author David Esteban Valencia
@@ -36,6 +40,9 @@ public class GameState implements IGameState {
     private GamePhase currentPhase;
     /**Cantidad de Barcos que el humano tiene a su disposicion para colocar en la tabla*/
     private List<ShipType> pendingShipsToPlaceForHuman;
+    
+    /**Caretaker para gestionar los mementos del juego*/
+    private GameCaretaker gameCaretaker;
 
     /** Constructor de la Clase*/
     public GameState() {
@@ -46,6 +53,8 @@ public class GameState implements IGameState {
         //Fase inicial del juego.
         this.currentPhase = GamePhase.INITIAL;
         this.pendingShipsToPlaceForHuman = new ArrayList<>();
+        //Inicializar el caretaker para el patrón Memento
+        this.gameCaretaker = new GameCaretaker();
     }
     /**
      * Inicia una nueva partida.
@@ -313,20 +322,133 @@ public class GameState implements IGameState {
     public List<ShipType> getPendingShipsToPlace() {
         return new ArrayList<>(this.pendingShipsToPlaceForHuman);
     }
+    
+    /**
+     * Obtiene la fase actual del juego
+     * @return La fase actual del juego
+     */
+    public GamePhase getCurrentPhase() {
+        return this.currentPhase;
+    }
 
     // Métodos no implementados (guardar/cargar, contadores, etc.)
+    /**
+     * Crea un memento con el estado actual del juego
+     * @return El memento creado
+     */
+    public GameMemento createMemento() {
+        String nickname = (humanPlayer != null) ? humanPlayer.getName() : "Unknown";
+        int humanSunkShips = countSunkShips(humanPlayerBoard);
+        int computerSunkShips = countSunkShips(machinePlayerBoard);
+        
+        return new GameMemento(nickname, humanSunkShips, computerSunkShips, currentPhase);
+    }
+    
+    /**
+     * Restaura el estado del juego desde un memento
+     * @param memento El memento a restaurar
+     */
+    public void restoreFromMemento(GameMemento memento) {
+        if (memento != null) {
+            // Restaurar el nickname del jugador
+            if (humanPlayer != null) {
+                humanPlayer.setName(memento.getHumanPlayerNickname());
+            }
+            
+            // Restaurar la fase del juego
+            this.currentPhase = memento.getCurrentPhase();
+            
+            System.out.println("Estado del juego restaurado desde memento: " + memento);
+        }
+    }
+    
+    /**
+     * Recalcula la lista de barcos pendientes basándose en los barcos ya colocados
+     * en el tablero del jugador humano.
+     */
+    private void recalculatePendingShips() {
+        // Crear una lista completa de todos los barcos que deberían estar en el tablero
+        List<ShipType> allShipTypes = createFleetShipTypes();
+        
+        // Obtener los tipos de barcos ya colocados en el tablero
+        List<ShipType> placedShipTypes = new ArrayList<>();
+        for (Ship ship : humanPlayerBoard.getShips()) {
+            placedShipTypes.add(ship.getShipType());
+        }
+        
+        // Limpiar la lista de pendientes y recalcular
+        pendingShipsToPlaceForHuman.clear();
+        
+        // Para cada tipo de barco en la flota completa
+        for (ShipType shipType : allShipTypes) {
+            // Si no está en la lista de barcos colocados, agregarlo a pendientes
+            if (!placedShipTypes.isEmpty() && placedShipTypes.contains(shipType)) {
+                placedShipTypes.remove(shipType); // Remover una ocurrencia
+            } else {
+                pendingShipsToPlaceForHuman.add(shipType);
+            }
+        }
+        
+        System.out.println("Barcos pendientes recalculados: " + pendingShipsToPlaceForHuman.size() + " barcos por colocar");
+    }
+    
+    /**
+     * Cuenta los barcos hundidos en un tablero
+     * @param board El tablero a revisar
+     * @return El número de barcos hundidos
+     */
+    private int countSunkShips(Board board) {
+        int sunkShips = 0;
+        List<Ship> ships = board.getShips();
+        for (Ship ship : ships) {
+            if (ship.isSunk()) {
+                sunkShips++;
+            }
+        }
+        return sunkShips;
+    }
+    
     @Override
-    public void saveGame() {}
+    public void saveGame() {
+        // Guardar el estado completo del juego incluyendo barcos y tableros
+        boolean saved = gameCaretaker.saveCompleteGame(this);
+        if (saved) {
+            System.out.println("Juego guardado exitosamente usando patrón Memento con serialización completa");
+        } else {
+            System.err.println("Error al guardar el juego");
+        }
+    }
     @Override
-    public boolean loadGame() { return false; }
+    public boolean loadGame() {
+        // Cargar el estado completo del juego incluyendo barcos y tableros
+        boolean loaded = gameCaretaker.loadCompleteGame(this);
+        if (loaded) {
+            // Recalcular los barcos pendientes basándose en los barcos ya colocados
+            recalculatePendingShips();
+            System.out.println("Juego cargado exitosamente con estado completo");
+            return true;
+        }
+        return false;
+    }
+
     @Override
-    public boolean isSavedGameAvailable() { return false; }
+    public boolean isSavedGameAvailable() {
+        return gameCaretaker.isSavedGameAvailable();
+    }
     @Override
-    public String getHumanPlayerNickname() { return null; }
+    public String getHumanPlayerNickname() {
+        return (humanPlayer != null) ? humanPlayer.getName() : null;
+    }
+    
     @Override
-    public int getHumanPlayerSunkShipCount() { return 0; }
+    public int getHumanPlayerSunkShipCount() {
+        return countSunkShips(machinePlayerBoard);
+    }
+    
     @Override
-    public int getComputerPlayerSunkShipCount() { return 0; }
+    public int getComputerPlayerSunkShipCount() {
+        return countSunkShips(humanPlayerBoard);
+    }
 
     /**
      * Metodo que crea la cantidad de barcos que cada jugador debe poseer en su tablero.

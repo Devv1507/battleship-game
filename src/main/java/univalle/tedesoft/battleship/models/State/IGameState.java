@@ -151,4 +151,9 @@ public interface IGameState {
      */
     void switchTurn();
 
+    /**
+     * Obtiene la fase actual del juego
+     * @return La fase actual del juego
+     */
+    univalle.tedesoft.battleship.models.Enums.GamePhase getCurrentPhase();
 }

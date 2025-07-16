@@ -189,6 +189,14 @@ public class Board {
     public List<Ship> getShips() {
         return new ArrayList<>(ships); // Devuelve una copia para evitar modificaciones externas
     }
+    
+    /**
+     * Agrega un barco directamente al tablero (para cargar desde archivo).
+     * @param ship El barco a agregar
+     */
+    public void addShipDirectly(Ship ship) {
+        this.ships.add(ship);
+    }
 
 
     /**
