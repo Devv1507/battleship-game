@@ -173,22 +173,14 @@ public class Board {
      */
     public boolean areAllShipsSunk() {
         if (ships.isEmpty()) {
-            System.out.println("No hay barcos en el tablero.");
             return false;
         }
-        
-        int totalShips = ships.size();
-        int sunkShips = 0;
-        
         for (Ship ship : ships) {
-            if (ship.isSunk()) {
-                sunkShips++;
+            if (!ship.isSunk()) {
+                return false;
             }
         }
-        
-        System.out.println("Barcos hundidos: " + sunkShips + " de " + totalShips);
-        
-        return sunkShips == totalShips;
+        return true;
     }
     /**
      * Devuelve la lista de barcos colocados en este tablero.

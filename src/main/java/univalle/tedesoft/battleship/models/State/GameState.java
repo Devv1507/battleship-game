@@ -273,9 +273,21 @@ public class GameState implements IGameState {
      */
     @Override
     public boolean isGameOver() {
-        boolean isGameOver = this.humanPlayerBoard.areAllShipsSunk() || this.machinePlayerBoard.areAllShipsSunk();
+        boolean humanShipsSunk = this.humanPlayerBoard.areAllShipsSunk();
+        boolean machineShipsSunk = this.machinePlayerBoard.areAllShipsSunk();
+        
+        // Mensajes de depuración
+        if (humanShipsSunk) {
+            System.out.println("Todos los barcos del jugador humano han sido hundidos.");
+        }
+        if (machineShipsSunk) {
+            System.out.println("Todos los barcos de la máquina han sido hundidos.");
+        }
+        
+        boolean isGameOver = humanShipsSunk || machineShipsSunk;
         if (isGameOver) {
             this.currentPhase = GamePhase.GAME_OVER;
+            System.out.println("El juego ha terminado. Fase actualizada a GAME_OVER.");
         }
         return isGameOver;
     }
@@ -287,15 +299,25 @@ public class GameState implements IGameState {
     @Override
     public Player getWinner() {
         if (!isGameOver()) {
+            System.out.println("El juego aún no ha terminado. No hay ganador.");
             return null;
         }
+        
+        // Si todos los barcos de la máquina están hundidos, gana el humano
         if (this.machinePlayerBoard.areAllShipsSunk()) {
+            System.out.println("El ganador es: " + this.humanPlayer.getName());
             return this.humanPlayer;
         }
+        
+        // Si todos los barcos del humano están hundidos, gana la máquina
         if (this.humanPlayerBoard.areAllShipsSunk()) {
+            System.out.println("El ganador es: " + this.machinePlayer.getName());
             return this.machinePlayer;
         }
-        return null; // En caso de empate o estado inesperado.
+        
+        // Esto no debería ocurrir si isGameOver() es true
+        System.err.println("Estado inesperado: isGameOver() es true pero no se puede determinar el ganador.");
+        return null;
     }
     /**
      * Obtiene el jugador cuyo turno es actualmente.

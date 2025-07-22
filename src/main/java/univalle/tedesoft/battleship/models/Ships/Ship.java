@@ -118,9 +118,8 @@ public abstract class Ship {
      */
     public void registerHit() {
         this.hitCount++;
-        System.out.println("Barco " + this.shipType + " impactado. Impactos: " + this.hitCount + "/" + this.valueShip);
-        if (isSunk()) {
-            System.out.println("¡El barco " + this.shipType + " ha sido hundido!");
+        if (this.isSunk()) {
+            this.sunkTheShip();
         }
     }
 }
