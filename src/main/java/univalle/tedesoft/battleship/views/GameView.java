@@ -3,34 +3,36 @@ package univalle.tedesoft.battleship.views;
 
 import javafx.application.Platform;
 import javafx.fxml.FXMLLoader;
+import javafx.geometry.Insets;
+import javafx.geometry.Pos;
+import javafx.scene.Group;
 import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.Label;
-import javafx.scene.image.Image;
-import javafx.scene.image.ImageView;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Pane;
+import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Font;
+import javafx.scene.transform.Rotate;
+import javafx.scene.transform.Scale;
 import javafx.stage.Stage;
 import univalle.tedesoft.battleship.Main;
 import univalle.tedesoft.battleship.controllers.GameController;
 import univalle.tedesoft.battleship.models.Board;
+import univalle.tedesoft.battleship.models.Coordinate;
 import univalle.tedesoft.battleship.models.Enums.CellState;
 import univalle.tedesoft.battleship.models.Enums.Orientation;
 import univalle.tedesoft.battleship.models.Enums.ShipType;
-import univalle.tedesoft.battleship.models.Enums.GamePhase;
 import univalle.tedesoft.battleship.models.Players.HumanPlayer;
 import univalle.tedesoft.battleship.models.Ships.Ship;
 import univalle.tedesoft.battleship.models.State.GameState;
 import univalle.tedesoft.battleship.models.State.IGameState;
+import univalle.tedesoft.battleship.views.shapes.*;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 
 /**
  * Gestiona la ventana principal y todos los elementos de la interfaz de usuario del juego.
@@ -43,9 +45,8 @@ public class GameView extends Stage {
 
     // ------------ Constantes
     private static final int CELL_SIZE = 40;
-    private final Map<ShipType, Image> shipImages;
-    /** Prefijo de la ruta donde se encuentran las imágenes de las cartas. */
-    private static final String IMAGE_PATH_PREFIX = "/univalle/tedesoft/battleship/images/";
+    /** Mapa para las figuras de los barcos */
+    private final Map<ShipType, ShipShape> shipShapeFactory;
     private static final int MAX_MESSAGES = 2; // Mostrar los últimos 2 mensajes
 
 
@@ -65,12 +66,12 @@ public class GameView extends Stage {
             throw new IllegalStateException("El controlador no se pudo cargar desde el FXML. Revisa el campo fx:controller.");
         }
 
-        this.shipImages = Map.of(
-                ShipType.AIR_CRAFT_CARRIER, Objects.requireNonNull(loadImage("aircraft_carrier.png"), "aircraft_carrier.png no encontrada"),
-                ShipType.SUBMARINE, Objects.requireNonNull(loadImage("submarine.png"), "submarine.png no encontrada"),
-                ShipType.DESTROYER, Objects.requireNonNull(loadImage("destroyer.png"), "destroyer.png no encontrada"),
-                ShipType.FRIGATE, Objects.requireNonNull(loadImage("frigate.png"), "frigate.png no encontrada")
-        );
+        this.shipShapeFactory = new HashMap<>(); // <-- ESTO ES NUEVO
+        this.shipShapeFactory.put(ShipType.AIR_CRAFT_CARRIER, new AircraftShape());
+        this.shipShapeFactory.put(ShipType.SUBMARINE, new SubmarineShape());
+        this.shipShapeFactory.put(ShipType.DESTROYER, new DestroyerShape());
+        this.shipShapeFactory.put(ShipType.FRIGATE, new FrigateShape());
+
         IGameState gameState = new GameState();
         this.controller.setGameView(this);
         this.controller.setGameState(gameState);
@@ -130,12 +131,43 @@ public class GameView extends Stage {
 
         this.controller.shipPlacementPane.getChildren().remove(1, this.controller.shipPlacementPane.getChildren().size());
 
+        // Definir los anchos deseados para cada tipo de barco en el panel de selección.
+        final Map<ShipType, Double> targetWidths = Map.of(
+                ShipType.FRIGATE, 50.0,           // La más pequeña (la mitad del destructor).
+                ShipType.DESTROYER, 100.0,        // Nuestro tamaño base.
+                ShipType.SUBMARINE, 125.0,        // Proporcionalmente más grande.
+                ShipType.AIR_CRAFT_CARRIER, 200.0 // La más grande (el doble del destructor).
+        );
+
         for (ShipType type : shipsToPlace) {
-            ImageView shipImageView = new ImageView(this.shipImages.get(type));
-            shipImageView.setPreserveRatio(true);
-            shipImageView.setFitWidth(150);
-            shipImageView.setOnMouseClicked(event -> this.controller.handleShipSelection(type));
-            this.controller.shipPlacementPane.getChildren().add(shipImageView);
+            // Obtener la fábrica de formas correcta desde nuestro mapa usando polimorfismo.
+            ShipShape shapeFactory = this.shipShapeFactory.get(type);
+
+            if (shapeFactory != null) {
+                // Crear la forma del barco. Esto nos devuelve un Node (un Group con todas las partes).
+                Node shipVisualNode = shapeFactory.createShape();
+                // Obtener el ancho objetivo dinámicamente del mapa.
+                double targetWidth = targetWidths.getOrDefault(type, 150.0);
+
+                // Calcular el factor de escala para que el barco encaje en el ancho deseado.
+                double originalWidth = shipVisualNode.getBoundsInLocal().getWidth();
+                double scaleFactor = targetWidth / originalWidth;
+
+                // Aplicar la transformación de escala.
+                Scale scale = new Scale(scaleFactor, scaleFactor);
+                shipVisualNode.getTransforms().add(scale);
+
+                // Crear un contenedor para la forma, para centrarla y manejarla fácilmente.
+                VBox container = new VBox(shipVisualNode);
+                container.setAlignment(Pos.CENTER);
+                container.setPadding(new Insets(5, 0, 5, 0)); // Espaciado vertical
+                container.getStyleClass().add("ship-selector-item"); // Para futuro estilo con CSS
+
+                container.setOnMouseClicked(event -> this.controller.handleShipSelection(type));
+
+                // 7. Añadir el contenedor (con el barco escalado dentro) al panel de colocación.
+                this.controller.shipPlacementPane.getChildren().add(container);
+            }
         }
     }
 
@@ -149,73 +181,65 @@ public class GameView extends Stage {
      * @param showShips Un booleano que indica si los barcos deben ser visibles.
      */
     public void drawBoard(GridPane gridPane, Board board, boolean showShips) {
-        // Limpiar el tablero antes de redibujar para evitar artefactos visuales.
-        for (int row = 0; row < board.getSize(); row++) {
-            for (int col = 0; col < board.getSize(); col++) {
-                Pane cellPane = this.getCellPane(gridPane, row, col);
-                if (cellPane != null) {
-                    cellPane.getChildren().clear();
-                }
+        // Determinar qué Pane de dibujo usar basándose en el GridPane proporcionado.
+        Pane drawingPane;
+        if (gridPane == this.controller.humanPlayerBoardGrid) {
+            drawingPane = this.controller.humanPlayerDrawingPane;
+        } else {
+            drawingPane = this.controller.machinePlayerDrawingPane;
+        }
+
+        // 1. Limpieza del tablero
+        // Limpiar el canvas de dibujo de barcos viejos.
+        drawingPane.getChildren().clear();
+
+        // Limpiar los marcadores de las celdas del GridPane.
+        for (Node node : gridPane.getChildren()) {
+            if (node instanceof Pane) {
+                Pane cellPane = (Pane) node;
+                cellPane.getChildren().clear();
+                cellPane.setStyle(""); // Restaurar estilo por defecto.
             }
         }
 
-        // Iterar sobre cada celda del modelo para dibujar su estado.
+        Set<Ship> drawnShips = new HashSet<>();
+
         for (int row = 0; row < board.getSize(); row++) {
             for (int col = 0; col < board.getSize(); col++) {
+                // Lógica de dibujo de barcos
+                if (showShips) {
+                    Ship occupyingShip = board.getShipAt(row, col);
+                    if (occupyingShip != null && !drawnShips.contains(occupyingShip)) {
+                        // Solo dibujar si estamos en la primera coordenada del barco (la "cabeza").
+                        Coordinate headCoordinate = occupyingShip.getOccupiedCoordinates().get(0);
+                        if (headCoordinate.getY() == row && headCoordinate.getX() == col) {
+
+                            Node shipVisualNode = createAndPositionShipVisual(occupyingShip, col, row);
+                            drawingPane.getChildren().add(shipVisualNode);
+                            drawnShips.add(occupyingShip);
+                        }
+                    }
+                }
+
+                // Lógica de dibujo de marcadores de estado de celdas
                 CellState state = board.getCellState(row, col);
                 Pane cellPane = this.getCellPane(gridPane, row, col);
                 if (cellPane == null) continue;
 
-                // Crear el marcador visual (un rectángulo)
-                Rectangle marker = new Rectangle(CELL_SIZE - 2, CELL_SIZE - 2);
-                marker.setArcWidth(10);
-                marker.setArcHeight(10);
+                if (state == CellState.HIT_SHIP || state == CellState.SUNK_SHIP_PART || state == CellState.SHOT_LOST_IN_WATER) {
+                    Rectangle marker = new Rectangle(CELL_SIZE - 2, CELL_SIZE - 2);
+                    marker.setArcWidth(10);
+                    marker.setArcHeight(10);
+                    marker.setOpacity(0.7);
 
-                switch (state) {
-                    case SHIP:
-                        if (showShips) {
-                            // --- LÓGICA DE COLORACIÓN ---
-                            // Si la celda contiene un barco, encontrar qué barco es para saber su color.
-                            Ship occupyingShip = board.getShipAt(row, col);
-                            if (occupyingShip != null) {
-                                // Asignar color basado en el tipo de barco.
-                                switch (occupyingShip.getShipType()) {
-                                    case AIR_CRAFT_CARRIER:
-                                        marker.setFill(Color.ORANGE);
-                                        break;
-                                    case SUBMARINE:
-                                        marker.setFill(Color.GREEN);
-                                        break;
-                                    case DESTROYER:
-                                        marker.setFill(Color.ROYALBLUE);
-                                        break;
-                                    case FRIGATE:
-                                        marker.setFill(Color.CRIMSON);
-                                        break;
-                                    default:
-                                        marker.setFill(Color.DIMGRAY);
-                                        break;
-                                }
-                                cellPane.getChildren().add(marker);
-                            }
-                        }
-                        break;
-                    case HIT_SHIP:
+                    if (state == CellState.HIT_SHIP) {
                         marker.setFill(Color.ORANGERED);
-                        cellPane.getChildren().add(marker);
-                        break;
-                    case SHOT_LOST_IN_WATER:
+                    } else if (state == CellState.SHOT_LOST_IN_WATER) {
                         marker.setFill(Color.LIGHTSKYBLUE);
-                        cellPane.getChildren().add(marker);
-                        break;
-                    case SUNK_SHIP_PART:
+                    } else { // SUNK_SHIP_PART
                         marker.setFill(Color.DARKRED);
-                        cellPane.getChildren().add(marker);
-                        break;
-                    case EMPTY:
-                    default:
-                        // No se dibuja nada en las celdas vacías.
-                        break;
+                    }
+                    cellPane.getChildren().add(marker);
                 }
             }
         }
@@ -399,6 +423,51 @@ public class GameView extends Stage {
     // ------------ Métodos auxiliares
 
     /**
+     * Crea, escala, rota y posiciona el nodo visual de un barco.
+     *
+     * @param ship El objeto de barco del modelo.
+     * @param col  La columna inicial del barco en la cuadrícula.
+     * @param row  La fila inicial del barco en la cuadrícula.
+     * @return El nodo JavaFX listo para ser añadido al canvas de dibujo.
+     */
+    private Node createAndPositionShipVisual(Ship ship, int col, int row) {
+        ShipShape factory = this.shipShapeFactory.get(ship.getShipType());
+        if (factory == null) {
+            return new Group(); // Devuelve un grupo vacío si no hay fábrica.
+        }
+
+        Node shipVisualNode = factory.createShape();
+
+        // Calcular escala
+        double originalWidth = shipVisualNode.getBoundsInLocal().getWidth();
+        double targetWidth = CELL_SIZE * ship.getValueShip();
+        double scaleFactor = targetWidth / originalWidth;
+
+        // Calcular posición en píxeles
+        double xPos = col * CELL_SIZE;
+        double yPos = row * CELL_SIZE;
+
+        shipVisualNode.setLayoutX(xPos);
+        shipVisualNode.setLayoutY(yPos);
+
+        // Aplicar transformaciones
+        if (ship.getOrientation() == Orientation.VERTICAL) {
+            // Para rotación vertical, el pivote debe estar en el centro de la primera celda.
+            double pivotX = CELL_SIZE / 2.0;
+            double pivotY = CELL_SIZE / 2.0;
+            Rotate rotation = new Rotate(90, pivotX, pivotY);
+            Scale scale = new Scale(scaleFactor, scaleFactor, pivotX, pivotY);
+            shipVisualNode.getTransforms().addAll(scale, rotation);
+        } else {
+            // Para horizontal, el pivote puede ser (0,0)
+            Scale scale = new Scale(scaleFactor, scaleFactor, 0, 0);
+            shipVisualNode.getTransforms().add(scale);
+        }
+
+        return shipVisualNode;
+    }
+
+    /**
      * Obtiene el Pane de una celda específica en un GridPane de forma segura.
      * Maneja el caso en que los índices de fila/columna son nulos (interpretándolos como 0).
      * @param gridPane El GridPane del cual obtener la celda.
@@ -425,27 +494,6 @@ public class GameView extends Stage {
             }
         }
         return null; // No se encontró la celda.
-    }
-
-    /**
-     * Carga una imagen desde la ruta de recursos correcta, usando Main.class como ancla.
-     * @param filename el nombre del archivo de imagen (ej. "barco.png").
-     * @return el objeto Image cargado, o null si no se encuentra.
-     */
-    private Image loadImage(String filename) {
-        String resourcePath = IMAGE_PATH_PREFIX + filename;
-        try {
-            // Usamos Main.class.getResourceAsStream como en tu ejemplo de UNO. ¡Excelente idea!
-            InputStream stream = Main.class.getResourceAsStream(resourcePath);
-            if (stream == null) {
-                System.err.println("No se pudo encontrar la imagen: " + resourcePath);
-                return null;
-            }
-            return new Image(stream);
-        } catch (Exception e) {
-            System.err.println("Error al cargar la imagen: " + resourcePath);
-            return null;
-        }
     }
 
 
