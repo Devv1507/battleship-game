@@ -4,6 +4,8 @@ import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.layout.GridPane;
+import javafx.scene.layout.Pane;
+import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import univalle.tedesoft.battleship.exceptions.OutOfBoundsException;
 import univalle.tedesoft.battleship.exceptions.OverlapException;
@@ -30,6 +32,10 @@ public class GameController {
     @FXML public Button verticalButton;
     @FXML public Button saveGameButton;
     @FXML public Button loadGameButton;
+    @FXML public Pane humanPlayerDrawingPane;
+    @FXML public Pane machinePlayerDrawingPane;
+    @FXML public StackPane humanPlayerBoardContainer;
+    @FXML public StackPane machinePlayerBoardContainer;
 
     // --- Referencias principales ---
     private IGameState gameState;
