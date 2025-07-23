@@ -3,16 +3,18 @@ package univalle.tedesoft.battleship.views;
 
 import javafx.application.Platform;
 import javafx.fxml.FXMLLoader;
+import javafx.geometry.Insets;
+import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.Label;
-import javafx.scene.image.Image;
-import javafx.scene.image.ImageView;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Pane;
+import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Font;
+import javafx.scene.transform.Scale;
 import javafx.stage.Stage;
 import univalle.tedesoft.battleship.Main;
 import univalle.tedesoft.battleship.controllers.GameController;
@@ -20,17 +22,16 @@ import univalle.tedesoft.battleship.models.Board;
 import univalle.tedesoft.battleship.models.Enums.CellState;
 import univalle.tedesoft.battleship.models.Enums.Orientation;
 import univalle.tedesoft.battleship.models.Enums.ShipType;
-import univalle.tedesoft.battleship.models.Enums.GamePhase;
 import univalle.tedesoft.battleship.models.Players.HumanPlayer;
 import univalle.tedesoft.battleship.models.Ships.Ship;
 import univalle.tedesoft.battleship.models.State.GameState;
 import univalle.tedesoft.battleship.models.State.IGameState;
+import univalle.tedesoft.battleship.views.shapes.*;
 
 import java.io.IOException;
-import java.io.InputStream;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 
 /**
  * Gestiona la ventana principal y todos los elementos de la interfaz de usuario del juego.
@@ -43,9 +44,8 @@ public class GameView extends Stage {
 
     // ------------ Constantes
     private static final int CELL_SIZE = 40;
-    private final Map<ShipType, Image> shipImages;
-    /** Prefijo de la ruta donde se encuentran las imágenes de las cartas. */
-    private static final String IMAGE_PATH_PREFIX = "/univalle/tedesoft/battleship/images/";
+    /** Mapa para las figuras de los barcos */
+    private final Map<ShipType, ShipShape> shipShapeFactory;
     private static final int MAX_MESSAGES = 2; // Mostrar los últimos 2 mensajes
 
 
@@ -65,12 +65,12 @@ public class GameView extends Stage {
             throw new IllegalStateException("El controlador no se pudo cargar desde el FXML. Revisa el campo fx:controller.");
         }
 
-        this.shipImages = Map.of(
-                ShipType.AIR_CRAFT_CARRIER, Objects.requireNonNull(loadImage("aircraft_carrier.png"), "aircraft_carrier.png no encontrada"),
-                ShipType.SUBMARINE, Objects.requireNonNull(loadImage("submarine.png"), "submarine.png no encontrada"),
-                ShipType.DESTROYER, Objects.requireNonNull(loadImage("destroyer.png"), "destroyer.png no encontrada"),
-                ShipType.FRIGATE, Objects.requireNonNull(loadImage("frigate.png"), "frigate.png no encontrada")
-        );
+        this.shipShapeFactory = new HashMap<>(); // <-- ESTO ES NUEVO
+        this.shipShapeFactory.put(ShipType.AIR_CRAFT_CARRIER, new AircraftShape());
+        this.shipShapeFactory.put(ShipType.SUBMARINE, new SubmarineShape());
+        this.shipShapeFactory.put(ShipType.DESTROYER, new DestroyerShape());
+        this.shipShapeFactory.put(ShipType.FRIGATE, new FrigateShape());
+
         IGameState gameState = new GameState();
         this.controller.setGameView(this);
         this.controller.setGameState(gameState);
@@ -130,12 +130,36 @@ public class GameView extends Stage {
 
         this.controller.shipPlacementPane.getChildren().remove(1, this.controller.shipPlacementPane.getChildren().size());
 
+        final double targetWidth = 150.0; // Ancho deseado para los barcos en el panel de selección.
+
         for (ShipType type : shipsToPlace) {
-            ImageView shipImageView = new ImageView(this.shipImages.get(type));
-            shipImageView.setPreserveRatio(true);
-            shipImageView.setFitWidth(150);
-            shipImageView.setOnMouseClicked(event -> this.controller.handleShipSelection(type));
-            this.controller.shipPlacementPane.getChildren().add(shipImageView);
+            // 1. Obtener la fábrica de formas correcta desde nuestro mapa usando polimorfismo.
+            ShipShape shapeFactory = this.shipShapeFactory.get(type);
+
+            if (shapeFactory != null) {
+                // 2. Crear la forma del barco. Esto nos devuelve un Node (un Group con todas las partes).
+                Node shipVisualNode = shapeFactory.createShape();
+
+                // 3. Calcular el factor de escala para que el barco encaje en el ancho deseado.
+                double originalWidth = shipVisualNode.getBoundsInLocal().getWidth();
+                double scaleFactor = targetWidth / originalWidth;
+
+                // 4. Aplicar la transformación de escala.
+                Scale scale = new Scale(scaleFactor, scaleFactor);
+                shipVisualNode.getTransforms().add(scale);
+
+                // 5. Crear un contenedor para la forma, lo que nos permite centrarla y manejarla fácilmente.
+                VBox container = new VBox(shipVisualNode);
+                container.setAlignment(Pos.CENTER);
+                container.setPadding(new Insets(5, 0, 5, 0)); // Espaciado vertical
+                container.getStyleClass().add("ship-selector-item"); // Para futuro estilo con CSS
+
+                // 6. Añadir el listener de clic al contenedor.
+                container.setOnMouseClicked(event -> this.controller.handleShipSelection(type));
+
+                // 7. Añadir el contenedor (con el barco escalado dentro) al panel de colocación.
+                this.controller.shipPlacementPane.getChildren().add(container);
+            }
         }
     }
 
@@ -425,27 +449,6 @@ public class GameView extends Stage {
             }
         }
         return null; // No se encontró la celda.
-    }
-
-    /**
-     * Carga una imagen desde la ruta de recursos correcta, usando Main.class como ancla.
-     * @param filename el nombre del archivo de imagen (ej. "barco.png").
-     * @return el objeto Image cargado, o null si no se encuentra.
-     */
-    private Image loadImage(String filename) {
-        String resourcePath = IMAGE_PATH_PREFIX + filename;
-        try {
-            // Usamos Main.class.getResourceAsStream como en tu ejemplo de UNO. ¡Excelente idea!
-            InputStream stream = Main.class.getResourceAsStream(resourcePath);
-            if (stream == null) {
-                System.err.println("No se pudo encontrar la imagen: " + resourcePath);
-                return null;
-            }
-            return new Image(stream);
-        } catch (Exception e) {
-            System.err.println("Error al cargar la imagen: " + resourcePath);
-            return null;
-        }
     }
 
 
