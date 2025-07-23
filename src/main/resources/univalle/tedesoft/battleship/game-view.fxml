@@ -28,29 +28,41 @@
       <padding>
         <Insets bottom="20.0" left="20.0" right="20.0" top="20.0" />
       </padding>
+
+      <!-- Contenedor para el tablero del Jugador Humano -->
       <VBox alignment="TOP_CENTER" spacing="10.0">
         <Label text="Tu Flota (Tablero de Posición)">
           <font>
             <Font name="Arial Bold" size="18.0" />
           </font>
         </Label>
-        <GridPane fx:id="humanPlayerBoardGrid" gridLinesVisible="true">
-          <!-- Las celdas se generarán programáticamente -->
-        </GridPane>
+        <!-- StackPane para superponer el tablero y el canvas de dibujo -->
+        <StackPane fx:id="humanPlayerBoardContainer">
+          <GridPane fx:id="humanPlayerBoardGrid" gridLinesVisible="true">
+          </GridPane>
+          <!-- Pane transparente para dibujar los barcos encima del GridPane -->
+          <Pane fx:id="humanPlayerDrawingPane" pickOnBounds="false" />
+        </StackPane>
       </VBox>
+
+      <!-- Contenedor para el tablero Enemigo -->
       <VBox alignment="TOP_CENTER" spacing="10.0">
         <Label text="Territorio Enemigo (Tablero Principal)">
           <font>
             <Font name="Arial Bold" size="18.0" />
           </font>
         </Label>
-        <GridPane fx:id="machinePlayerBoardGrid" gridLinesVisible="true">
-          <!-- Las celdas se generarán programáticamente -->
-        </GridPane>
+        <!-- StackPane para superponer el tablero y el canvas de dibujo -->
+        <StackPane fx:id="machinePlayerBoardContainer">
+          <GridPane fx:id="machinePlayerBoardGrid" gridLinesVisible="true">
+          </GridPane>
+          <!-- Pane transparente para dibujar los barcos encima del GridPane -->
+          <Pane fx:id="machinePlayerDrawingPane" pickOnBounds="false" />
+        </StackPane>
       </VBox>
+
     </HBox>
   </center>
-
   <left>
     <VBox fx:id="shipPlacementPane" alignment="TOP_CENTER" prefWidth="200.0" spacing="15.0" BorderPane.alignment="CENTER">
       <padding>
