@@ -2,14 +2,14 @@ package univalle.tedesoft.battleship;
 
 import javafx.application.Application;
 import javafx.stage.Stage;
-import univalle.tedesoft.battleship.views.gameView;
+import univalle.tedesoft.battleship.views.GameView;
 
 import java.io.IOException;
 
-public class main extends Application {
+public class Main extends Application {
     @Override
     public void start(Stage stage) throws IOException {
-        gameView gameMainView = gameView.getInstance();
+        GameView gameMainView = GameView.getInstance();
         gameMainView.show();
     }
 

@@ -1,8 +1,8 @@
 package univalle.tedesoft.battleship.models.ships;
 
-import univalle.tedesoft.battleship.models.coordinate;
-import univalle.tedesoft.battleship.models.enums.orientation;
-import univalle.tedesoft.battleship.models.enums.shipType;
+import univalle.tedesoft.battleship.models.Coordinate;
+import univalle.tedesoft.battleship.models.enums.Orientation;
+import univalle.tedesoft.battleship.models.enums.ShipType;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -13,13 +13,13 @@ import java.util.List;
  * @author Santiago David Guerrero
  * @author Juan Pablo Escamilla
  */
-public abstract class ship {
+public abstract class Ship {
     /**Tipo de embarcacion que se esta creando*/
-    public shipType shipType;
+    public ShipType shipType;
     /**La Orientacion de la embarcacion*/
-    public orientation orientation;
+    public Orientation orientation;
     /**Coordenadas que ocupa la embarcacion*/
-    private List<coordinate> occupiedCoordinates;
+    private List<Coordinate> occupiedCoordinates;
     /**Ataques recibidos por parte del enemigo*/
     private int hitCount;
     /**booleano que indica si la embarcacion se ha hundido*/
@@ -32,9 +32,9 @@ public abstract class ship {
      * @param shipType tipo de embarcacion.
      * @param valueShip cantidad de casillas que va a ocupar.
      */
-    public ship(shipType shipType, int valueShip) {
+    public Ship(ShipType shipType, int valueShip) {
         this.shipType = shipType;
-        this.orientation= univalle.tedesoft.battleship.models.enums.orientation.VERTICAL;
+        this.orientation= Orientation.VERTICAL;
         this.sunk = false;
         this.valueShip = valueShip;
         this.occupiedCoordinates = new ArrayList<>();
@@ -45,7 +45,7 @@ public abstract class ship {
      * Metodo que retorna el tipo de barco.
      * @return tipo de embarcacion.
      */
-    public shipType getShipType() {
+    public ShipType getShipType() {
         return shipType;
     }
 
@@ -53,7 +53,7 @@ public abstract class ship {
      * Metodo que retorna la orientacion del barco.
      * @return orientacion de la embarcacion.
      */
-    public orientation getOrientation() {
+    public Orientation getOrientation() {
         return orientation;
     }
 
@@ -61,7 +61,7 @@ public abstract class ship {
      * Metodo que retorna las casillas ocupadas por la embarcacion.
      * @return arreglo con las casillas que ocupa la embarcacion.
      */
-    public List<coordinate> getOccupiedCoordinates() {
+    public List<Coordinate> getOccupiedCoordinates() {
         return occupiedCoordinates;
     }
 
@@ -101,14 +101,14 @@ public abstract class ship {
     /**
      * Metodo que edita el arreglo de coordenadas ocupadas por el barco.
      */
-    public void addCoordinates(coordinate occupiedCoordinate) {
+    public void addCoordinates(Coordinate occupiedCoordinate) {
         occupiedCoordinates.add(occupiedCoordinate);
     }
 
     /**
      * Metodo que permite editar la orientacion del barco.
      */
-    public void setOrientation(orientation orientation) {
+    public void setOrientation(Orientation orientation) {
         this.orientation = orientation;
     }
 

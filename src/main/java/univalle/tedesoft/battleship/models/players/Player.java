@@ -5,11 +5,11 @@ package univalle.tedesoft.battleship.models.players;
  * @author Santiago David Guerrero
  * @author Juan Pablo Escamilla
  */
-public abstract class player {
+public abstract class Player {
     /**Nombre del jugador*/
     private String name;
     /**Constructor de la clase*/
-    public player(String name) {
+    public Player(String name) {
         this.name = name;
     }
     /**Metodo para obtener el nombre del jugador*/

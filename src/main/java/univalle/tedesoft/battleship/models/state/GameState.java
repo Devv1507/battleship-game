@@ -1,16 +1,16 @@
 package univalle.tedesoft.battleship.models.state;
 
-import univalle.tedesoft.battleship.exceptions.invalidShipPlacementException;
-import univalle.tedesoft.battleship.exceptions.outOfBoundsException;
-import univalle.tedesoft.battleship.exceptions.overlapException;
-import univalle.tedesoft.battleship.models.board;
-import univalle.tedesoft.battleship.models.coordinate;
+import univalle.tedesoft.battleship.exceptions.InvalidShipPlacementException;
+import univalle.tedesoft.battleship.exceptions.OutOfBoundsException;
+import univalle.tedesoft.battleship.exceptions.OverlapException;
+import univalle.tedesoft.battleship.models.Board;
+import univalle.tedesoft.battleship.models.Coordinate;
+import univalle.tedesoft.battleship.models.players.Player;
 import univalle.tedesoft.battleship.models.enums.*;
-import univalle.tedesoft.battleship.models.players.machinePlayer;
-import univalle.tedesoft.battleship.models.players.player;
+import univalle.tedesoft.battleship.models.players.MachinePlayer;
 import univalle.tedesoft.battleship.models.ships.*;
-import univalle.tedesoft.battleship.models.shotOutcome;
-import univalle.tedesoft.battleship.models.ships.shipFactory;
+import univalle.tedesoft.battleship.models.ShotOutcome;
+import univalle.tedesoft.battleship.models.ships.ShipFactory;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -25,34 +25,34 @@ import java.util.Random;
  * @author Santiago David Guerrero
  * @author Juan Pablo Escamilla
  */
-public class gameState implements iGameState {
+public class GameState implements IGameState {
     /**Tableros de juego*/
-    private board humanPlayerBoard;
-    private board machinePlayerBoard;
-    private board machinePlayerTerritoryBoard;
+    private Board humanPlayerBoard;
+    private Board machinePlayerBoard;
+    private Board machinePlayerTerritoryBoard;
     /**Jugadores*/
-    private player humanPlayer;
-    private player machinePlayer;
-    private player currentPlayer;
+    private Player humanPlayer;
+    private Player machinePlayer;
+    private Player currentPlayer;
     /**Fase actual del juego*/
-    private gamePhase currentPhase;
+    private GamePhase currentPhase;
     /**Cantidad de Barcos que el humano tiene a su disposicion para colocar en la tabla*/
-    private List<shipType> pendingShipsToPlaceForHuman;
+    private List<ShipType> pendingShipsToPlaceForHuman;
     
     /**Caretaker para gestionar los mementos del juego*/
-    private gameCaretaker gameCaretaker;
+    private GameCaretaker gameCaretaker;
 
     /** Constructor de la Clase*/
-    public gameState() {
+    public GameState() {
         //Tableros de juego necesarios.
-        this.humanPlayerBoard = new board();
-        this.machinePlayerBoard = new board();
-        this.machinePlayerTerritoryBoard = new board();
+        this.humanPlayerBoard = new Board();
+        this.machinePlayerBoard = new Board();
+        this.machinePlayerTerritoryBoard = new Board();
         //Fase inicial del juego.
-        this.currentPhase = gamePhase.INITIAL;
+        this.currentPhase = GamePhase.INITIAL;
         this.pendingShipsToPlaceForHuman = new ArrayList<>();
         //Inicializar el caretaker para el patrón Memento
-        this.gameCaretaker = new gameCaretaker();
+        this.gameCaretaker = new GameCaretaker();
     }
     /**
      * Inicia una nueva partida.
@@ -61,17 +61,17 @@ public class gameState implements iGameState {
      * @param humanPlayer jugador humano.
      */
     @Override
-    public void startNewGame(player humanPlayer) {
+    public void startNewGame(Player humanPlayer) {
         //Jugadores.
         this.humanPlayer = humanPlayer;
-        this.machinePlayer = new machinePlayer();
+        this.machinePlayer = new MachinePlayer();
         this.currentPlayer = this.humanPlayer;
         //Se inicializa las tablas.
         this.humanPlayerBoard.resetBoard();
         this.machinePlayerBoard.resetBoard();
         this.machinePlayerTerritoryBoard.resetBoard();
         //El juego empieza en su fase inicial.
-        this.currentPhase = gamePhase.PLACEMENT;
+        this.currentPhase = GamePhase.PLACEMENT;
         //Barcos que el humano ha colocado.
         this.pendingShipsToPlaceForHuman.clear();
         //Barcos que el humano debe movilizar en la tabla.
@@ -83,22 +83,22 @@ public class gameState implements iGameState {
      * @param shipType El barco a colocar (ej. PORTAAVIONES, SUBMARINO).
      * @param row coordenada en fila donde se piensa ubicar el ship.
      * @param col coordenada en columna
-     * @throws invalidShipPlacementException si la colocación es inválida por superposición,
+     * @throws InvalidShipPlacementException si la colocación es inválida por superposición,
      *         salirse del tablero o tipo de barco ya colocado.
      */
     @Override
-    public void placeHumanPlayerShip(shipType shipType, int row, int col, orientation orientation) throws invalidShipPlacementException, overlapException, outOfBoundsException {
+    public void placeHumanPlayerShip(ShipType shipType, int row, int col, Orientation orientation) throws InvalidShipPlacementException, OverlapException, OutOfBoundsException {
 
         // 1. Validar que el tipo de barco está pendiente de ser colocado.
         if (!this.pendingShipsToPlaceForHuman.contains(shipType)) {
-            throw new invalidShipPlacementException("Ya has colocado todos los barcos de tipo: " + shipType);
+            throw new InvalidShipPlacementException("Ya has colocado todos los barcos de tipo: " + shipType);
         }
 
         // 2. Crear los objetos de dominio necesarios.
         //Ship newShip = createShipFromType(shipType);
-        ship newShip = shipFactory.createShip(shipType);
+        Ship newShip = ShipFactory.createShip(shipType);
         newShip.setOrientation(orientation);
-        coordinate coordinate = new coordinate(col, row); // Recordar que Coordinate(x, y) -> (col, row)
+        Coordinate coordinate = new Coordinate(col, row); // Recordar que Coordinate(x, y) -> (col, row)
 
         // 3. Delegar la colocación al tablero.
         if (this.humanPlayerBoard.placeShip(newShip, coordinate)) {
@@ -106,7 +106,7 @@ public class gameState implements iGameState {
             this.pendingShipsToPlaceForHuman.remove(shipType);
         } else {
             // Esta línea es teóricamente inalcanzable si placeShip lanza excepciones, pero es una buena práctica.
-            throw new invalidShipPlacementException("No fue posible agregar esta embarcacion!!");
+            throw new InvalidShipPlacementException("No fue posible agregar esta embarcacion!!");
         }
     };
 
@@ -117,16 +117,16 @@ public class gameState implements iGameState {
      * @param type El enum ShipType del barco a crear.
      * @return una nueva instancia del barco correspondiente.
      */
-    private ship createShipFromType(shipType type) {
+    private Ship createShipFromType(ShipType type) {
         switch (type) {
             case AIR_CRAFT_CARRIER:
-                return new airCraftCarrier();
+                return new AirCraftCarrier();
             case SUBMARINE:
-                return new submarine();
+                return new Submarine();
             case DESTROYER:
-                return new destroyer();
+                return new Destroyer();
             case FRIGATE:
-                return new frigate();
+                return new Frigate();
             default:
                 // Esto no debería ocurrir si el enum está completo.
                 throw new IllegalArgumentException("Tipo de barco desconocido: " + type);
@@ -138,18 +138,18 @@ public class gameState implements iGameState {
      * Este metodo crea la lista de TIPOS de barcos que cada jugador debe poseer.
      * @return una lista de ShipType con la flota completa.
      */
-    public List<shipType> createFleetShipTypes() {
-        List<shipType> fleetTypes = new ArrayList<>();
-        fleetTypes.add(shipType.AIR_CRAFT_CARRIER); // 1
-        fleetTypes.add(shipType.SUBMARINE);        // 2
-        fleetTypes.add(shipType.SUBMARINE);
-        fleetTypes.add(shipType.DESTROYER);        // 3
-        fleetTypes.add(shipType.DESTROYER);
-        fleetTypes.add(shipType.DESTROYER);
-        fleetTypes.add(shipType.FRIGATE);          // 4
-        fleetTypes.add(shipType.FRIGATE);
-        fleetTypes.add(shipType.FRIGATE);
-        fleetTypes.add(shipType.FRIGATE);
+    public List<ShipType> createFleetShipTypes() {
+        List<ShipType> fleetTypes = new ArrayList<>();
+        fleetTypes.add(ShipType.AIR_CRAFT_CARRIER); // 1
+        fleetTypes.add(ShipType.SUBMARINE);        // 2
+        fleetTypes.add(ShipType.SUBMARINE);
+        fleetTypes.add(ShipType.DESTROYER);        // 3
+        fleetTypes.add(ShipType.DESTROYER);
+        fleetTypes.add(ShipType.DESTROYER);
+        fleetTypes.add(ShipType.FRIGATE);          // 4
+        fleetTypes.add(ShipType.FRIGATE);
+        fleetTypes.add(ShipType.FRIGATE);
+        fleetTypes.add(ShipType.FRIGATE);
         return fleetTypes;
     }
 
@@ -164,7 +164,7 @@ public class gameState implements iGameState {
             return;
         }
         this.placeMachinePlayerShips();
-        this.currentPhase = gamePhase.FIRING;
+        this.currentPhase = GamePhase.FIRING;
     }
 
     /**
@@ -172,16 +172,16 @@ public class gameState implements iGameState {
      * @param row Fila del disparo.
      * @param col Columna del disparo.
      * @return Un objeto ShotResult que indica el resultado del disparo.
-     * @throws outOfBoundsException si el disparo es fuera del tablero.
+     * @throws OutOfBoundsException si el disparo es fuera del tablero.
      */
     @Override
-    public shotOutcome handleHumanPlayerShot(int row, int col) throws outOfBoundsException, overlapException {
-        coordinate coordinate = new coordinate(col, row);
+    public ShotOutcome handleHumanPlayerShot(int row, int col) throws OutOfBoundsException, OverlapException {
+        Coordinate coordinate = new Coordinate(col, row);
         try {
-            shotOutcome outcome = this.machinePlayerBoard.receiveShot(coordinate);
+            ShotOutcome outcome = this.machinePlayerBoard.receiveShot(coordinate);
             this.machinePlayerTerritoryBoard.setCellState(row, col, this.machinePlayerBoard.getCellState(row, col));
             return outcome;
-        } catch (overlapException e) {
+        } catch (OverlapException e) {
             // Relanzar la excepción para que el controlador la maneje.
             throw e;
         }
@@ -192,23 +192,23 @@ public class gameState implements iGameState {
      * en el tablero del jugador humano.
      * @return Un objeto ShotOutcome que indica las coordenadas del disparo y su resultado.
      */
-    public shotOutcome handleMachinePlayerTurn() {
+    public ShotOutcome handleMachinePlayerTurn() {
         Random random = new Random();
-        coordinate shotCoordinate;
+        Coordinate shotCoordinate;
         int maxAttempts = 100; // Evita bucles infinitos
 
         // Bucle para encontrar una celda válida que no haya sido disparada
         do {
             int row = random.nextInt(this.humanPlayerBoard.getSize());
             int col = random.nextInt(this.humanPlayerBoard.getSize());
-            shotCoordinate = new coordinate(col, row);
+            shotCoordinate = new Coordinate(col, row);
             maxAttempts--;
         } while (isCellAlreadyShotByMachine(shotCoordinate) && maxAttempts > 0);
 
         // Si después de 100 intentos no se encontró una celda (muy improbable),
         // se devuelve un resultado que el controlador pueda interpretar.
         if (isCellAlreadyShotByMachine(shotCoordinate)) {
-            return new shotOutcome(shotCoordinate, shotResult.ALREADY_HIT);
+            return new ShotOutcome(shotCoordinate, ShotResult.ALREADY_HIT);
         }
 
         try {
@@ -216,9 +216,9 @@ public class gameState implements iGameState {
             // Por eso no llamamos a receiveShot directamente sino que manejamos el caso internamente.
             return this.humanPlayerBoard.receiveShot(shotCoordinate);
 
-        } catch(outOfBoundsException | overlapException e) {
+        } catch(OutOfBoundsException | OverlapException e) {
             System.err.println("Error inesperado en el turno de la IA: " + e.getMessage());
-            return new shotOutcome(shotCoordinate, shotResult.WATER);
+            return new ShotOutcome(shotCoordinate, ShotResult.WATER);
         }
     }
 
@@ -227,11 +227,11 @@ public class gameState implements iGameState {
      * @param coordinate La coordenada a verificar.
      * @return true si la celda ya fue disparada, false en caso contrario.
      */
-    private boolean isCellAlreadyShotByMachine(coordinate coordinate) {
+    private boolean isCellAlreadyShotByMachine(Coordinate coordinate) {
         try {
-            cellState state = this.humanPlayerBoard.getCellState(coordinate.getY(), coordinate.getX());
-            return state == cellState.HIT_SHIP || state == cellState.SUNK_SHIP_PART || state == cellState.SHOT_LOST_IN_WATER;
-        } catch (outOfBoundsException e) {
+            CellState state = this.humanPlayerBoard.getCellState(coordinate.getY(), coordinate.getX());
+            return state == CellState.HIT_SHIP || state == CellState.SUNK_SHIP_PART || state == CellState.SHOT_LOST_IN_WATER;
+        } catch (OutOfBoundsException e) {
             return true; // Considerar fuera de límites como "ya disparado" para evitarlo.
         }
     }
@@ -242,7 +242,7 @@ public class gameState implements iGameState {
      * @return El objeto Board del jugador humano.
      */
     @Override
-    public board getHumanPlayerPositionBoard() {
+    public Board getHumanPlayerPositionBoard() {
         return this.humanPlayerBoard;
     }
 
@@ -252,7 +252,7 @@ public class gameState implements iGameState {
      * @return El objeto Board del territorio de la máquina (vista del jugador).
      */
     @Override
-    public board getMachinePlayerTerritoryBoard() {
+    public Board getMachinePlayerTerritoryBoard() {
         return this.machinePlayerTerritoryBoard;
     }
 
@@ -263,7 +263,7 @@ public class gameState implements iGameState {
      * @return El objeto Board con la disposición real de los barcos de la máquina.
      */
     @Override
-    public board getMachinePlayerActualPositionBoard() {
+    public Board getMachinePlayerActualPositionBoard() {
         return this.machinePlayerBoard;
     }
 
@@ -275,7 +275,7 @@ public class gameState implements iGameState {
     public boolean isGameOver() {
         boolean isGameOver = this.humanPlayerBoard.areAllShipsSunk() || this.machinePlayerBoard.areAllShipsSunk();
         if (isGameOver) {
-            this.currentPhase = gamePhase.GAME_OVER;
+            this.currentPhase = GamePhase.GAME_OVER;
         }
         return isGameOver;
     }
@@ -285,7 +285,7 @@ public class gameState implements iGameState {
      * @return El Player del ganador, o null si el juego no ha terminado.
      */
     @Override
-    public player getWinner() {
+    public Player getWinner() {
         if (!isGameOver()) {
             return null;
         }
@@ -302,7 +302,7 @@ public class gameState implements iGameState {
      * @return El Player del jugador actual.
      */
     @Override
-    public player getCurrentTurnPlayer() {
+    public Player getCurrentTurnPlayer() {
         return this.currentPlayer;
     }
 
@@ -319,7 +319,7 @@ public class gameState implements iGameState {
     }
 
     @Override
-    public List<shipType> getPendingShipsToPlace() {
+    public List<ShipType> getPendingShipsToPlace() {
         return new ArrayList<>(this.pendingShipsToPlaceForHuman);
     }
     
@@ -327,7 +327,7 @@ public class gameState implements iGameState {
      * Obtiene la fase actual del juego
      * @return La fase actual del juego
      */
-    public gamePhase getCurrentPhase() {
+    public GamePhase getCurrentPhase() {
         return this.currentPhase;
     }
 
@@ -336,19 +336,19 @@ public class gameState implements iGameState {
      * Crea un memento con el estado actual del juego
      * @return El memento creado
      */
-    public gameMemento createMemento() {
+    public GameMemento createMemento() {
         String nickname = (humanPlayer != null) ? humanPlayer.getName() : "Unknown";
         int humanSunkShips = countSunkShips(humanPlayerBoard);
         int computerSunkShips = countSunkShips(machinePlayerBoard);
         
-        return new gameMemento(nickname, humanSunkShips, computerSunkShips, currentPhase);
+        return new GameMemento(nickname, humanSunkShips, computerSunkShips, currentPhase);
     }
     
     /**
      * Restaura el estado del juego desde un memento
      * @param memento El memento a restaurar
      */
-    public void restoreFromMemento(gameMemento memento) {
+    public void restoreFromMemento(GameMemento memento) {
         if (memento != null) {
             // Restaurar el nickname del jugador
             if (humanPlayer != null) {
@@ -368,11 +368,11 @@ public class gameState implements iGameState {
      */
     private void recalculatePendingShips() {
         // Crear una lista completa de todos los barcos que deberían estar en el tablero
-        List<shipType> allShipTypes = createFleetShipTypes();
+        List<ShipType> allShipTypes = createFleetShipTypes();
         
         // Obtener los tipos de barcos ya colocados en el tablero
-        List<shipType> placedShipTypes = new ArrayList<>();
-        for (ship ship : humanPlayerBoard.getShips()) {
+        List<ShipType> placedShipTypes = new ArrayList<>();
+        for (Ship ship : humanPlayerBoard.getShips()) {
             placedShipTypes.add(ship.getShipType());
         }
         
@@ -380,7 +380,7 @@ public class gameState implements iGameState {
         pendingShipsToPlaceForHuman.clear();
         
         // Para cada tipo de barco en la flota completa
-        for (shipType shipType : allShipTypes) {
+        for (ShipType shipType : allShipTypes) {
             // Si no está en la lista de barcos colocados, agregarlo a pendientes
             if (!placedShipTypes.isEmpty() && placedShipTypes.contains(shipType)) {
                 placedShipTypes.remove(shipType); // Remover una ocurrencia
@@ -397,10 +397,10 @@ public class gameState implements iGameState {
      * @param board El tablero a revisar
      * @return El número de barcos hundidos
      */
-    private int countSunkShips(board board) {
+    private int countSunkShips(Board board) {
         int sunkShips = 0;
-        List<ship> ships = board.getShips();
-        for (ship ship : ships) {
+        List<Ship> ships = board.getShips();
+        for (Ship ship : ships) {
             if (ship.isSunk()) {
                 sunkShips++;
             }
@@ -454,18 +454,18 @@ public class gameState implements iGameState {
      * Metodo que crea la cantidad de barcos que cada jugador debe poseer en su tablero.
      * @return fleet flota de barcos especificada en los requerimientos.
      */
-    public List<ship> createFleet() {
-        List<ship> fleet = new ArrayList<>();
-        fleet.add(new airCraftCarrier());
-        fleet.add(new submarine());
-        fleet.add(new submarine());
-        fleet.add(new destroyer());
-        fleet.add(new destroyer());
-        fleet.add(new destroyer());
-        fleet.add(new frigate());
-        fleet.add(new frigate());
-        fleet.add(new frigate());
-        fleet.add(new frigate());
+    public List<Ship> createFleet() {
+        List<Ship> fleet = new ArrayList<>();
+        fleet.add(new AirCraftCarrier());
+        fleet.add(new Submarine());
+        fleet.add(new Submarine());
+        fleet.add(new Destroyer());
+        fleet.add(new Destroyer());
+        fleet.add(new Destroyer());
+        fleet.add(new Frigate());
+        fleet.add(new Frigate());
+        fleet.add(new Frigate());
+        fleet.add(new Frigate());
         return fleet;
     }
 
@@ -474,10 +474,10 @@ public class gameState implements iGameState {
      */
     private void placeMachinePlayerShips() {
         this.machinePlayerBoard.resetBoard(); // Asegurarse que el tablero esté limpio
-        List<ship> machineFleet = this.createFleet();
+        List<Ship> machineFleet = this.createFleet();
         Random random = new Random();
 
-        for (ship ship : machineFleet) {
+        for (Ship ship : machineFleet) {
             boolean placedSuccessfully = false;
             int attempts = 0;
             final int MAX_PLACEMENT_ATTEMPTS = 100; // Para evitar bucles infinitos
@@ -485,14 +485,14 @@ public class gameState implements iGameState {
             while (!placedSuccessfully && attempts < MAX_PLACEMENT_ATTEMPTS) {
                 int row = random.nextInt(this.machinePlayerBoard.getSize());
                 int col = random.nextInt(this.machinePlayerBoard.getSize());
-                orientation orientation = random.nextBoolean() ? univalle.tedesoft.battleship.models.enums.orientation.HORIZONTAL : univalle.tedesoft.battleship.models.enums.orientation.VERTICAL;
+                Orientation orientation = random.nextBoolean() ? Orientation.HORIZONTAL : Orientation.VERTICAL;
 
                 ship.setOrientation(orientation);
 
                 try {
-                    this.machinePlayerBoard.placeShip(ship, new coordinate(col, row));
+                    this.machinePlayerBoard.placeShip(ship, new Coordinate(col, row));
                     placedSuccessfully = true; // Si no lanza excepción, se colocó bien.
-                } catch (outOfBoundsException | overlapException e) {
+                } catch (OutOfBoundsException | OverlapException e) {
                     // Si falla, simplemente lo intentamos de nuevo en otra posición.
                     placedSuccessfully = false;
                 }

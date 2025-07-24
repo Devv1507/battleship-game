@@ -1,25 +1,25 @@
 package univalle.tedesoft.battleship;
 
-import univalle.tedesoft.battleship.models.players.humanPlayer;
-import univalle.tedesoft.battleship.models.state.gameState;
-import univalle.tedesoft.battleship.models.enums.shipType;
-import univalle.tedesoft.battleship.models.enums.orientation;
+import univalle.tedesoft.battleship.models.enums.Orientation;
+import univalle.tedesoft.battleship.models.players.HumanPlayer;
+import univalle.tedesoft.battleship.models.state.GameState;
+import univalle.tedesoft.battleship.models.enums.ShipType;
 
 /**
  * Clase de prueba para verificar la serialización completa del juego.
  * 
  * @author Tu Nombre
  */
-public class testCompleteSaveLoad {
+public class TestCompleteSaveLoad {
     
     public static void main(String[] args) {
         System.out.println("=== Prueba de Serialización Completa ===\n");
         
         // Crear una instancia del juego
-        gameState gameState = new gameState();
+        GameState gameState = new GameState();
         
         // Crear un jugador humano
-        humanPlayer humanPlayer = new humanPlayer("JugadorCompleto");
+        HumanPlayer humanPlayer = new HumanPlayer("JugadorCompleto");
         
         // Iniciar un nuevo juego
         gameState.startNewGame(humanPlayer);
@@ -33,15 +33,15 @@ public class testCompleteSaveLoad {
         System.out.println("\n2. Simulando colocación de barcos...");
         try {
             // Colocar un portaaviones horizontalmente en (0,0)
-            gameState.placeHumanPlayerShip(shipType.AIR_CRAFT_CARRIER, 0, 0, orientation.HORIZONTAL);
+            gameState.placeHumanPlayerShip(ShipType.AIR_CRAFT_CARRIER, 0, 0, Orientation.HORIZONTAL);
             System.out.println("   ✓ Portaaviones colocado en (0,0) horizontal");
             
             // Colocar un submarino verticalmente en (2,2)
-            gameState.placeHumanPlayerShip(shipType.SUBMARINE, 2, 2, orientation.VERTICAL);
+            gameState.placeHumanPlayerShip(ShipType.SUBMARINE, 2, 2, Orientation.VERTICAL);
             System.out.println("   ✓ Submarino colocado en (2,2) vertical");
             
             // Colocar un destructor horizontalmente en (5,5)
-            gameState.placeHumanPlayerShip(shipType.DESTROYER, 5, 5, orientation.HORIZONTAL);
+            gameState.placeHumanPlayerShip(ShipType.DESTROYER, 5, 5, Orientation.HORIZONTAL);
             System.out.println("   ✓ Destructor colocado en (5,5) horizontal");
             
         } catch (Exception e) {
@@ -64,8 +64,8 @@ public class testCompleteSaveLoad {
         
         // Crear un nuevo estado y cargar el anterior
         System.out.println("\n5. Creando nuevo estado y cargando el anterior...");
-        gameState newGameState = new gameState();
-        humanPlayer newPlayer = new humanPlayer("NuevoJugador");
+        GameState newGameState = new GameState();
+        HumanPlayer newPlayer = new HumanPlayer("NuevoJugador");
         newGameState.startNewGame(newPlayer);
         
         System.out.println("   - Nuevo jugador: " + newGameState.getHumanPlayerNickname());

@@ -6,7 +6,7 @@ package univalle.tedesoft.battleship.models.enums;
  * @author Santiago David Guerrero
  * @author Juan Pablo Escamilla
  */
-public enum cellState {
+public enum CellState {
     /** Estado en el que la celda se encuentra ocupada por un tipo de barco o parte de uno*/
     SHIP,
     /** Estado en el que la celda se encuentra vacia*/

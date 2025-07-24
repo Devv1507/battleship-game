@@ -1,14 +1,16 @@
 package univalle.tedesoft.battleship.models.ships;
 
+import univalle.tedesoft.battleship.models.enums.ShipType;
+
 /**
  * Clase que representa la embarcacion de tipo "FRIGATE".
  * @author David Esteban Valencia
  * @author Santiago David Guerrero
  * @author Juan Pablo Escamilla
  */
-public class frigate extends ship {
+public class Frigate extends Ship {
     /**Constructor de la clase*/
-    public frigate() {
-        super(univalle.tedesoft.battleship.models.enums.shipType.FRIGATE, 1);
+    public Frigate() {
+        super(ShipType.FRIGATE, 1);
     }
 }

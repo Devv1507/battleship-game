@@ -7,18 +7,18 @@ import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
-import univalle.tedesoft.battleship.exceptions.outOfBoundsException;
-import univalle.tedesoft.battleship.exceptions.overlapException;
-import univalle.tedesoft.battleship.models.enums.orientation;
-import univalle.tedesoft.battleship.models.enums.shipType;
-import univalle.tedesoft.battleship.models.players.humanPlayer;
-import univalle.tedesoft.battleship.models.players.player;
-import univalle.tedesoft.battleship.models.shotOutcome;
-import univalle.tedesoft.battleship.models.state.iGameState;
-import univalle.tedesoft.battleship.threads.machineTurnRunnable;
-import univalle.tedesoft.battleship.views.gameView;
+import univalle.tedesoft.battleship.exceptions.OutOfBoundsException;
+import univalle.tedesoft.battleship.exceptions.OverlapException;
+import univalle.tedesoft.battleship.models.enums.Orientation;
+import univalle.tedesoft.battleship.models.enums.ShipType;
+import univalle.tedesoft.battleship.models.players.HumanPlayer;
+import univalle.tedesoft.battleship.models.players.Player;
+import univalle.tedesoft.battleship.models.ShotOutcome;
+import univalle.tedesoft.battleship.models.state.IGameState;
+import univalle.tedesoft.battleship.threads.MachineTurnRunnable;
+import univalle.tedesoft.battleship.views.GameView;
 
-public class gameController {
+public class GameController {
 
     // --- Componentes FXML ---
     @FXML public Button finalizePlacementButton;
@@ -38,14 +38,14 @@ public class gameController {
     @FXML public StackPane machinePlayerBoardContainer;
 
     // --- Referencias principales ---
-    private iGameState gameState;
-    private gameView gameView;
+    private IGameState gameState;
+    private GameView gameView;
 
     private Thread machineTurnThread;
 
     // --- Estado interno del controlador ---
-    private shipType selectedShipToPlace;
-    private orientation chosenOrientation = orientation.HORIZONTAL;
+    private ShipType selectedShipToPlace;
+    private Orientation chosenOrientation = Orientation.HORIZONTAL;
     private boolean isOpponentBoardVisible = false;
     private static final long MACHINE_TURN_THINK_DELAY_MS = 1500;
 
@@ -63,7 +63,7 @@ public class gameController {
      *
      * @param gameView La instancia de la vista que hará el trabajo.
      */
-    public void initializeUI(gameView gameView) {
+    public void initializeUI(GameView gameView) {
         // Limpiar el contenedor de mensajes al inicio
         if (this.messageContainer != null) {
             this.messageContainer.getChildren().clear();
@@ -80,7 +80,7 @@ public class gameController {
      *
      * @param gameView La instancia de GameView que maneja la ventana.
      */
-    public void setGameView(gameView gameView) {
+    public void setGameView(GameView gameView) {
         this.gameView = gameView;
 
         // Ahora que la vista está lista, podemos pedirle que configure su estado inicial.
@@ -95,7 +95,7 @@ public class gameController {
      *
      * @param gameState La instancia del estado del juego.
      */
-    public void setGameState(iGameState gameState) {
+    public void setGameState(IGameState gameState) {
         this.gameState = gameState;
     }
 
@@ -106,7 +106,7 @@ public class gameController {
      *
      * @return la instancia de IGameState.
      */
-    public iGameState getGameState() {
+    public IGameState getGameState() {
         return this.gameState;
     }
 
@@ -142,7 +142,7 @@ public class gameController {
      */
     @FXML
     void onHorizontalClick(ActionEvent event) {
-        this.chosenOrientation = orientation.HORIZONTAL;
+        this.chosenOrientation = Orientation.HORIZONTAL;
         this.gameView.updateOrientationButtons(this.chosenOrientation);
         this.gameView.displayMessage("Orientación seleccionada: Horizontal.", false);
     }
@@ -154,7 +154,7 @@ public class gameController {
      */
     @FXML
     void onVerticalClick(ActionEvent event) {
-        this.chosenOrientation = orientation.VERTICAL;
+        this.chosenOrientation = Orientation.VERTICAL;
         this.gameView.updateOrientationButtons(this.chosenOrientation);
         this.gameView.displayMessage("Orientación seleccionada: Vertical.", false);
     }
@@ -242,7 +242,7 @@ public class gameController {
             this.machineTurnThread.interrupt();
         }
 
-        machineTurnRunnable machineRunnable = new machineTurnRunnable(this, MACHINE_TURN_THINK_DELAY_MS);
+        MachineTurnRunnable machineRunnable = new MachineTurnRunnable(this, MACHINE_TURN_THINK_DELAY_MS);
         this.machineTurnThread = new Thread(machineRunnable);
         this.machineTurnThread.setDaemon(true);
         this.machineTurnThread.start();
@@ -251,7 +251,7 @@ public class gameController {
     public void executeMachineTurnLogic() {
         if (this.gameState.isGameOver()) return;
 
-        shotOutcome outcome = this.gameState.handleMachinePlayerTurn();
+        ShotOutcome outcome = this.gameState.handleMachinePlayerTurn();
 
         String message = this.buildShotMessage("Máquina disparó a " + outcome.getCoordinate().toAlgebraicNotation(), outcome);
         this.gameView.displayMessage(message, false);
@@ -269,7 +269,7 @@ public class gameController {
 
     private boolean checkAndHandleGameOver() {
         if (this.gameState.isGameOver()) {
-            player winner = this.gameState.getWinner();
+            Player winner = this.gameState.getWinner();
             this.gameView.displayMessage("¡Juego Terminado! El ganador es: " + winner.getName(), false);
             this.gameView.setBoardInteraction(this.humanPlayerBoardGrid, false);
             this.gameView.setBoardInteraction(this.machinePlayerBoardGrid, false);
@@ -287,13 +287,13 @@ public class gameController {
      * @param col La columna de la celda clickeada.
      */
     public void handleFiringCellClick(int row, int col) {
-        if (this.gameState.isGameOver() || !(this.gameState.getCurrentTurnPlayer() instanceof humanPlayer)) {
+        if (this.gameState.isGameOver() || !(this.gameState.getCurrentTurnPlayer() instanceof HumanPlayer)) {
             this.gameView.displayMessage("Espera tu turno.", true);
             return;
         }
 
         try {
-            shotOutcome outcome = this.gameState.handleHumanPlayerShot(row, col);
+            ShotOutcome outcome = this.gameState.handleHumanPlayerShot(row, col);
 
             String message = this.buildShotMessage("Disparo a " + outcome.getCoordinate().toAlgebraicNotation(), outcome);
             this.gameView.displayMessage(message, false);
@@ -307,11 +307,11 @@ public class gameController {
             this.gameState.switchTurn();
             this.scheduleMachineTurn();
 
-        } catch (overlapException e) {
+        } catch (OverlapException e) {
             // El jugador disparó a una casilla repetida. Mostramos el error y le permitimos disparar de nuevo.
             this.gameView.displayMessage(e.getMessage() + " Por favor, selecciona otra casilla.", true);
             // IMPORTANTE: No cambiamos de turno.
-        } catch (outOfBoundsException e) {
+        } catch (OutOfBoundsException e) {
             this.gameView.displayMessage("Error: " + e.getMessage(), true);
         }
     }
@@ -359,7 +359,7 @@ public class gameController {
      *
      * @param shipType El tipo de barco seleccionado.
      */
-    public void handleShipSelection(shipType shipType) {
+    public void handleShipSelection(ShipType shipType) {
         this.selectedShipToPlace = shipType;
         this.gameView.showOrientationControls(true); // Mostrar controles
         this.gameView.updateOrientationButtons(this.chosenOrientation); // Resaltar el botón actual
@@ -372,7 +372,7 @@ public class gameController {
      * @param outcome El resultado del disparo.
      * @return El mensaje completo y formateado.
      */
-    private String buildShotMessage(String baseMessage, shotOutcome outcome) {
+    private String buildShotMessage(String baseMessage, ShotOutcome outcome) {
         String message = switch (outcome.getResult()) {
             case WATER -> baseMessage + ", ¡Falla!";
             case TOUCHED -> baseMessage + ", ¡Acierto!";

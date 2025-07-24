@@ -6,7 +6,7 @@ package univalle.tedesoft.battleship.models;
  * @author Santiago David Guerrero
  * @author Juan Pablo Escamilla
  */
-public class coordinate {
+public class Coordinate {
     /** Coordenada x*/
     private int x;
     /** Coordenada y*/
@@ -14,7 +14,7 @@ public class coordinate {
     /** Booleano con el objetivo de saber si la coordenada fue impactada*/
     private boolean isSunk;
     /** Constructor*/
-    public coordinate(int x, int y) {
+    public Coordinate(int x, int y) {
         this.x = x;
         this.y = y;
         this.isSunk = false;

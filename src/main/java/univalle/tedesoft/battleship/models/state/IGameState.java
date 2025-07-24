@@ -1,14 +1,14 @@
 package univalle.tedesoft.battleship.models.state;
 
-import univalle.tedesoft.battleship.exceptions.outOfBoundsException;
-import univalle.tedesoft.battleship.exceptions.overlapException;
-import univalle.tedesoft.battleship.models.enums.orientation;
-import univalle.tedesoft.battleship.models.enums.shipType;
-import univalle.tedesoft.battleship.models.enums.gamePhase;
-import univalle.tedesoft.battleship.models.players.player; // Necesitará ser definida
-import univalle.tedesoft.battleship.exceptions.invalidShipPlacementException;
-import univalle.tedesoft.battleship.models.board;
-import univalle.tedesoft.battleship.models.shotOutcome;
+import univalle.tedesoft.battleship.exceptions.InvalidShipPlacementException;
+import univalle.tedesoft.battleship.exceptions.OutOfBoundsException;
+import univalle.tedesoft.battleship.exceptions.OverlapException;
+import univalle.tedesoft.battleship.models.enums.Orientation;
+import univalle.tedesoft.battleship.models.enums.ShipType;
+import univalle.tedesoft.battleship.models.enums.GamePhase;
+import univalle.tedesoft.battleship.models.players.Player; // Necesitará ser definida
+import univalle.tedesoft.battleship.models.Board;
+import univalle.tedesoft.battleship.models.ShotOutcome;
 
 
 import java.util.List;
@@ -18,7 +18,7 @@ import java.util.List;
  * El GameController utiliza esta interfaz para interactuar con el modelo del juego,
  * gestionando la colocación de barcos, los disparos, los turnos y el estado general de la partida.
  */
-public interface iGameState {
+public interface IGameState {
 
     /**
      * Inicia una nueva partida.
@@ -26,7 +26,7 @@ public interface iGameState {
      * El jugador humano deberá colocar sus barcos. La máquina los colocará automáticamente.
      * @param humanPlayer El nombre del jugador humano.
      */
-    void startNewGame(player humanPlayer);
+    void startNewGame(Player humanPlayer);
 
     /**
      * Intenta colocar un barco para el jugador humano en su tablero de posición.
@@ -36,11 +36,11 @@ public interface iGameState {
      * @param row La fila (0-9) de la casilla de inicio del barco.
      * @param col La columna (0-9) de la casilla de inicio del barco.
      * @param orientation La orientación del barco (HORIZONTAL o VERTICAL).
-     * @throws invalidShipPlacementException si la colocación es inválida.
-     * @throws overlapException si el barco se superpone con otro.
-     * @throws outOfBoundsException si el barco se sale del tablero.
+     * @throws InvalidShipPlacementException si la colocación es inválida.
+     * @throws OverlapException si el barco se superpone con otro.
+     * @throws OutOfBoundsException si el barco se sale del tablero.
      */
-    void placeHumanPlayerShip(shipType shipType, int row, int col, orientation orientation) throws invalidShipPlacementException, overlapException, outOfBoundsException;
+    void placeHumanPlayerShip(ShipType shipType, int row, int col, Orientation orientation) throws InvalidShipPlacementException, OverlapException, OutOfBoundsException;
 
     /**
      * Indica que el jugador humano ha terminado de colocar todos sus barcos.
@@ -52,30 +52,30 @@ public interface iGameState {
     /**
      * Procesa un disparo realizado por el jugador humano en el tablero principal (de la máquina).
      * @return Un objeto ShotResult que indica las coordenadas del disparo y su resultado (AGUA, TOCADO, HUNDIDO).
-     * @throws outOfBoundsException si el disparo es fuera del tablero.
+     * @throws OutOfBoundsException si el disparo es fuera del tablero.
      */
-    shotOutcome handleHumanPlayerShot(int row, int col) throws outOfBoundsException, overlapException;
+    ShotOutcome handleHumanPlayerShot(int row, int col) throws OutOfBoundsException, OverlapException;
 
     /**
      * Ejecuta el turno de la máquina. La máquina elige una casilla para disparar
      * en el tablero del jugador humano.
      * @return Un objeto ShotResult que indica las coordenadas del disparo y su resultado.
      */
-    shotOutcome handleMachinePlayerTurn();
+    ShotOutcome handleMachinePlayerTurn();
 
     /**
      * Obtiene el tablero de posición del jugador humano.
      * Utilizado por la vista para mostrar los barcos del jugador y los disparos de la máquina.
      * @return El objeto Board del jugador humano.
      */
-    board getHumanPlayerPositionBoard();
+    Board getHumanPlayerPositionBoard();
 
     /**
      * Obtiene el tablero principal, que representa la vista del jugador humano
      * sobre el territorio de la máquina. Muestra los resultados de los disparos del humano.
      * @return El objeto Board del territorio de la máquina (vista del jugador).
      */
-    board getMachinePlayerTerritoryBoard(); // Vista para el jugador humano
+    Board getMachinePlayerTerritoryBoard(); // Vista para el jugador humano
 
     /**
      * Obtiene el tablero de posición real de la máquina.
@@ -83,7 +83,7 @@ public interface iGameState {
      * No debe ser accesible para la lógica normal del juego del jugador.
      * @return El objeto Board con la disposición real de los barcos de la máquina.
      */
-    board getMachinePlayerActualPositionBoard();
+    Board getMachinePlayerActualPositionBoard();
 
     /**
      * Verifica si el juego ha terminado (toda la flota de un jugador ha sido hundida).
@@ -95,13 +95,13 @@ public interface iGameState {
      * Obtiene el ganador del juego.
      * @return El PlayerType del ganador (HUMAN o COMPUTER), o null si el juego no ha terminado.
      */
-    player getWinner(); // Debería devolver un tipo Player o un enum que identifique al ganador
+    Player getWinner(); // Debería devolver un tipo Player o un enum que identifique al ganador
 
     /**
      * Obtiene el jugador cuyo turno es actualmente.
      * @return El PlayerType del jugador actual.
      */
-    player getCurrentTurnPlayer(); // Debería devolver un tipo Player o un enum
+    Player getCurrentTurnPlayer(); // Debería devolver un tipo Player o un enum
 
     /**
      * Guarda el estado actual del juego (tableros, turno, etc.) para poder reanudarlo.
@@ -125,7 +125,7 @@ public interface iGameState {
      * Obtiene la lista de barcos que el jugador humano aún necesita colocar.
      * @return Una lista de ShipType.
      */
-    List<shipType> getPendingShipsToPlace();
+    List<ShipType> getPendingShipsToPlace();
 
     /**
      * Devuelve el nickname del jugador humano.
@@ -154,5 +154,5 @@ public interface iGameState {
      * Obtiene la fase actual del juego
      * @return La fase actual del juego
      */
-    gamePhase getCurrentPhase();
+    GamePhase getCurrentPhase();
 }

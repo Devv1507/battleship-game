@@ -6,7 +6,7 @@ package univalle.tedesoft.battleship.models.enums;
  * @author Santiago David Guerrero
  * @author Juan Pablo Escamilla
  */
-public enum gamePhase {
+public enum GamePhase {
     /** Inicio*/
     INITIAL,
     /** Jugador colocando barcos*/

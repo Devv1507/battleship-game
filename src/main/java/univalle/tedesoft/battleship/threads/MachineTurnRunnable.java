@@ -1,16 +1,16 @@
 package univalle.tedesoft.battleship.threads;
 
 import javafx.application.Platform;
-import univalle.tedesoft.battleship.controllers.gameController;
+import univalle.tedesoft.battleship.controllers.GameController;
 
 /**
  * Runnable que gestiona el turno de la máquina en un hilo separado.
  * Introduce un retraso para simular el "pensamiento" de la máquina antes
  * de ejecutar la lógica del juego en el hilo de la interfaz de usuario de JavaFX.
  */
-public class machineTurnRunnable implements Runnable {
+public class MachineTurnRunnable implements Runnable {
 
-    private final gameController gameController;
+    private final GameController gameController;
     private final long thinkDelayMs;
 
     /**
@@ -18,7 +18,7 @@ public class machineTurnRunnable implements Runnable {
      * @param gameController La instancia del controlador del juego.
      * @param thinkDelayMs El tiempo en milisegundos que la máquina "pensará" antes de actuar.
      */
-    public machineTurnRunnable(gameController gameController, long thinkDelayMs) {
+    public MachineTurnRunnable(GameController gameController, long thinkDelayMs) {
         this.gameController = gameController;
         this.thinkDelayMs = thinkDelayMs;
     }

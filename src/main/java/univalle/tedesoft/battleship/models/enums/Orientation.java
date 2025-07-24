@@ -6,7 +6,7 @@ package univalle.tedesoft.battleship.models.enums;
  * @author Santiago David Guerrero
  * @author Juan Pablo Escamilla
  */
-public enum orientation {
+public enum Orientation {
     /** Embarcacion en estado vertical*/
     VERTICAL,
     /** Embarcacion en estado horizontal*/

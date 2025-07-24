@@ -5,7 +5,7 @@ package univalle.tedesoft.battleship.models.enums;
  * @author David Esteban Valencia
  * @author Juan Pablo Escamilla
  */
-public enum shotResult {
+public enum ShotResult {
     /**Disparo al agua*/
     WATER,
     /**Disparo toca una embarcacion*/

@@ -1,6 +1,6 @@
 package univalle.tedesoft.battleship.models.state;
 
-import univalle.tedesoft.battleship.models.enums.gamePhase;
+import univalle.tedesoft.battleship.models.enums.GamePhase;
 
 import java.io.*;
 import java.nio.file.Files;
@@ -14,17 +14,17 @@ import java.time.format.DateTimeFormatter;
  * 
  * @author Tu Nombre
  */
-public class gameCaretaker {
+public class GameCaretaker {
     private static final String SAVE_DIRECTORY = "src/main/resources/univalle/tedesoft/battleship/saves";
     private static final String GAME_INFO_FILE = "game_info.txt";
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
     
-    private gameMemento currentMemento;
+    private GameMemento currentMemento;
     
     /**
      * Constructor del Caretaker
      */
-    public gameCaretaker() {
+    public GameCaretaker() {
         // Crear el directorio de guardado si no existe
         createSaveDirectory();
     }
@@ -33,7 +33,7 @@ public class gameCaretaker {
      * Guarda un memento en memoria
      * @param memento El memento a guardar
      */
-    public void saveMemento(gameMemento memento) {
+    public void saveMemento(GameMemento memento) {
         this.currentMemento = memento;
     }
     
@@ -41,7 +41,7 @@ public class gameCaretaker {
      * Recupera el memento guardado en memoria
      * @return El memento guardado o null si no hay ninguno
      */
-    public gameMemento getMemento() {
+    public GameMemento getMemento() {
         return currentMemento;
     }
     
@@ -50,7 +50,7 @@ public class gameCaretaker {
      * @param memento El memento a persistir
      * @return true si se guardó exitosamente, false en caso contrario
      */
-    public boolean saveGameToFiles(gameMemento memento) {
+    public boolean saveGameToFiles(GameMemento memento) {
         try {
             // Guardar información del juego en archivo plano
             Path gameInfoPath = Paths.get(SAVE_DIRECTORY, GAME_INFO_FILE);
@@ -85,10 +85,10 @@ public class gameCaretaker {
      * @param gameState El estado del juego a guardar
      * @return true si se guardó exitosamente, false en caso contrario
      */
-    public boolean saveCompleteGame(gameState gameState) {
+    public boolean saveCompleteGame(GameState gameState) {
         try {
             // Primero guardar la información básica del juego
-            gameMemento memento = new gameMemento(
+            GameMemento memento = new GameMemento(
                 gameState.getHumanPlayerNickname(),
                 gameState.getHumanPlayerSunkShipCount(),
                 gameState.getComputerPlayerSunkShipCount(),
@@ -101,7 +101,7 @@ public class gameCaretaker {
             }
             
             // Luego serializar el estado completo del juego
-            boolean completeStateSaved = gameSerializer.serializeGame(gameState);
+            boolean completeStateSaved = GameSerializer.serializeGame(gameState);
             if (completeStateSaved) {
                 System.out.println("Estado completo del juego guardado exitosamente");
                 return true;
@@ -120,7 +120,7 @@ public class gameCaretaker {
      * Carga el estado del juego desde archivos planos
      * @return El memento cargado o null si no se pudo cargar
      */
-    public gameMemento loadGameFromFiles() {
+    public GameMemento loadGameFromFiles() {
         try {
             Path gameInfoPath = Paths.get(SAVE_DIRECTORY, GAME_INFO_FILE);
             
@@ -132,7 +132,7 @@ public class gameCaretaker {
             String nickname = null;
             int humanSunkShips = 0;
             int computerSunkShips = 0;
-            gamePhase gamePhase = univalle.tedesoft.battleship.models.enums.gamePhase.INITIAL;
+            GamePhase gamePhase = GamePhase.INITIAL;
             
             try (BufferedReader reader = Files.newBufferedReader(gameInfoPath)) {
                 String line;
@@ -153,7 +153,7 @@ public class gameCaretaker {
                                 computerSunkShips = Integer.parseInt(value);
                                 break;
                             case "GAME_PHASE":
-                                gamePhase = univalle.tedesoft.battleship.models.enums.gamePhase.valueOf(value);
+                                gamePhase = GamePhase.valueOf(value);
                                 break;
                         }
                     }
@@ -161,7 +161,7 @@ public class gameCaretaker {
             }
             
             if (nickname != null) {
-                gameMemento memento = new gameMemento(nickname, humanSunkShips, computerSunkShips, gamePhase);
+                GameMemento memento = new GameMemento(nickname, humanSunkShips, computerSunkShips, gamePhase);
                 saveMemento(memento);
                 System.out.println("Juego cargado exitosamente desde: " + gameInfoPath.toAbsolutePath());
                 return memento;
@@ -187,10 +187,10 @@ public class gameCaretaker {
      * @param gameState El estado del juego donde cargar los datos
      * @return true si se cargó exitosamente, false en caso contrario
      */
-    public boolean loadCompleteGame(gameState gameState) {
+    public boolean loadCompleteGame(GameState gameState) {
         try {
             // Primero cargar la información básica del juego
-            gameMemento memento = loadGameFromFiles();
+            GameMemento memento = loadGameFromFiles();
             if (memento == null) {
                 return false;
             }
@@ -199,7 +199,7 @@ public class gameCaretaker {
             gameState.restoreFromMemento(memento);
             
             // Luego deserializar el estado completo del juego
-            boolean completeStateLoaded = gameSerializer.deserializeGame(gameState);
+            boolean completeStateLoaded = GameSerializer.deserializeGame(gameState);
             if (completeStateLoaded) {
                 System.out.println("Estado completo del juego cargado exitosamente");
                 return true;
@@ -224,7 +224,7 @@ public class gameCaretaker {
         boolean hasBasicInfo = Files.exists(gameInfoPath);
         
         // Verificar si hay estado completo del juego
-        boolean hasCompleteState = gameSerializer.hasSavedGame();
+        boolean hasCompleteState = GameSerializer.hasSavedGame();
         
         return hasBasicInfo && hasCompleteState;
     }

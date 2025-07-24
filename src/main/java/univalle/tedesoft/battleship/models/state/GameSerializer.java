@@ -1,10 +1,10 @@
 package univalle.tedesoft.battleship.models.state;
 
-import univalle.tedesoft.battleship.models.board;
-import univalle.tedesoft.battleship.models.coordinate;
-import univalle.tedesoft.battleship.models.enums.cellState;
-import univalle.tedesoft.battleship.models.enums.orientation;
-import univalle.tedesoft.battleship.models.enums.shipType;
+import univalle.tedesoft.battleship.models.Board;
+import univalle.tedesoft.battleship.models.Coordinate;
+import univalle.tedesoft.battleship.models.enums.CellState;
+import univalle.tedesoft.battleship.models.enums.Orientation;
+import univalle.tedesoft.battleship.models.enums.ShipType;
 import univalle.tedesoft.battleship.models.ships.*;
 
 import java.io.*;
@@ -20,7 +20,7 @@ import java.util.List;
  * 
  * @author Tu Nombre
  */
-public class gameSerializer {
+public class GameSerializer {
     private static final String SAVE_DIRECTORY = "src/main/resources/univalle/tedesoft/battleship/saves";
     private static final String BOARD_FILE = "board_state.txt";
     private static final String SHIPS_FILE = "ships_state.txt";
@@ -30,7 +30,7 @@ public class gameSerializer {
      * @param gameState El estado del juego a serializar
      * @return true si se serializó exitosamente, false en caso contrario
      */
-    public static boolean serializeGame(gameState gameState) {
+    public static boolean serializeGame(GameState gameState) {
         try {
             createSaveDirectory();
             
@@ -55,7 +55,7 @@ public class gameSerializer {
      * @param gameState El estado del juego donde cargar los datos
      * @return true si se deserializó exitosamente, false en caso contrario
      */
-    public static boolean deserializeGame(gameState gameState) {
+    public static boolean deserializeGame(GameState gameState) {
         try {
             // Deserializar tableros
             deserializeBoard(gameState.getHumanPlayerPositionBoard(), "human_board");
@@ -78,14 +78,14 @@ public class gameSerializer {
      * @param board El tablero a serializar
      * @param prefix Prefijo para el archivo
      */
-    private static void serializeBoard(board board, String prefix) throws IOException {
+    private static void serializeBoard(Board board, String prefix) throws IOException {
         Path boardPath = Paths.get(SAVE_DIRECTORY, prefix + "_" + BOARD_FILE);
         
         try (BufferedWriter writer = Files.newBufferedWriter(boardPath)) {
             // Escribir el estado de cada celda
             for (int row = 0; row < board.getSize(); row++) {
                 for (int col = 0; col < board.getSize(); col++) {
-                    cellState state = board.getCellState(row, col);
+                    CellState state = board.getCellState(row, col);
                     writer.write(row + "," + col + ":" + state.name());
                     writer.newLine();
                 }
@@ -98,7 +98,7 @@ public class gameSerializer {
      * @param board El tablero donde cargar los datos
      * @param prefix Prefijo para el archivo
      */
-    private static void deserializeBoard(board board, String prefix) throws IOException {
+    private static void deserializeBoard(Board board, String prefix) throws IOException {
         Path boardPath = Paths.get(SAVE_DIRECTORY, prefix + "_" + BOARD_FILE);
         
         if (!Files.exists(boardPath)) {
@@ -116,7 +116,7 @@ public class gameSerializer {
                     String[] coords = parts[0].split(",");
                     int row = Integer.parseInt(coords[0]);
                     int col = Integer.parseInt(coords[1]);
-                    cellState state = cellState.valueOf(parts[1]);
+                    CellState state = CellState.valueOf(parts[1]);
                     
                     board.setCellState(row, col, state);
                 }
@@ -129,11 +129,11 @@ public class gameSerializer {
      * @param ships La lista de barcos a serializar
      * @param prefix Prefijo para el archivo
      */
-    private static void serializeShips(List<ship> ships, String prefix) throws IOException {
+    private static void serializeShips(List<Ship> ships, String prefix) throws IOException {
         Path shipsPath = Paths.get(SAVE_DIRECTORY, prefix + "_" + SHIPS_FILE);
         
         try (BufferedWriter writer = Files.newBufferedWriter(shipsPath)) {
-            for (ship ship : ships) {
+            for (Ship ship : ships) {
                 // Escribir información del barco
                 writer.write("SHIP:" + ship.getShipType().name() + ":" + 
                            ship.getOrientation().name() + ":" + 
@@ -142,7 +142,7 @@ public class gameSerializer {
                 writer.newLine();
                 
                 // Escribir coordenadas del barco
-                for (coordinate coord : ship.getOccupiedCoordinates()) {
+                for (Coordinate coord : ship.getOccupiedCoordinates()) {
                     writer.write("COORD:" + coord.getX() + "," + coord.getY());
                     writer.newLine();
                 }
@@ -158,7 +158,7 @@ public class gameSerializer {
      * @param board El tablero donde colocar los barcos
      * @param prefix Prefijo para el archivo
      */
-    private static void deserializeShips(board board, String prefix) throws IOException {
+    private static void deserializeShips(Board board, String prefix) throws IOException {
         Path shipsPath = Paths.get(SAVE_DIRECTORY, prefix + "_" + SHIPS_FILE);
         
         if (!Files.exists(shipsPath)) {
@@ -167,15 +167,15 @@ public class gameSerializer {
         
         try (BufferedReader reader = Files.newBufferedReader(shipsPath)) {
             String line;
-            ship currentShip = null;
-            List<coordinate> shipCoords = new ArrayList<>();
+            Ship currentShip = null;
+            List<Coordinate> shipCoords = new ArrayList<>();
             
             while ((line = reader.readLine()) != null) {
                 if (line.startsWith("SHIP:")) {
                     // Crear nuevo barco
                     String[] shipData = line.split(":");
-                    shipType shipType = univalle.tedesoft.battleship.models.enums.shipType.valueOf(shipData[1]);
-                    orientation orientation = univalle.tedesoft.battleship.models.enums.orientation.valueOf(shipData[2]);
+                    ShipType shipType = ShipType.valueOf(shipData[1]);
+                    Orientation orientation = Orientation.valueOf(shipData[2]);
                     int hitCount = Integer.parseInt(shipData[3]);
                     boolean sunk = Boolean.parseBoolean(shipData[4]);
                     
@@ -193,12 +193,12 @@ public class gameSerializer {
                     String[] coordData = line.split(":")[1].split(",");
                     int x = Integer.parseInt(coordData[0]);
                     int y = Integer.parseInt(coordData[1]);
-                    shipCoords.add(new coordinate(x, y));
+                    shipCoords.add(new Coordinate(x, y));
                 } else if (line.equals("ENDSHIP")) {
                     // Finalizar barco y agregarlo al tablero
                     if (currentShip != null) {
                         // Agregar coordenadas al barco
-                        for (coordinate coord : shipCoords) {
+                        for (Coordinate coord : shipCoords) {
                             currentShip.addCoordinates(coord);
                         }
                         
@@ -217,7 +217,7 @@ public class gameSerializer {
      * @param shipType El tipo de barco
      * @return El barco creado
      */
-    private static ship createShipFromType(shipType shipType) {
+    private static Ship createShipFromType(ShipType shipType) {
         /*
         switch (shipType) {
             case AIR_CRAFT_CARRIER:
@@ -233,7 +233,7 @@ public class gameSerializer {
         }
 
          */
-        return shipFactory.createShip(shipType);
+        return ShipFactory.createShip(shipType);
     }
     
     /**

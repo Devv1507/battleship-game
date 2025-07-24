@@ -18,17 +18,17 @@ import javafx.scene.text.Font;
 import javafx.scene.transform.Rotate;
 import javafx.scene.transform.Scale;
 import javafx.stage.Stage;
-import univalle.tedesoft.battleship.main;
-import univalle.tedesoft.battleship.controllers.gameController;
-import univalle.tedesoft.battleship.models.board;
-import univalle.tedesoft.battleship.models.coordinate;
-import univalle.tedesoft.battleship.models.enums.cellState;
-import univalle.tedesoft.battleship.models.enums.orientation;
-import univalle.tedesoft.battleship.models.enums.shipType;
-import univalle.tedesoft.battleship.models.players.humanPlayer;
-import univalle.tedesoft.battleship.models.ships.ship;
-import univalle.tedesoft.battleship.models.state.gameState;
-import univalle.tedesoft.battleship.models.state.iGameState;
+import univalle.tedesoft.battleship.Main;
+import univalle.tedesoft.battleship.controllers.GameController;
+import univalle.tedesoft.battleship.models.Board;
+import univalle.tedesoft.battleship.models.enums.CellState;
+import univalle.tedesoft.battleship.models.enums.ShipType;
+import univalle.tedesoft.battleship.models.players.HumanPlayer;
+import univalle.tedesoft.battleship.models.ships.Ship;
+import univalle.tedesoft.battleship.models.Coordinate;
+import univalle.tedesoft.battleship.models.enums.Orientation;
+import univalle.tedesoft.battleship.models.state.GameState;
+import univalle.tedesoft.battleship.models.state.IGameState;
 import univalle.tedesoft.battleship.views.shapes.*;
 
 import java.io.IOException;
@@ -39,14 +39,14 @@ import java.util.*;
  * Implementa la interfaz IGameView para realizar todas las manipulaciones de la UI,
  * utilizando los componentes FXML que le proporciona el GameController.
  */
-public class gameView extends Stage {
+public class GameView extends Stage {
 
-    private gameController controller;
+    private GameController controller;
 
     // ------------ Constantes
     private static final int CELL_SIZE = 40;
     /** Mapa para las figuras de los barcos */
-    private final Map<shipType, ShipShape> shipShapeFactory;
+    private final Map<ShipType, ShipShape> shipShapeFactory;
     private static final int MAX_MESSAGES = 2; // Mostrar los últimos 2 mensajes
 
 
@@ -55,9 +55,9 @@ public class gameView extends Stage {
      * Carga el FXML, obtiene la referencia al controlador y se la pasa a sí mismo (el Stage).
      * @throws IOException si el archivo FXML no se puede cargar.
      */
-    public gameView() throws IOException {
+    public GameView() throws IOException {
         FXMLLoader fxmlLoader = new FXMLLoader(
-                main.class.getResource("game-view.fxml")
+                Main.class.getResource("game-view.fxml")
         );
         Scene scene = new Scene(fxmlLoader.load());
 
@@ -67,17 +67,17 @@ public class gameView extends Stage {
         }
 
         this.shipShapeFactory = new HashMap<>(); // <-- ESTO ES NUEVO
-        this.shipShapeFactory.put(shipType.AIR_CRAFT_CARRIER, new AircraftShape());
-        this.shipShapeFactory.put(shipType.SUBMARINE, new SubmarineShape());
-        this.shipShapeFactory.put(shipType.DESTROYER, new DestroyerShape());
-        this.shipShapeFactory.put(shipType.FRIGATE, new FrigateShape());
+        this.shipShapeFactory.put(ShipType.AIR_CRAFT_CARRIER, new AircraftShape());
+        this.shipShapeFactory.put(ShipType.SUBMARINE, new SubmarineShape());
+        this.shipShapeFactory.put(ShipType.DESTROYER, new DestroyerShape());
+        this.shipShapeFactory.put(ShipType.FRIGATE, new FrigateShape());
 
-        iGameState gameState = new gameState();
+        IGameState gameState = new GameState();
         this.controller.setGameView(this);
         this.controller.setGameState(gameState);
 
         this.controller.initializeUI(this);
-        gameState.startNewGame(new humanPlayer("Capitán")); // Inicia el modelo con un jugador por defecto
+        gameState.startNewGame(new HumanPlayer("Capitán")); // Inicia el modelo con un jugador por defecto
         this.showShipPlacementPhase(
                 gameState.getHumanPlayerPositionBoard(),
                 gameState.getPendingShipsToPlace()
@@ -93,7 +93,7 @@ public class gameView extends Stage {
      * una vez que la vista ha sido enlazada.
      * @param controller La instancia del controlador para asignar listeners.
      */
-    public void initializeUI(gameController controller) {
+    public void initializeUI(GameController controller) {
         this.initializeBoardGrid(controller.humanPlayerBoardGrid, true);
         this.initializeBoardGrid(controller.machinePlayerBoardGrid, false);
     }
@@ -122,7 +122,7 @@ public class gameView extends Stage {
         }
     }
 
-    public void showShipPlacementPhase(board playerPositionBoard, List<shipType> shipsToPlace) {
+    public void showShipPlacementPhase(Board playerPositionBoard, List<ShipType> shipsToPlace) {
         this.controller.shipPlacementPane.setVisible(true);
         // El botón solo se habilita si no quedan barcos por colocar.
         this.controller.finalizePlacementButton.setDisable(!shipsToPlace.isEmpty());
@@ -132,14 +132,14 @@ public class gameView extends Stage {
         this.controller.shipPlacementPane.getChildren().remove(1, this.controller.shipPlacementPane.getChildren().size());
 
         // Definir los anchos deseados para cada tipo de barco en el panel de selección.
-        final Map<shipType, Double> targetWidths = Map.of(
-                shipType.FRIGATE, 50.0,           // La más pequeña (la mitad del destructor).
-                shipType.DESTROYER, 100.0,        // Nuestro tamaño base.
-                shipType.SUBMARINE, 125.0,        // Proporcionalmente más grande.
-                shipType.AIR_CRAFT_CARRIER, 200.0 // La más grande (el doble del destructor).
+        final Map<ShipType, Double> targetWidths = Map.of(
+                ShipType.FRIGATE, 50.0,           // La más pequeña (la mitad del destructor).
+                ShipType.DESTROYER, 100.0,        // Nuestro tamaño base.
+                ShipType.SUBMARINE, 125.0,        // Proporcionalmente más grande.
+                ShipType.AIR_CRAFT_CARRIER, 200.0 // La más grande (el doble del destructor).
         );
 
-        for (shipType type : shipsToPlace) {
+        for (ShipType type : shipsToPlace) {
             // Obtener la fábrica de formas correcta desde nuestro mapa usando polimorfismo.
             ShipShape shapeFactory = this.shipShapeFactory.get(type);
 
@@ -180,7 +180,7 @@ public class gameView extends Stage {
      * @param board     El objeto Board del modelo que contiene el estado a dibujar.
      * @param showShips Un booleano que indica si los barcos deben ser visibles.
      */
-    public void drawBoard(GridPane gridPane, board board, boolean showShips) {
+    public void drawBoard(GridPane gridPane, Board board, boolean showShips) {
         // Determinar qué Pane de dibujo usar basándose en el GridPane proporcionado.
         Pane drawingPane;
         if (gridPane == this.controller.humanPlayerBoardGrid) {
@@ -202,16 +202,16 @@ public class gameView extends Stage {
             }
         }
 
-        Set<ship> drawnShips = new HashSet<>();
+        Set<Ship> drawnShips = new HashSet<>();
 
         for (int row = 0; row < board.getSize(); row++) {
             for (int col = 0; col < board.getSize(); col++) {
                 // Lógica de dibujo de barcos
                 if (showShips) {
-                    ship occupyingShip = board.getShipAt(row, col);
+                    Ship occupyingShip = board.getShipAt(row, col);
                     if (occupyingShip != null && !drawnShips.contains(occupyingShip)) {
                         // Solo dibujar si estamos en la primera coordenada del barco (la "cabeza").
-                        coordinate headCoordinate = occupyingShip.getOccupiedCoordinates().get(0);
+                        Coordinate headCoordinate = occupyingShip.getOccupiedCoordinates().get(0);
                         if (headCoordinate.getY() == row && headCoordinate.getX() == col) {
 
                             Node shipVisualNode = createAndPositionShipVisual(occupyingShip, col, row);
@@ -222,19 +222,19 @@ public class gameView extends Stage {
                 }
 
                 // Lógica de dibujo de marcadores de estado de celdas
-                cellState state = board.getCellState(row, col);
+                CellState state = board.getCellState(row, col);
                 Pane cellPane = this.getCellPane(gridPane, row, col);
                 if (cellPane == null) continue;
 
-                if (state == cellState.HIT_SHIP || state == cellState.SUNK_SHIP_PART || state == cellState.SHOT_LOST_IN_WATER) {
+                if (state == CellState.HIT_SHIP || state == CellState.SUNK_SHIP_PART || state == CellState.SHOT_LOST_IN_WATER) {
                     Rectangle marker = new Rectangle(CELL_SIZE - 2, CELL_SIZE - 2);
                     marker.setArcWidth(10);
                     marker.setArcHeight(10);
                     marker.setOpacity(0.7);
 
-                    if (state == cellState.HIT_SHIP) {
+                    if (state == CellState.HIT_SHIP) {
                         marker.setFill(Color.ORANGERED);
-                    } else if (state == cellState.SHOT_LOST_IN_WATER) {
+                    } else if (state == CellState.SHOT_LOST_IN_WATER) {
                         marker.setFill(Color.LIGHTSKYBLUE);
                     } else { // SUNK_SHIP_PART
                         marker.setFill(Color.DARKRED);
@@ -330,13 +330,13 @@ public class gameView extends Stage {
      * Actualiza el estilo de los botones de orientación para resaltar el que está activo.
      * @param activeOrientation La orientación actualmente seleccionada.
      */
-    public void updateOrientationButtons(orientation activeOrientation) {
+    public void updateOrientationButtons(Orientation activeOrientation) {
         // Estilo base para los botones
         String baseStyle = "-fx-background-color: lightgray; -fx-border-color: gray;";
         // Estilo para el botón activo
         String activeStyle = "-fx-background-color: lightblue; -fx-border-color: darkblue; -fx-font-weight: bold;";
 
-        if (activeOrientation == orientation.HORIZONTAL) {
+        if (activeOrientation == Orientation.HORIZONTAL) {
             this.controller.horizontalButton.setStyle(activeStyle);
             this.controller.verticalButton.setStyle(baseStyle);
         } else {
@@ -430,7 +430,7 @@ public class gameView extends Stage {
      * @param row  La fila inicial del barco en la cuadrícula.
      * @return El nodo JavaFX listo para ser añadido al canvas de dibujo.
      */
-    private Node createAndPositionShipVisual(ship ship, int col, int row) {
+    private Node createAndPositionShipVisual(Ship ship, int col, int row) {
         ShipShape factory = this.shipShapeFactory.get(ship.getShipType());
         if (factory == null) {
             return new Group(); // Devuelve un grupo vacío si no hay fábrica.
@@ -451,7 +451,7 @@ public class gameView extends Stage {
         shipVisualNode.setLayoutY(yPos);
 
         // Aplicar transformaciones
-        if (ship.getOrientation() == orientation.VERTICAL) {
+        if (ship.getOrientation() == Orientation.VERTICAL) {
             // Para rotación vertical, el pivote debe estar en el centro de la primera celda.
             double pivotX = CELL_SIZE / 2.0;
             double pivotY = CELL_SIZE / 2.0;
@@ -501,18 +501,18 @@ public class gameView extends Stage {
      * Permite obtener la instancia del controlador asociado a esta vista.
      * @return El GameController de la vista.
      */
-    public gameController getController() {
+    public GameController getController() {
         return controller;
     }
 
     // --- Singleton Holder Pattern ---
     private static class GameViewHolder {
-        private static gameView INSTANCE;
+        private static GameView INSTANCE;
     }
 
-    public static gameView getInstance() throws IOException {
+    public static GameView getInstance() throws IOException {
         if (GameViewHolder.INSTANCE == null) {
-            GameViewHolder.INSTANCE = new gameView();
+            GameViewHolder.INSTANCE = new GameView();
             return GameViewHolder.INSTANCE;
         } else {
             return GameViewHolder.INSTANCE;

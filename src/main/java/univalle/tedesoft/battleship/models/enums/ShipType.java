@@ -6,7 +6,7 @@ package univalle.tedesoft.battleship.models.enums;
  * @author Santiago David Guerrero
  * @author Juan Pablo Escamilla
  */
-public enum shipType {
+public enum ShipType {
     /** Embarcacion de tipo Portaavionnes*/
     AIR_CRAFT_CARRIER,
     /** Embarcacion de tipo Submarino*/
