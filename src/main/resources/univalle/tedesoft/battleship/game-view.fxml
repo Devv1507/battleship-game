@@ -8,19 +8,36 @@
 
 <BorderPane prefHeight="700.0" prefWidth="1200.0" xmlns="http://javafx.com/javafx/17.0.6" xmlns:fx="http://javafx.com/fxml/1" fx:controller="univalle.tedesoft.battleship.controllers.GameController">
   <top>
-    <VBox alignment="CENTER" spacing="10.0" BorderPane.alignment="CENTER">
-      <padding>
-        <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
-      </padding>
-      <VBox fx:id="messageContainer" alignment="CENTER" spacing="2.0" prefHeight="50.0">
-        <!-- Este Label es solo un placeholder para el diseñador FXML, se limpiará al iniciar -->
-        <Label text="¡Bienvenido! Coloca tus barcos para comenzar." textAlignment="CENTER">
-          <font>
-            <Font name="Arial" size="16.0" />
-          </font>
-        </Label>
-      </VBox>
-    </VBox>
+    <BorderPane>
+      <left>
+        <!-- Contenedor para botón en la esquina superior izquierda -->
+        <VBox alignment="TOP_LEFT" BorderPane.alignment="TOP_LEFT">
+          <padding>
+            <Insets top="10.0" left="10.0"/>
+          </padding>
+          <children>
+            <Button fx:id="placeRandomlyButton" onAction="#onPlaceRandomlyClick" text="Colocar Aleatoriamente">
+              <font>
+                <Font size="12.0"/>
+              </font>
+            </Button>
+          </children>
+        </VBox>
+      </left>
+      <center>
+        <!-- Contenedor para los mensajes en el centro -->
+        <VBox fx:id="messageContainer" alignment="CENTER" spacing="2.0" prefHeight="50.0" BorderPane.alignment="CENTER">
+          <padding>
+            <Insets top="10.0"/>
+          </padding>
+          <Label text="¡Bienvenido! Coloca tus barcos para comenzar." textAlignment="CENTER">
+            <font>
+              <Font name="Arial" size="16.0"/>
+            </font>
+          </Label>
+        </VBox>
+      </center>
+    </BorderPane>
   </top>
 
   <center>
@@ -88,21 +105,25 @@
       <padding>
         <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
       </padding>
+
       <Button fx:id="saveGameButton" onAction="#onSaveGameClick" text="Guardar Juego">
         <font>
           <Font size="14.0" />
         </font>
       </Button>
+
       <Button fx:id="loadGameButton" onAction="#onLoadGameClick" text="Cargar Juego">
         <font>
           <Font size="14.0" />
         </font>
       </Button>
+
       <Button fx:id="finalizePlacementButton" onAction="#onFinalizePlacementClick" text="Finalizar Colocación" disable="true">
         <font>
           <Font size="14.0" />
         </font>
       </Button>
+
       <Button fx:id="toggleOpponentBoardButton" onAction="#onToggleOpponentBoardClick" text="Ver Tablero Oponente (Profesor)" />
     </HBox>
   </bottom>
