@@ -116,6 +116,8 @@ public class GameView extends Stage {
                 cellPane.getStyleClass().add("cell"); // Para CSS
                 cellPane.setPrefSize(CELL_SIZE, CELL_SIZE);
 
+                // Las etiquetas de coordenadas se manejan dinámicamente en drawBoard()
+
                 final int finalRow = row;
                 final int finalCol = col;
                 cellPane.setOnMouseClicked(event -> {
@@ -239,11 +241,43 @@ public class GameView extends Stage {
             }
         }
 
-        // Lógica de dibujo de marcadores de estado de celdas
+        // Lógica de dibujo de marcadores de estado de celdas y manejo de etiquetas de coordenadas
+        boolean isEnemyBoard = (gridPane == this.controller.machinePlayerBoardGrid);
         for (int row = 0; row < board.getSize(); row++) {
             for (int col = 0; col < board.getSize(); col++) {
                 CellState state = board.getCellState(row, col);
-                // Ignorar celdas sin disparos
+                Pane cellPane = this.getCellPane(gridPane, row, col);
+                
+                if (cellPane != null) {
+                    // En el tablero enemigo, manejar las etiquetas de coordenadas según el estado de la celda
+                    if (isEnemyBoard) {
+                        if (state == CellState.EMPTY || state == CellState.SHIP) {
+                            // Celda no atacada - mostrar etiqueta de coordenada si no existe
+                            boolean hasCoordinateLabel = cellPane.getChildren().stream()
+                                    .anyMatch(child -> child instanceof Label);
+                            
+                            if (!hasCoordinateLabel) {
+                                char columnLetter = (char) ('A' + col);
+                                int rowNumber = row + 1;
+                                String coordinateText = String.format("%c%d", columnLetter, rowNumber);
+                                
+                                Label coordinateLabel = new Label(coordinateText);
+                                coordinateLabel.setFont(new Font("Arial Bold", 14));
+                                coordinateLabel.setStyle("-fx-text-fill: black; -fx-background-color: transparent;");
+                                coordinateLabel.setMouseTransparent(true);
+                                coordinateLabel.setPrefSize(CELL_SIZE, CELL_SIZE);
+                                coordinateLabel.setAlignment(Pos.CENTER);
+                                
+                                cellPane.getChildren().add(coordinateLabel);
+                            }
+                        } else {
+                            // Celda atacada - remover etiqueta de coordenada si existe
+                            cellPane.getChildren().removeIf(child -> child instanceof Label);
+                        }
+                    }
+                }
+                
+                // Continuar con la lógica original de marcadores para celdas atacadas
                 if (state == CellState.EMPTY || state == CellState.SHIP) continue;
 
                 // Buscar en la fábrica si hay un marcador para el estado actual de la celda.
@@ -272,7 +306,6 @@ public class GameView extends Stage {
                         drawingPane.getChildren().add(centeringContainer);
                     } else {
                         // Los otros marcadores (WATER, TOUCHED) van en la capa inferior (cellPane)
-                        Pane cellPane = this.getCellPane(gridPane, row, col);
                         if (cellPane != null) {
                             cellPane.getChildren().add(markerVisualNode);
                         }
