@@ -9,7 +9,9 @@ import java.time.LocalDateTime;
  * Clase Memento que almacena el estado del juego para poder restaurarlo posteriormente.
  * Implementa el patrón de diseño Memento.
  * 
- * @author Tu Nombre
+ * @author Juan Pablo Escamilla
+ * @author David Valencia
+ * @author Santiago Guerrero
  */
 public class GameMemento {
     private final String humanPlayerNickname;
