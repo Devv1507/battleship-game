@@ -9,9 +9,21 @@ import java.time.format.DateTimeFormatter;
 
 /**
  * Clase Caretaker que gestiona los mementos del juego y la persistencia en archivos planos.
- * Implementa el patrón de diseño Memento como Caretaker.
+ * Implementa el patrón Memento como Caretaker, responsable de almacenar y recuperar 
+ * el estado del juego tanto en memoria como en archivos.
  * 
- * @author Tu Nombre
+ * Maneja dos niveles de persistencia:
+ * - Información básica: nickname, barcos hundidos, fase del juego
+ * - Estado completo: tableros, posiciones de barcos y coordenadas
+ * 
+ * Los archivos se guardan en: src/main/resources/univalle/tedesoft/battleship/saves/
+ * 
+ * @author Juan Pablo Escamilla
+ * @author David Valencia
+ * @author Santiago Guerrero
+ * @version 1.0
+ * @see GameMemento
+ * @see GameSerializer
  */
 public class GameCaretaker {
     private static final String SAVE_DIRECTORY = "src/main/resources/univalle/tedesoft/battleship/saves";
@@ -80,7 +92,10 @@ public class GameCaretaker {
     }
     
     /**
-     * Guarda el estado completo del juego incluyendo barcos y tableros
+     * Guarda el estado completo del juego incluyendo barcos y tableros.
+     * Combina el guardado de información básica (memento) con la serialización 
+     * completa del estado del juego.
+     * 
      * @param gameState El estado del juego a guardar
      * @return true si se guardó exitosamente, false en caso contrario
      */
@@ -182,7 +197,10 @@ public class GameCaretaker {
     }
     
     /**
-     * Carga el estado completo del juego incluyendo barcos y tableros
+     * Carga el estado completo del juego desde archivos guardados.
+     * Restaura tanto la información básica como el estado detallado 
+     * (tableros, barcos y coordenadas).
+     * 
      * @param gameState El estado del juego donde cargar los datos
      * @return true si se cargó exitosamente, false en caso contrario
      */
@@ -214,8 +232,10 @@ public class GameCaretaker {
     }
     
     /**
-     * Verifica si existe un juego guardado
-     * @return true si existe un juego guardado, false en caso contrario
+     * Verifica si existe un juego guardado completo y válido.
+     * Comprueba tanto la información básica como los archivos de estado completo.
+     * 
+     * @return true si existe un juego guardado válido, false en caso contrario
      */
     public boolean isSavedGameAvailable() {
         // Verificar si hay información básica del juego
