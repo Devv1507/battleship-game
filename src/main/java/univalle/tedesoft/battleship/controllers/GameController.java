@@ -270,9 +270,28 @@ public class GameController {
     private boolean checkAndHandleGameOver() {
         if (this.gameState.isGameOver()) {
             Player winner = this.gameState.getWinner();
-            this.gameView.displayMessage("¡Juego Terminado! El ganador es: " + winner.getName(), false);
+            String winnerMessage;
+            
+            if (winner != null) {
+                if (winner instanceof HumanPlayer) {
+                    winnerMessage = "¡FELICITACIONES! ¡Has ganado la partida!";
+                } else {
+                    winnerMessage = "¡La máquina ha ganado! Mejor suerte la próxima vez.";
+                }
+                System.out.println("Ganador determinado: " + winner.getName());
+            } else {
+                // Esto no debería suceder, pero lo manejamos por seguridad
+                winnerMessage = "¡Juego Terminado! No se pudo determinar el ganador.";
+                System.err.println("ERROR: No se pudo determinar el ganador aunque el juego terminó.");
+            }
+            
+            // Mostrar el mensaje del ganador
+            this.gameView.displayMessage(winnerMessage, false);
+            
+            // Deshabilitar la interacción con ambos tableros
             this.gameView.setBoardInteraction(this.humanPlayerBoardGrid, false);
             this.gameView.setBoardInteraction(this.machinePlayerBoardGrid, false);
+            
             return true;
         }
         return false;
