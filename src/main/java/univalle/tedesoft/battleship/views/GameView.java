@@ -229,7 +229,8 @@ public class GameView extends Stage {
 
                 // Aplicar efecto visual si está hundido
                 if (ship.isSunk()) {
-                    shipVisualNode.setEffect(new ColorAdjust(0, -0.5, -0.2, 0)); // Desaturado y oscuro
+                    // Desaturado y oscuro
+                    shipVisualNode.setEffect(new ColorAdjust(0, -0.5, -0.2, 0));
                     shipVisualNode.setOpacity(0.8);
                 }
 
@@ -242,13 +243,11 @@ public class GameView extends Stage {
         for (int row = 0; row < board.getSize(); row++) {
             for (int col = 0; col < board.getSize(); col++) {
                 CellState state = board.getCellState(row, col);
-                Pane cellPane = this.getCellPane(gridPane, row, col);
-                if (cellPane == null) continue;
+                // Ignorar celdas sin disparos
+                if (state == CellState.EMPTY || state == CellState.SHIP) continue;
 
                 // Buscar en la fábrica si hay un marcador para el estado actual de la celda.
                 IMarkerShape markerFactory = this.markerShapeFactory.get(state);
-
-                // Si se encuentra una fábrica (es decir, si el estado es WATER, TOUCH o SUNKEN)...
                 if (markerFactory != null) {
                     // Crear el marcador visual
                     Node markerVisualNode = markerFactory.createMarker();
@@ -260,19 +259,23 @@ public class GameView extends Stage {
                         markerVisualNode.setScaleX(scaleFactor);
                         markerVisualNode.setScaleY(scaleFactor);
 
-                        // Crear un StackPane que actuará como nuestro contenedor de centrado.
+                        // La llama debe estar ENCIMA del barco y CENTRADA.
+                        // Usar un StackPane para centrar la llama automáticamente.
                         StackPane centeringContainer = new StackPane(markerVisualNode);
 
-                        // Definir el tamaño del contenedor para que coincida con la celda.
-                        centeringContainer.setPrefSize(CELL_SIZE, CELL_SIZE);
+                        // Posicionar el CONTENEDOR en la capa superior usando relocate().
+                        double xPos = col * CELL_SIZE;
+                        double yPos = row * CELL_SIZE;
+                        centeringContainer.relocate(xPos, yPos);
 
-                        // Por defecto, StackPane centra a sus hijos. ¡No necesitamos hacer más!
-
-                        // Añadimos el contenedor (con la llama centrada dentro) a la celda.
-                        cellPane.getChildren().add(centeringContainer);
+                        // Añadir el contenedor a la capa de dibujo.
+                        drawingPane.getChildren().add(centeringContainer);
                     } else {
-                        // Para los otros marcadores, que ya ocupan toda la celda, los añadimos directamente.
-                        cellPane.getChildren().add(markerVisualNode);
+                        // Los otros marcadores (WATER, TOUCHED) van en la capa inferior (cellPane)
+                        Pane cellPane = this.getCellPane(gridPane, row, col);
+                        if (cellPane != null) {
+                            cellPane.getChildren().add(markerVisualNode);
+                        }
                     }
                 }
             }
