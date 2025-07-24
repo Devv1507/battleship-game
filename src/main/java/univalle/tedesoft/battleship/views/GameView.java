@@ -380,8 +380,9 @@ public class GameView extends Stage {
         this.controller.shipPlacementPane.setVisible(false);
         this.controller.orientationControlPane.setVisible(false);
 
-        // Ocultar el botón de finalizar
+        // Ocultar el botón de finalizar y el de colocar barcos aleatoriamente
         this.controller.finalizePlacementButton.setVisible(false);
+        this.controller.placeRandomlyButton.setVisible(false);
 
         // Habilitar el botón para ver el tablero del oponente
         this.controller.toggleOpponentBoardButton.setDisable(false);
@@ -470,6 +471,7 @@ public class GameView extends Stage {
                 );
                 this.controller.shipPlacementPane.setVisible(true);
                 this.controller.finalizePlacementButton.setVisible(true);
+                this.controller.placeRandomlyButton.setVisible(true);
                 this.controller.machinePlayerBoardGrid.setDisable(true);
                 this.controller.humanPlayerBoardGrid.setDisable(false);
                 break;
@@ -482,6 +484,7 @@ public class GameView extends Stage {
                 this.displayMessage("¡La partida ha terminado!", false);
                 this.controller.shipPlacementPane.setVisible(false);
                 this.controller.finalizePlacementButton.setVisible(false);
+                this.controller.placeRandomlyButton.setVisible(true);
                 this.controller.machinePlayerBoardGrid.setDisable(true);
                 this.controller.humanPlayerBoardGrid.setDisable(true);
                 break;

@@ -1,10 +1,9 @@
 package univalle.tedesoft.battleship.models.State;
 
-import univalle.tedesoft.battleship.models.Coordinate;
+import univalle.tedesoft.battleship.models.Enums.GamePhase;
 import univalle.tedesoft.battleship.models.Enums.Orientation;
 import univalle.tedesoft.battleship.models.Enums.ShipType;
-import univalle.tedesoft.battleship.models.Players.Player; // Necesitará ser definida
-import univalle.tedesoft.battleship.models.Enums.ShotResult; // Necesitará ser definida
+import univalle.tedesoft.battleship.models.Players.Player;
 import univalle.tedesoft.battleship.exceptions.InvalidShipPlacementException;
 import univalle.tedesoft.battleship.exceptions.OverlapException;
 import univalle.tedesoft.battleship.exceptions.OutOfBoundsException;
@@ -155,5 +154,10 @@ public interface IGameState {
      * Obtiene la fase actual del juego
      * @return La fase actual del juego
      */
-    univalle.tedesoft.battleship.models.Enums.GamePhase getCurrentPhase();
+    GamePhase getCurrentPhase();
+
+    /**
+     * Coloca todos los barcos del jugador humano de forma aleatoria en el tablero.
+     */
+    void placeHumanPlayerShipsRandomly();
 }
