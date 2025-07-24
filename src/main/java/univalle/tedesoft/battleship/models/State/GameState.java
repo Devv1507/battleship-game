@@ -11,7 +11,7 @@ import univalle.tedesoft.battleship.models.Players.MachinePlayer;
 import univalle.tedesoft.battleship.models.Players.Player;
 import univalle.tedesoft.battleship.models.Ships.*;
 import univalle.tedesoft.battleship.models.ShotOutcome;
-
+import univalle.tedesoft.battleship.models.Ships.ShipFactory;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -97,7 +97,8 @@ public class GameState implements IGameState {
         }
 
         // 2. Crear los objetos de dominio necesarios.
-        Ship newShip = createShipFromType(shipType);
+        //Ship newShip = createShipFromType(shipType);
+        Ship newShip = ShipFactory.createShip(shipType);
         newShip.setOrientation(orientation);
         Coordinate coordinate = new Coordinate(col, row); // Recordar que Coordinate(x, y) -> (col, row)
 
@@ -111,6 +112,7 @@ public class GameState implements IGameState {
         }
     };
 
+    // Candidato a eliminar.
     /**
      * Metodo de fábrica privado para crear una instancia de Ship a partir de su tipo.
      * Esto centraliza la lógica de creación de barcos.

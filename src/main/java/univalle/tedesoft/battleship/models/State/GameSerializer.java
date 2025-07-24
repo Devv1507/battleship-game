@@ -218,6 +218,7 @@ public class GameSerializer {
      * @return El barco creado
      */
     private static Ship createShipFromType(ShipType shipType) {
+        /*
         switch (shipType) {
             case AIR_CRAFT_CARRIER:
                 return new AirCraftCarrier();
@@ -230,6 +231,9 @@ public class GameSerializer {
             default:
                 throw new IllegalArgumentException("Tipo de barco desconocido: " + shipType);
         }
+
+         */
+        return ShipFactory.createShip(shipType);
     }
     
     /**
