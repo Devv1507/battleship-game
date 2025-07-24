@@ -15,10 +15,20 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Clase para serializar y deserializar el estado completo del juego.
- * Guarda y carga la información de barcos, tableros y estado del juego.
+ * Clase para serializar y deserializar el estado completo del juego de Batalla Naval.
+ * Se encarga de la persistencia detallada de tableros, barcos y sus posiciones 
+ * en archivos de texto plano.
  * 
- * @author Tu Nombre
+ * Maneja la serialización de:
+ * - Tableros: estado de cada celda (agua, barco, impacto, etc.)
+ * - Barcos: tipo, orientación, daño recibido y coordenadas
+ * 
+ * Genera archivos separados para tableros (*_board_state.txt) 
+ * y barcos (*_ships_state.txt).
+ * 
+ * @author Juan Pablo Escamilla
+ * @author David Valencia
+ * @author Santiago Guerrero
  */
 public class GameSerializer {
     private static final String SAVE_DIRECTORY = "src/main/resources/univalle/tedesoft/battleship/saves";
@@ -26,7 +36,9 @@ public class GameSerializer {
     private static final String SHIPS_FILE = "ships_state.txt";
     
     /**
-     * Serializa el estado completo del juego
+     * Serializa el estado completo del juego en archivos de texto plano.
+     * Guarda tableros (estado de celdas) y barcos (posición, orientación, daño).
+     * 
      * @param gameState El estado del juego a serializar
      * @return true si se serializó exitosamente, false en caso contrario
      */
@@ -51,7 +63,9 @@ public class GameSerializer {
     }
     
     /**
-     * Deserializa el estado completo del juego
+     * Deserializa el estado completo del juego desde archivos guardados.
+     * Restaura tableros, barcos y sus posiciones desde los archivos de texto.
+     * 
      * @param gameState El estado del juego donde cargar los datos
      * @return true si se deserializó exitosamente, false en caso contrario
      */
@@ -136,9 +150,9 @@ public class GameSerializer {
             for (Ship ship : ships) {
                 // Escribir información del barco
                 writer.write("SHIP:" + ship.getShipType().name() + ":" + 
-                           ship.getOrientation().name() + ":" + 
-                           ship.getHitCount() + ":" + 
-                           ship.isSunk());
+                            ship.getOrientation().name() + ":" + 
+                            ship.getHitCount() + ":" + 
+                            ship.isSunk());
                 writer.newLine();
                 
                 // Escribir coordenadas del barco
@@ -213,9 +227,12 @@ public class GameSerializer {
     }
     
     /**
-     * Crea un barco del tipo especificado
-     * @param shipType El tipo de barco
-     * @return El barco creado
+     * Crea una instancia de barco del tipo especificado.
+     * Factory method usado durante la deserialización para reconstruir barcos.
+     * 
+     * @param shipType El tipo de barco a crear (AIR_CRAFT_CARRIER, SUBMARINE, DESTROYER, FRIGATE)
+     * @return Una nueva instancia del tipo de barco especificado
+     * @throws IllegalArgumentException si el tipo de barco no es reconocido
      */
     private static Ship createShipFromType(ShipType shipType) {
         switch (shipType) {
@@ -260,14 +277,14 @@ public class GameSerializer {
             Path saveDir = Paths.get(SAVE_DIRECTORY);
             if (Files.exists(saveDir)) {
                 Files.walk(saveDir)
-                     .filter(Files::isRegularFile)
-                     .forEach(path -> {
-                         try {
-                             Files.delete(path);
-                         } catch (IOException e) {
-                             System.err.println("Error al eliminar archivo: " + path);
-                         }
-                     });
+                    .filter(Files::isRegularFile)
+                    .forEach(path -> {
+                        try {
+                            Files.delete(path);
+                        } catch (IOException e) {
+                            System.err.println("Error al eliminar archivo: " + path);
+                        }
+                    });
             }
             return true;
         } catch (IOException e) {
