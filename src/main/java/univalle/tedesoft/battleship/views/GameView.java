@@ -113,13 +113,13 @@ public class GameView extends Stage {
         for (int row = 0; row < 10; row++) {
             for (int col = 0; col < 10; col++) {
                 Pane cellPane = new Pane();
-                cellPane.getStyleClass().add("cell"); // Para CSS
+                cellPane.setStyle("-fx-background-color: transparent;");
                 cellPane.setPrefSize(CELL_SIZE, CELL_SIZE);
 
                 // Las etiquetas de coordenadas se manejan dinámicamente en drawBoard()
-
                 final int finalRow = row;
                 final int finalCol = col;
+
                 cellPane.setOnMouseClicked(event -> {
                     if (isHumanBoard) {
                         this.controller.handlePlacementCellClick(finalRow, finalCol);
@@ -344,18 +344,19 @@ public class GameView extends Stage {
             for (int i = 0; i < controller.messageContainer.getChildren().size(); i++) {
                 Node node = controller.messageContainer.getChildren().get(i);
                 if (node instanceof Label label) {
-                    // El mensaje más reciente (i=0) tiene opacidad completa
                     if (i == 0) {
                         label.setOpacity(1.0);
                         if (isError) {
-                            label.setStyle("-fx-text-fill: red; -fx-font-weight: bold;");
+                            // Rojo claro para errores, visible sobre fondo oscuro
+                            label.setStyle("-fx-text-fill: #ff8a80; -fx-font-weight: bold;");
                         } else {
-                            label.setStyle("-fx-text-fill: black; -fx-font-weight: normal;");
+                            // Blanco para mensajes normales
+                            label.setStyle("-fx-text-fill: white; -fx-font-weight: normal;");
                         }
                     } else {
-                        // Los mensajes más antiguos se desvanecen
-                        label.setOpacity(0.6); // Opacidad para el mensaje anterior
-                        label.setStyle("-fx-text-fill: dimgray; -fx-font-weight: normal;");
+                        // Gris claro para mensajes antiguos
+                        label.setOpacity(0.7);
+                        label.setStyle("-fx-text-fill: #cccccc; -fx-font-weight: normal;");
                     }
                 }
             }
