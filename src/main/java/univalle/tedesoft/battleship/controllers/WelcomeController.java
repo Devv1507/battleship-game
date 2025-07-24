@@ -7,6 +7,7 @@ import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.TextField;
 import univalle.tedesoft.battleship.views.GameView;
+import univalle.tedesoft.battleship.views.InstructionsView;
 import univalle.tedesoft.battleship.views.WelcomeView;
 
 import java.io.IOException;
@@ -20,6 +21,7 @@ public class WelcomeController {
     @FXML private TextField nameTextField;
     @FXML private Button startGameButton;
     @FXML private Button exitButton;
+    @FXML private Button instructionsButton;
 
     private WelcomeView welcomeView;
 
@@ -63,7 +65,7 @@ public class WelcomeController {
                     new univalle.tedesoft.battleship.models.Players.HumanPlayer(playerName)
             );
 
-            // Refrescar la UI del juego para mostrar todo desde el principio
+            // Refrescar la UI
             gameView.refreshUI();
 
             // Mostrar la ventana del juego
@@ -78,6 +80,26 @@ public class WelcomeController {
             alert.setContentText("Ocurrió un error al cargar la vista principal del juego. La aplicación se cerrará.");
             alert.showAndWait();
             Platform.exit();
+        }
+    }
+
+    /**
+     * Maneja el clic en el botón "Instrucciones".
+     * Muestra la ventana de instrucciones del juego.
+     * @param event El evento de la acción.
+     */
+    @FXML
+    void onInstructionsClick(ActionEvent event) {
+        try {
+            InstructionsView instructionsView = InstructionsView.getInstance();
+            instructionsView.show();
+        } catch (IOException e) {
+            e.printStackTrace();
+            Alert alert = new Alert(Alert.AlertType.ERROR);
+            alert.setTitle("Error");
+            alert.setHeaderText("No se pudieron cargar las instrucciones.");
+            alert.setContentText("Ocurrió un error al intentar abrir la ventana de instrucciones.");
+            alert.showAndWait();
         }
     }
 

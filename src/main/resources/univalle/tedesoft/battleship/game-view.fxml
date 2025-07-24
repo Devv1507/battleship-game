@@ -150,6 +150,17 @@
         </effect>
       </Button>
 
+      <Button fx:id="instructionsButton" onAction="#onInstructionsClick"
+              style="-fx-background-color: #27ae60; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 8;"
+              text="Instrucciones">
+        <font>
+          <Font size="14.0" />
+        </font>
+        <effect>
+          <DropShadow />
+        </effect>
+      </Button>
+
       <Button fx:id="toggleOpponentBoardButton" onAction="#onToggleOpponentBoardClick" text="Ver Tablero Oponente"/>
     </HBox>
   </bottom>
