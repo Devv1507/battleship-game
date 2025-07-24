@@ -22,20 +22,22 @@ public class GameController {
 
     // --- Componentes FXML ---
     @FXML public Button finalizePlacementButton;
-    @FXML public GridPane humanPlayerBoardGrid;
-    @FXML public GridPane machinePlayerBoardGrid;
-    @FXML public VBox messageContainer;
-    @FXML public VBox shipPlacementPane;
     @FXML public Button toggleOpponentBoardButton;
-    @FXML public VBox orientationControlPane; // Contenedor de los botones
     @FXML public Button horizontalButton;
     @FXML public Button verticalButton;
     @FXML public Button saveGameButton;
     @FXML public Button loadGameButton;
+    @FXML public Button placeRandomlyButton;
+
+    @FXML public GridPane humanPlayerBoardGrid;
+    @FXML public GridPane machinePlayerBoardGrid;
+    @FXML public VBox shipPlacementPane;
+    @FXML public VBox orientationControlPane; // Contenedor de los botones
     @FXML public Pane humanPlayerDrawingPane;
     @FXML public Pane machinePlayerDrawingPane;
     @FXML public StackPane humanPlayerBoardContainer;
     @FXML public StackPane machinePlayerBoardContainer;
+    @FXML public VBox messageContainer;
 
     // --- Referencias principales ---
     private IGameState gameState;
@@ -116,11 +118,9 @@ public class GameController {
     /**
      * Se activa cuando el jugador hace clic en el botón "Finalizar Colocación".
      * Notifica al modelo y actualiza la vista para pasar a la fase de disparos.
-     *
-     * @param event El evento de la acción.
      */
     @FXML
-    void onFinalizePlacementClick(ActionEvent event) {
+    void onFinalizePlacementClick() {
         if (this.gameState != null && this.gameView != null) {
             if (!this.gameState.getPendingShipsToPlace().isEmpty()) {
                 this.gameView.displayMessage("Aún debes colocar todos tus barcos.", true);
@@ -137,11 +137,9 @@ public class GameController {
 
     /**
      * Se activa cuando el jugador hace clic en el botón "Horizontal".
-     *
-     * @param event El evento de la acción.
      */
     @FXML
-    void onHorizontalClick(ActionEvent event) {
+    void onHorizontalClick() {
         this.chosenOrientation = Orientation.HORIZONTAL;
         this.gameView.updateOrientationButtons(this.chosenOrientation);
         this.gameView.displayMessage("Orientación seleccionada: Horizontal.", false);
@@ -149,11 +147,9 @@ public class GameController {
 
     /**
      * Se activa cuando el jugador hace clic en el botón "Vertical".
-     *
-     * @param event El evento de la acción.
      */
     @FXML
-    void onVerticalClick(ActionEvent event) {
+    void onVerticalClick() {
         this.chosenOrientation = Orientation.VERTICAL;
         this.gameView.updateOrientationButtons(this.chosenOrientation);
         this.gameView.displayMessage("Orientación seleccionada: Vertical.", false);
@@ -163,7 +159,7 @@ public class GameController {
      * Maneja el clic en el botón para ver/ocultar el tablero del oponente.
      */
     @FXML
-    void onToggleOpponentBoardClick(ActionEvent event) {
+    void onToggleOpponentBoardClick() {
         if (this.gameState == null || this.gameView == null) return;
 
         this.isOpponentBoardVisible = !this.isOpponentBoardVisible; // Invertir el estado
@@ -191,7 +187,7 @@ public class GameController {
      * Maneja el clic en el botón para guardar el juego.
      */
     @FXML
-    void onSaveGameClick(ActionEvent event) {
+    void onSaveGameClick() {
         if (this.gameState == null) {
             this.gameView.displayMessage("Error: No hay juego activo para guardar.", true);
             return;
@@ -229,8 +225,28 @@ public class GameController {
         }
     }
 
-    // ------------ Métodos con lógica central del juego
+    /**
+     * Maneja el clic en el botón "Colocar Aleatoriamente".
+     * Llama al modelo para que coloque los barcos del jugador humano al azar
+     * y luego actualiza la vista para reflejar los cambios.
+     */
+    @FXML
+    void onPlaceRandomlyClick() {
+        if (this.gameState == null || this.gameView == null) {
+            return;
+        }
 
+        // Pedir al modelo que coloque los barcos aleatoriamente.
+        this.gameState.placeHumanPlayerShipsRandomly();
+        this.gameView.drawBoard(this.humanPlayerBoardGrid, this.gameState.getHumanPlayerPositionBoard(), true);
+        this.gameView.showShipPlacementPhase(
+                this.gameState.getHumanPlayerPositionBoard(),
+                this.gameState.getPendingShipsToPlace()
+        );
+        this.gameView.displayMessage("¡Tus barcos han sido colocados aleatoriamente! Presiona 'Finalizar Colocación'.", false);
+    }
+
+    // ------------ Métodos con lógica central del juego
 
     private void scheduleMachineTurn() {
         if (this.gameState.isGameOver()) return;
