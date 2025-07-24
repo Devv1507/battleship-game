@@ -485,8 +485,15 @@ public class GameState implements IGameState {
             while (!placedSuccessfully && attempts < MAX_PLACEMENT_ATTEMPTS) {
                 int row = random.nextInt(this.machinePlayerBoard.getSize());
                 int col = random.nextInt(this.machinePlayerBoard.getSize());
-                Orientation orientation = random.nextBoolean() ? Orientation.HORIZONTAL : Orientation.VERTICAL;
 
+                Orientation orientation;
+                // Si el barco es de tipo FRIGATE, su orientación será HORIZONTAL.
+                if (ship.getShipType() == ShipType.FRIGATE) {
+                    orientation = Orientation.HORIZONTAL;
+                } else {
+                    // Para los demás barcos, la orientación es aleatoria.
+                    orientation = random.nextBoolean() ? Orientation.HORIZONTAL : Orientation.VERTICAL;
+                }
                 ship.setOrientation(orientation);
 
                 try {

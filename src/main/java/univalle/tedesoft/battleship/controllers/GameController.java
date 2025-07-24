@@ -180,7 +180,7 @@ public class GameController {
             // Pedir a la vista que muestre la vista normal del territorio enemigo (sin barcos visibles)
             this.gameView.drawBoard(
                     this.machinePlayerBoardGrid,
-                    this.gameState.getMachinePlayerTerritoryBoard(),
+                    this.gameState.getMachinePlayerActualPositionBoard(),
                     false // false para ocultar los barcos
             );
             this.gameView.updateToggleButtonText("Ver Tablero Oponente (Profesor)");
@@ -298,7 +298,7 @@ public class GameController {
             String message = this.buildShotMessage("Disparo a " + outcome.getCoordinate().toAlgebraicNotation(), outcome);
             this.gameView.displayMessage(message, false);
 
-            this.gameView.drawBoard(this.machinePlayerBoardGrid, this.gameState.getMachinePlayerTerritoryBoard(), false);
+            this.gameView.drawBoard(this.machinePlayerBoardGrid, this.gameState.getMachinePlayerActualPositionBoard(), false);
 
             if (this.checkAndHandleGameOver()) {
                 return;
@@ -333,6 +333,10 @@ public class GameController {
         }
 
         try {
+            if (this.selectedShipToPlace == ShipType.FRIGATE) {
+                // Si es un FRIGATE, por defecto la orientación es horizontal.
+                this.chosenOrientation = Orientation.HORIZONTAL;
+            }
             // Ya no usamos un valor por defecto, usamos la variable 'chosenOrientation'
             this.gameState.placeHumanPlayerShip(this.selectedShipToPlace, row, col, this.chosenOrientation);
 
@@ -361,9 +365,16 @@ public class GameController {
      */
     public void handleShipSelection(ShipType shipType) {
         this.selectedShipToPlace = shipType;
-        this.gameView.showOrientationControls(true); // Mostrar controles
-        this.gameView.updateOrientationButtons(this.chosenOrientation); // Resaltar el botón actual
-        this.gameView.displayMessage("Seleccionado: " + shipType + ". Haz clic en tu tablero para colocarlo.", false);
+        // Si el barco es un FRIGATE, no necesita controles de orientación.
+        if (shipType == ShipType.FRIGATE) {
+            this.gameView.showOrientationControls(false);
+            this.gameView.displayMessage("Seleccionado: " + shipType + ". Es un barco de 1 casilla, solo haz clic para colocarlo.", false);
+
+        } else {
+            this.gameView.showOrientationControls(true);
+            this.gameView.updateOrientationButtons(this.chosenOrientation);
+            this.gameView.displayMessage("Seleccionado: " + shipType + ". Elige una orientación y haz clic en tu tablero para colocarlo.", false);
+        }
     }
 
     /**
