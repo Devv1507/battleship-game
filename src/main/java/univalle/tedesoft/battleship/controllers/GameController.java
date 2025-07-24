@@ -180,7 +180,7 @@ public class GameController {
             // Pedir a la vista que muestre la vista normal del territorio enemigo (sin barcos visibles)
             this.gameView.drawBoard(
                     this.machinePlayerBoardGrid,
-                    this.gameState.getMachinePlayerTerritoryBoard(),
+                    this.gameState.getMachinePlayerActualPositionBoard(),
                     false // false para ocultar los barcos
             );
             this.gameView.updateToggleButtonText("Ver Tablero Oponente (Profesor)");
@@ -298,7 +298,7 @@ public class GameController {
             String message = this.buildShotMessage("Disparo a " + outcome.getCoordinate().toAlgebraicNotation(), outcome);
             this.gameView.displayMessage(message, false);
 
-            this.gameView.drawBoard(this.machinePlayerBoardGrid, this.gameState.getMachinePlayerTerritoryBoard(), false);
+            this.gameView.drawBoard(this.machinePlayerBoardGrid, this.gameState.getMachinePlayerActualPositionBoard(), false);
 
             if (this.checkAndHandleGameOver()) {
                 return;
