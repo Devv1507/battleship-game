@@ -9,11 +9,11 @@ import javafx.scene.Group;
 import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.Label;
+import javafx.scene.effect.ColorAdjust;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Pane;
+import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
-import javafx.scene.paint.Color;
-import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Font;
 import javafx.scene.transform.Rotate;
 import javafx.scene.transform.Scale;
@@ -47,6 +47,8 @@ public class GameView extends Stage {
     private static final int CELL_SIZE = 40;
     /** Mapa para las figuras de los barcos */
     private final Map<ShipType, ShipShape> shipShapeFactory;
+    /** Mapa para las figuras de los marcadores de disparo */
+    private final Map<CellState, IMarkerShape> markerShapeFactory;
     private static final int MAX_MESSAGES = 2; // Mostrar los últimos 2 mensajes
 
 
@@ -65,12 +67,18 @@ public class GameView extends Stage {
         if (this.controller == null) {
             throw new IllegalStateException("El controlador no se pudo cargar desde el FXML. Revisa el campo fx:controller.");
         }
-
-        this.shipShapeFactory = new HashMap<>(); // <-- ESTO ES NUEVO
+        // Inicializar la fábrica de formas de barcos
+        this.shipShapeFactory = new HashMap<>();
         this.shipShapeFactory.put(ShipType.AIR_CRAFT_CARRIER, new AircraftShape());
         this.shipShapeFactory.put(ShipType.SUBMARINE, new SubmarineShape());
         this.shipShapeFactory.put(ShipType.DESTROYER, new DestroyerShape());
         this.shipShapeFactory.put(ShipType.FRIGATE, new FrigateShape());
+
+        // Inicializar la fábrica de formas de marcadores
+        this.markerShapeFactory = new HashMap<>();
+        this.markerShapeFactory.put(CellState.SHOT_LOST_IN_WATER, new WaterMarkerShape());
+        this.markerShapeFactory.put(CellState.HIT_SHIP, new TouchedMarkerShape());
+        this.markerShapeFactory.put(CellState.SUNK_SHIP_PART, new SunkenMarkerShape());
 
         IGameState gameState = new GameState();
         this.controller.setGameView(this);
@@ -202,44 +210,70 @@ public class GameView extends Stage {
             }
         }
 
+        // Lógica de dibujo de barcos
+        // Primero, dibujamos todos los barcos que deben ser visibles.
         Set<Ship> drawnShips = new HashSet<>();
+        // Iteramos directamente sobre la lista de barcos
+        for (Ship ship : board.getShips()) {
+            if (drawnShips.contains(ship)) continue;
 
-        for (int row = 0; row < board.getSize(); row++) {
-            for (int col = 0; col < board.getSize(); col++) {
-                // Lógica de dibujo de barcos
-                if (showShips) {
-                    Ship occupyingShip = board.getShipAt(row, col);
-                    if (occupyingShip != null && !drawnShips.contains(occupyingShip)) {
-                        // Solo dibujar si estamos en la primera coordenada del barco (la "cabeza").
-                        Coordinate headCoordinate = occupyingShip.getOccupiedCoordinates().get(0);
-                        if (headCoordinate.getY() == row && headCoordinate.getX() == col) {
+            // La condición para dibujar el barco es la clave:
+            // 1. Siempre se dibuja en el tablero del jugador humano.
+            // 2. O el modo "showShips" (profesor) está activo.
+            // 3. O el barco está hundido.
+            boolean isHumanBoard = (gridPane == this.controller.humanPlayerBoardGrid);
+            if (isHumanBoard || showShips || ship.isSunk()) {
 
-                            Node shipVisualNode = createAndPositionShipVisual(occupyingShip, col, row);
-                            drawingPane.getChildren().add(shipVisualNode);
-                            drawnShips.add(occupyingShip);
-                        }
-                    }
+                Coordinate headCoordinate = ship.getOccupiedCoordinates().get(0);
+                Node shipVisualNode = createAndPositionShipVisual(ship, headCoordinate.getX(), headCoordinate.getY());
+
+                // Aplicar efecto visual si está hundido
+                if (ship.isSunk()) {
+                    shipVisualNode.setEffect(new ColorAdjust(0, -0.5, -0.2, 0)); // Desaturado y oscuro
+                    shipVisualNode.setOpacity(0.8);
                 }
 
-                // Lógica de dibujo de marcadores de estado de celdas
+                drawingPane.getChildren().add(shipVisualNode);
+                drawnShips.add(ship);
+            }
+        }
+
+        // Lógica de dibujo de marcadores de estado de celdas
+        for (int row = 0; row < board.getSize(); row++) {
+            for (int col = 0; col < board.getSize(); col++) {
                 CellState state = board.getCellState(row, col);
                 Pane cellPane = this.getCellPane(gridPane, row, col);
                 if (cellPane == null) continue;
 
-                if (state == CellState.HIT_SHIP || state == CellState.SUNK_SHIP_PART || state == CellState.SHOT_LOST_IN_WATER) {
-                    Rectangle marker = new Rectangle(CELL_SIZE - 2, CELL_SIZE - 2);
-                    marker.setArcWidth(10);
-                    marker.setArcHeight(10);
-                    marker.setOpacity(0.7);
+                // Buscar en la fábrica si hay un marcador para el estado actual de la celda.
+                IMarkerShape markerFactory = this.markerShapeFactory.get(state);
 
-                    if (state == CellState.HIT_SHIP) {
-                        marker.setFill(Color.ORANGERED);
-                    } else if (state == CellState.SHOT_LOST_IN_WATER) {
-                        marker.setFill(Color.LIGHTSKYBLUE);
-                    } else { // SUNK_SHIP_PART
-                        marker.setFill(Color.DARKRED);
+                // Si se encuentra una fábrica (es decir, si el estado es WATER, TOUCH o SUNKEN)...
+                if (markerFactory != null) {
+                    // Crear el marcador visual
+                    Node markerVisualNode = markerFactory.createMarker();
+
+                    // Aplicar solo si el marcador es una instancia de FlameMarkerShape.
+                    if (markerFactory instanceof SunkenMarkerShape) {
+                        // Hacer la llama un 60% del tamaño de la celda
+                        double scaleFactor = 0.6;
+                        markerVisualNode.setScaleX(scaleFactor);
+                        markerVisualNode.setScaleY(scaleFactor);
+
+                        // Crear un StackPane que actuará como nuestro contenedor de centrado.
+                        StackPane centeringContainer = new StackPane(markerVisualNode);
+
+                        // Definir el tamaño del contenedor para que coincida con la celda.
+                        centeringContainer.setPrefSize(CELL_SIZE, CELL_SIZE);
+
+                        // Por defecto, StackPane centra a sus hijos. ¡No necesitamos hacer más!
+
+                        // Añadimos el contenedor (con la llama centrada dentro) a la celda.
+                        cellPane.getChildren().add(centeringContainer);
+                    } else {
+                        // Para los otros marcadores, que ya ocupan toda la celda, los añadimos directamente.
+                        cellPane.getChildren().add(markerVisualNode);
                     }
-                    cellPane.getChildren().add(marker);
                 }
             }
         }
