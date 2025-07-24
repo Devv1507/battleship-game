@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.text.Font?>
+
+<ScrollPane fitToWidth="true" style="-fx-background: #2c3e50; -fx-border-color: transparent;" xmlns="http://javafx.com/javafx/17.0.6" xmlns:fx="http://javafx.com/fxml/1">
+    <VBox spacing="20" style="-fx-background-color: linear-gradient(to bottom, #3a6073, #16222a);">
+        <padding>
+            <Insets bottom="20" left="30" right="30" top="20" />
+        </padding>
+
+        <Label maxWidth="Infinity" style="-fx-alignment: center;" text="REGLAS DE BATTLESHIP" textFill="WHITE">
+            <font>
+                <Font name="Arial Bold" size="28.0" />
+            </font>
+        </Label>
+
+        <VBox spacing="15">
+            <!-- Objetivo del Juego -->
+            <VBox spacing="5">
+                <Label style="-fx-font-weight: bold;" text="1. OBJETIVO DEL JUEGO" textFill="#4a90e2">
+                    <font>
+                        <Font name="Arial Bold" size="18.0" />
+                    </font>
+                </Label>
+                <Label text="El objetivo es hundir todos los barcos de tu oponente (la máquina) antes de que él hunda los tuyos." textFill="WHITE" wrapText="true">
+                    <font>
+                        <Font name="Arial" size="14.0" />
+                    </font>
+                </Label>
+            </VBox>
+
+            <!-- Fase de Colocación -->
+            <VBox spacing="5">
+                <Label style="-fx-font-weight: bold;" text="2. FASE DE COLOCACIÓN" textFill="#4a90e2">
+                    <font>
+                        <Font name="Arial Bold" size="18.0" />
+                    </font>
+                </Label>
+                <VBox spacing="5" style="-fx-padding: 0 0 0 20;">
+                    <Label text="• Al inicio, verás una lista de barcos a la izquierda que debes colocar en tu tablero ('Tu Flota')." textFill="WHITE" wrapText="true">
+                        <font>
+                            <Font name="Arial" size="14.0" />
+                        </font>
+                    </Label>
+                    <Label text="• Haz clic en un barco de la lista para seleccionarlo." textFill="WHITE" wrapText="true">
+                        <font>
+                            <Font name="Arial" size="14.0" />
+                        </font>
+                    </Label>
+                    <Label text="• Si el barco tiene más de una casilla, elige una orientación (Horizontal o Vertical)." textFill="WHITE" wrapText="true">
+                        <font>
+                            <Font name="Arial" size="14.0" />
+                        </font>
+                    </Label>
+                    <Label text="• Haz clic en una celda de tu tablero para colocar el barco. El barco se extenderá desde esa celda." textFill="WHITE" wrapText="true">
+                        <font>
+                            <Font name="Arial" size="14.0" />
+                        </font>
+                    </Label>
+                    <Label text="• Si prefieres, usa el botón 'Colocar Aleatoriamente' para que el sistema posicione tu flota." textFill="WHITE" wrapText="true">
+                        <font>
+                            <Font name="Arial" />
+                        </font>
+                    </Label>
+                    <Label text="• Una vez colocados todos los barcos, presiona 'Finalizar Colocación' para empezar la batalla." textFill="WHITE" wrapText="true">
+                        <font>
+                            <Font name="Arial" />
+                        </font>
+                    </Label>
+                </VBox>
+            </VBox>
+
+            <!-- Fase de Disparos -->
+            <VBox spacing="5">
+                <Label style="-fx-font-weight: bold;" text="3. FASE DE DISPAROS" textFill="#4a90e2">
+                    <font>
+                        <Font name="Arial Bold" size="18.0" />
+                    </font>
+                </Label>
+                <VBox spacing="5" style="-fx-padding: 0 0 0 20;">
+                    <Label text="• Por turnos, tú y la máquina dispararán al tablero del oponente." textFill="WHITE" wrapText="true">
+                        <font>
+                            <Font name="Arial" size="14.0" />
+                        </font>
+                    </Label>
+                    <Label text="• En tu turno, haz clic en una celda del 'Territorio Enemigo' para lanzar un misil." textFill="WHITE" wrapText="true">
+                        <font>
+                            <Font name="Arial" size="14.0" />
+                        </font>
+                    </Label>
+                    <Label text="• Agua (Fallo): Una marca azul y blanca. No has acertado." textFill="WHITE" wrapText="true">
+                        <font>
+                            <Font name="Arial" size="14.0" />
+                        </font>
+                    </Label>
+                    <Label text="• Tocado (Acierto): Una marca roja y blanca. Has impactado parte de un barco." textFill="WHITE" wrapText="true">
+                        <font>
+                            <Font name="Arial" size="14.0" />
+                        </font>
+                    </Label>
+                    <Label text="• Hundido: Si aciertas en todas las partes de un barco, este se revelará en el tablero enemigo y verás una llama." textFill="WHITE" wrapText="true">
+                        <font>
+                            <Font name="Arial" />
+                        </font>
+                    </Label>
+                </VBox>
+            </VBox>
+
+            <!-- Fin del Juego -->
+            <VBox spacing="5">
+                <Label style="-fx-font-weight: bold;" text="4. FIN DEL JUEGO" textFill="#4a90e2">
+                    <font>
+                        <Font name="Arial Bold" size="18.0" />
+                    </font>
+                </Label>
+                <VBox spacing="5" style="-fx-padding: 0 0 0 20;">
+                    <Label text="• El primer jugador que hunda la flota completa del oponente, gana la partida." textFill="WHITE" wrapText="true">
+                        <font>
+                            <Font name="Arial" size="14.0" />
+                        </font>
+                    </Label>
+                </VBox>
+            </VBox>
+
+            <Label maxWidth="Infinity" style="-fx-alignment: center;" text="¡BUENA SUERTE, CAPITÁN!" textFill="#f39c12">
+                <font>
+                    <Font name="Arial Bold" size="20.0" />
+                </font>
+            </Label>
+        </VBox>
+    </VBox>
+</ScrollPane>

@@ -17,6 +17,9 @@ import univalle.tedesoft.battleship.models.ShotOutcome;
 import univalle.tedesoft.battleship.models.State.IGameState;
 import univalle.tedesoft.battleship.threads.MachineTurnRunnable;
 import univalle.tedesoft.battleship.views.GameView;
+import univalle.tedesoft.battleship.views.InstructionsView;
+
+import java.io.IOException;
 
 public class GameController {
 
@@ -28,6 +31,7 @@ public class GameController {
     @FXML public Button saveGameButton;
     @FXML public Button loadGameButton;
     @FXML public Button placeRandomlyButton;
+    @FXML public Button instructionsButton;
 
     @FXML public GridPane humanPlayerBoardGrid;
     @FXML public GridPane machinePlayerBoardGrid;
@@ -244,6 +248,21 @@ public class GameController {
                 this.gameState.getPendingShipsToPlace()
         );
         this.gameView.displayMessage("¡Tus barcos han sido colocados aleatoriamente! Presiona 'Finalizar Colocación'.", false);
+    }
+
+    /**
+     * Maneja el clic en el botón "Instrucciones".
+     * Muestra la ventana con las reglas del juego.
+     * Este método puede ser llamado en cualquier momento de la partida.
+     */
+    @FXML
+    void onInstructionsClick() {
+        try {
+            InstructionsView.getInstance().show();
+        } catch (IOException e) {
+            e.printStackTrace();
+            this.gameView.displayMessage("Error al abrir las instrucciones.", true);
+        }
     }
 
     // ------------ Métodos con lógica central del juego
