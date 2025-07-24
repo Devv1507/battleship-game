@@ -492,44 +492,68 @@ public class GameState implements IGameState {
     }
 
     /**
-     * Metodo que crea y asigna en su sitio los barcos del jugador maquina.
+     * Metodo que crea y asigna en su sitio los barcos del jugador máquina.
      */
     private void placeMachinePlayerShips() {
-        this.machinePlayerBoard.resetBoard(); // Asegurarse que el tablero esté limpio
-        List<Ship> machineFleet = this.createFleet();
+        this.placeShipsRandomlyOnBoard(this.machinePlayerBoard);
+    }
+
+    /**
+     * Coloca todos los barcos pendientes del jugador humano de forma aleatoria en su tablero.
+     * Delega la lógica de colocación y luego actualiza el estado de los barcos pendientes.
+     */
+    @Override
+    public void placeHumanPlayerShipsRandomly() {
+        this.placeShipsRandomlyOnBoard(this.humanPlayerBoard);
+        // Vaciar la lista de barcos pendientes para la UI.
+        this.pendingShipsToPlaceForHuman.clear();
+    }
+
+    /**
+     * Lógica centralizada y reutilizable para colocar una flota completa de barcos
+     * de forma aleatoria en un tablero específico.
+     * Este metodo es llamado tanto para la colocación de la máquina como para la
+     * colocación aleatoria del jugador humano.
+     *
+     * @param board El tablero (del humano o de la máquina) en el que se colocarán los barcos.
+     */
+    private void placeShipsRandomlyOnBoard(Board board) {
+        // Asegurarse que el tablero esté limpio antes de empezar.
+        board.resetBoard();
+        List<Ship> fleetToPlace = this.createFleet();
         Random random = new Random();
 
-        for (Ship ship : machineFleet) {
+        for (Ship ship : fleetToPlace) {
             boolean placedSuccessfully = false;
             int attempts = 0;
-            final int MAX_PLACEMENT_ATTEMPTS = 100; // Para evitar bucles infinitos
+            final int MAX_PLACEMENT_ATTEMPTS = 100; // Evitar bucles infinitos.
 
             while (!placedSuccessfully && attempts < MAX_PLACEMENT_ATTEMPTS) {
-                int row = random.nextInt(this.machinePlayerBoard.getSize());
-                int col = random.nextInt(this.machinePlayerBoard.getSize());
+                int row = random.nextInt(board.getSize());
+                int col = random.nextInt(board.getSize());
 
                 Orientation orientation;
-                // Si el barco es de tipo FRIGATE, su orientación será HORIZONTAL.
                 if (ship.getShipType() == ShipType.FRIGATE) {
                     orientation = Orientation.HORIZONTAL;
                 } else {
-                    // Para los demás barcos, la orientación es aleatoria.
                     orientation = random.nextBoolean() ? Orientation.HORIZONTAL : Orientation.VERTICAL;
                 }
                 ship.setOrientation(orientation);
 
                 try {
-                    this.machinePlayerBoard.placeShip(ship, new Coordinate(col, row));
-                    placedSuccessfully = true; // Si no lanza excepción, se colocó bien.
+                    board.placeShip(ship, new Coordinate(col, row));
+                    placedSuccessfully = true;
                 } catch (OutOfBoundsException | OverlapException e) {
-                    // Si falla, simplemente lo intentamos de nuevo en otra posición.
                     placedSuccessfully = false;
                 }
                 attempts++;
             }
 
             if (!placedSuccessfully) {
-                System.err.println("Error crítico: No se pudo colocar el barco de la máquina: " + ship.getShipType());
+                System.err.println("Error crítico: No se pudo colocar el barco " + ship.getShipType() + " en el tablero. Reiniciando tablero.");
+                board.resetBoard();
+                // Salir para evitar un tablero a medio colocar.
+                return;
             }
         }
     }
