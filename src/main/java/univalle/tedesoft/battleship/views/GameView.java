@@ -151,46 +151,72 @@ public class GameView extends Stage {
         this.controller.finalizePlacementButton.setDisable(!shipsToPlace.isEmpty());
         this.controller.machinePlayerBoardGrid.setDisable(true);
         this.controller.humanPlayerBoardGrid.setDisable(false);
-
+        // Limpiar el contenido anterior del panel (excepto el control de orientación)
         this.controller.shipPlacementPane.getChildren().remove(1, this.controller.shipPlacementPane.getChildren().size());
 
-        // Definir los anchos deseados para cada tipo de barco en el panel de selección.
+        // Obtener el recuento de barcos pendientes del controlador
+        Map<ShipType, Long> pendingCounts = this.controller.getPendingShipCounts();
+        //  Definir los anchos deseados para cada tipo de barco en el panel de selección.
         final Map<ShipType, Double> targetWidths = Map.of(
-                ShipType.FRIGATE, 50.0,           // La más pequeña (la mitad del destructor).
-                ShipType.DESTROYER, 100.0,        // Nuestro tamaño base.
-                ShipType.SUBMARINE, 125.0,        // Proporcionalmente más grande.
-                ShipType.AIR_CRAFT_CARRIER, 200.0 // La más grande (el doble del destructor).
+                ShipType.FRIGATE, 50.0,
+                ShipType.DESTROYER, 100.0,
+                ShipType.SUBMARINE, 125.0,
+                ShipType.AIR_CRAFT_CARRIER, 200.0
+        );
+        // Definir el orden en que queremos mostrar los barcos
+        List<ShipType> displayOrder = List.of(
+                ShipType.AIR_CRAFT_CARRIER,
+                ShipType.SUBMARINE,
+                ShipType.DESTROYER,
+                ShipType.FRIGATE
         );
 
-        for (ShipType type : shipsToPlace) {
-            // Obtener la fábrica de formas correcta desde nuestro mapa usando polimorfismo.
+        for (ShipType type : displayOrder) {
+            long count = pendingCounts.getOrDefault(type, 0L);
+
+            // Crear un contenedor para la forma, para centrarla y manejarla fácilmente.
+            VBox shipContainer = new VBox(5);
+            shipContainer.setAlignment(Pos.CENTER);
+            shipContainer.getStyleClass().add("ship-selector-item");
+
+            // Etiqueta con el nombre y contador
+            String shipName = type.toString().replace("_", " ");
+            Label countLabel = new Label(String.format("%s: %dx", shipName, count));
+            countLabel.setFont(new Font("Arial Bold", 14));
+            countLabel.setTextFill(javafx.scene.paint.Color.WHITE);
+
+            // Forma Visual del Barco
             ShipShape shapeFactory = this.shipShapeFactory.get(type);
-
+            Node shipVisualNode = new Group();
             if (shapeFactory != null) {
-                // Crear la forma del barco. Esto nos devuelve un Node (un Group con todas las partes).
-                Node shipVisualNode = shapeFactory.createShape();
-                // Obtener el ancho objetivo dinámicamente del mapa.
+                // Crear la forma del barco.
+                shipVisualNode = shapeFactory.createShape();
+                // Obtener el ancho objetivo dinámicamente del mapa targetWidths.
                 double targetWidth = targetWidths.getOrDefault(type, 150.0);
-
-                // Calcular el factor de escala para que el barco encaje en el ancho deseado.
                 double originalWidth = shipVisualNode.getBoundsInLocal().getWidth();
-                double scaleFactor = targetWidth / originalWidth;
-
-                // Aplicar la transformación de escala.
-                Scale scale = new Scale(scaleFactor, scaleFactor);
-                shipVisualNode.getTransforms().add(scale);
-
-                // Crear un contenedor para la forma, para centrarla y manejarla fácilmente.
-                VBox container = new VBox(shipVisualNode);
-                container.setAlignment(Pos.CENTER);
-                container.setPadding(new Insets(5, 0, 5, 0)); // Espaciado vertical
-                container.getStyleClass().add("ship-selector-item"); // Para futuro estilo con CSS
-
-                container.setOnMouseClicked(event -> this.controller.handleShipSelection(type));
-
-                // 7. Añadir el contenedor (con el barco escalado dentro) al panel de colocación.
-                this.controller.shipPlacementPane.getChildren().add(container);
+                if (originalWidth > 0) {
+                    double scaleFactor = targetWidth / originalWidth;
+                    Scale scale = new Scale(scaleFactor, scaleFactor);
+                    shipVisualNode.getTransforms().add(scale);
+                }
             }
+
+            shipContainer.getChildren().addAll(countLabel, shipVisualNode);
+
+            if (count == 0) {
+                // Si ya no hay más barcos de este tipo por colocar,
+                // deshabilitar la interacción y hacerlo más tenue.
+                shipContainer.setOpacity(0.4);
+                shipContainer.setDisable(true);
+            } else {
+                // Si aún hay barcos por colocar, habilitar la interacción.
+                shipContainer.setOpacity(1.0);
+                shipContainer.setDisable(false);
+                shipContainer.setOnMouseClicked(event -> this.controller.handleShipSelection(type));
+                shipContainer.setStyle("-fx-cursor: hand;");
+            }
+            // Añadir el contenedor (con el barco escalado dentro) al panel de colocación.
+            this.controller.shipPlacementPane.getChildren().add(shipContainer);
         }
     }
 
