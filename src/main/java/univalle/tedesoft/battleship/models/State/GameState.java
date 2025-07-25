@@ -440,6 +440,7 @@ public class GameState implements IGameState {
             System.err.println("Error al guardar el juego");
         }
     }
+
     @Override
     public boolean loadGame() {
         // Cargar el estado completo del juego incluyendo barcos y tableros
@@ -457,6 +458,7 @@ public class GameState implements IGameState {
     public boolean isSavedGameAvailable() {
         return gameCaretaker.isSavedGameAvailable();
     }
+
     @Override
     public String getHumanPlayerNickname() {
         return (humanPlayer != null) ? humanPlayer.getName() : null;
@@ -558,4 +560,48 @@ public class GameState implements IGameState {
         }
     }
 
+    /**
+     * Mueve un barco ya colocado a una nueva posición en el tablero del jugador humano.
+     * Si la nueva posición es inválida, el barco se restaura a su ubicación original.
+     *
+     * @param shipToMove El objeto Ship que se desea mover.
+     * @param newRow La nueva fila de inicio para el barco.
+     * @param newCol La nueva columna de inicio para el barco.
+     * @throws InvalidShipPlacementException si el movimiento es inválido.
+     */
+    @Override
+    public void moveHumanPlayerShip(Ship shipToMove, int newRow, int newCol) throws InvalidShipPlacementException, OverlapException, OutOfBoundsException {
+        // Guardar la información original del barco por si el movimiento falla
+        List<Coordinate> originalCoordinates = new ArrayList<>(shipToMove.getOccupiedCoordinates());
+
+        // Eliminar el barco de su posición actual en el tablero.
+        if (!this.humanPlayerBoard.removeShip(shipToMove)) {
+            throw new InvalidShipPlacementException("El barco a mover no se encuentra en el tablero.");
+        }
+        shipToMove.getOccupiedCoordinates().clear();
+
+        try {
+            // Intentar colocar el barco en la nueva posición.
+            this.humanPlayerBoard.placeShip(shipToMove, new Coordinate(newCol, newRow));
+        } catch (OutOfBoundsException | OverlapException e) {
+            // Si el movimiento falla, restaurar el barco a su estado original.
+            // Limpiar cualquier coordenada parcial que se haya podido añadir.
+            shipToMove.getOccupiedCoordinates().clear();
+
+            // Reasignar las coordenadas originales al objeto Ship.
+            for (Coordinate coord : originalCoordinates) {
+                shipToMove.addCoordinates(coord);
+            }
+
+            // Volver a añadir el barco al tablero en su posición original.
+            this.humanPlayerBoard.addShipDirectly(shipToMove);
+            for(Coordinate coord : shipToMove.getOccupiedCoordinates()){
+                // Restaurar el estado en la grilla y en la lista de barcos.
+                this.humanPlayerBoard.setCellState(coord.getY(), coord.getX(), CellState.SHIP);
+            }
+
+            // Relanzar la excepción para que el controlador pueda notificar al usuario.
+            throw e;
+        }
+    }
 }

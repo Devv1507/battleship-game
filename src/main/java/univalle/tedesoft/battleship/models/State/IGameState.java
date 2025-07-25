@@ -8,6 +8,7 @@ import univalle.tedesoft.battleship.exceptions.InvalidShipPlacementException;
 import univalle.tedesoft.battleship.exceptions.OverlapException;
 import univalle.tedesoft.battleship.exceptions.OutOfBoundsException;
 import univalle.tedesoft.battleship.models.Board;
+import univalle.tedesoft.battleship.models.Ships.Ship;
 import univalle.tedesoft.battleship.models.ShotOutcome;
 
 
@@ -160,4 +161,16 @@ public interface IGameState {
      * Coloca todos los barcos del jugador humano de forma aleatoria en el tablero.
      */
     void placeHumanPlayerShipsRandomly();
+
+
+    /**
+     * Mueve un barco ya colocado a una nueva posición en el tablero del jugador humano.
+     * Si la nueva posición es inválida, el barco se restaura a su ubicación original.
+     *
+     * @param shipToMove El objeto Ship que se desea mover.
+     * @param newRow La nueva fila de inicio para el barco.
+     * @param newCol La nueva columna de inicio para el barco.
+     * @throws InvalidShipPlacementException si el movimiento es inválido.
+     */
+    void moveHumanPlayerShip(Ship shipToMove, int newRow, int newCol) throws InvalidShipPlacementException, OverlapException, OutOfBoundsException;
 }

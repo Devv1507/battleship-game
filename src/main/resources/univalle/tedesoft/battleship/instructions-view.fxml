@@ -3,7 +3,6 @@
 <?import javafx.scene.control.ScrollPane?>
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.Label?>
-<?import javafx.scene.control.ScrollPane?>
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
 
@@ -42,34 +41,33 @@
                     </font>
                 </Label>
                 <VBox spacing="5" style="-fx-padding: 0 0 0 20;">
-                    <Label text="• Al inicio, verás una lista de barcos a la izquierda que debes colocar en tu tablero ('Tu Flota')." textFill="WHITE" wrapText="true">
+                    <!--  Colocar un barco nuevo -->
+                    <Label text="• Para colocar un barco nuevo: selecciona un barco de la lista de la izquierda, elige su orientación (si es necesario) y haz un solo clic en tu tablero ('Tu Flota') para posicionarlo." textFill="WHITE" wrapText="true">
                         <font>
                             <Font name="Arial" size="14.0" />
                         </font>
                     </Label>
-                    <Label text="• Haz clic en un barco de la lista para seleccionarlo." textFill="WHITE" wrapText="true">
+
+                    <!-- Mover un barco existente -->
+                    <Label text="• Para mover un barco ya colocado: haz doble clic sobre el barco, mantén presionado y arrástralo a una nueva posición válida. Suéltalo para fijarlo." textFill="WHITE" wrapText="true">
                         <font>
                             <Font name="Arial" size="14.0" />
                         </font>
                     </Label>
-                    <Label text="• Si el barco tiene más de una casilla, elige una orientación (Horizontal o Vertical)." textFill="WHITE" wrapText="true">
-                        <font>
-                            <Font name="Arial" size="14.0" />
-                        </font>
-                    </Label>
-                    <Label text="• Haz clic en una celda de tu tablero para colocar el barco. El barco se extenderá desde esa celda." textFill="WHITE" wrapText="true">
+
+                    <Label text="• Los barcos no pueden superponerse ni salirse del tablero." textFill="WHITE" wrapText="true">
                         <font>
                             <Font name="Arial" size="14.0" />
                         </font>
                     </Label>
                     <Label text="• Si prefieres, usa el botón 'Colocar Aleatoriamente' para que el sistema posicione tu flota." textFill="WHITE" wrapText="true">
                         <font>
-                            <Font name="Arial" />
+                            <Font name="Arial" size="14.0" />
                         </font>
                     </Label>
                     <Label text="• Una vez colocados todos los barcos, presiona 'Finalizar Colocación' para empezar la batalla." textFill="WHITE" wrapText="true">
                         <font>
-                            <Font name="Arial" />
+                            <Font name="Arial" size="14.0" />
                         </font>
                     </Label>
                 </VBox>
@@ -105,7 +103,7 @@
                     </Label>
                     <Label text="• Hundido: Si aciertas en todas las partes de un barco, este se revelará en el tablero enemigo y verás una llama." textFill="WHITE" wrapText="true">
                         <font>
-                            <Font name="Arial" />
+                            <Font name="Arial" size="14.0" />
                         </font>
                     </Label>
                 </VBox>
