@@ -9,10 +9,13 @@ import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import univalle.tedesoft.battleship.exceptions.OutOfBoundsException;
 import univalle.tedesoft.battleship.exceptions.OverlapException;
+import univalle.tedesoft.battleship.models.Coordinate;
+import univalle.tedesoft.battleship.models.enums.GamePhase;
 import univalle.tedesoft.battleship.models.enums.Orientation;
 import univalle.tedesoft.battleship.models.enums.ShipType;
 import univalle.tedesoft.battleship.models.players.HumanPlayer;
 import univalle.tedesoft.battleship.models.players.Player;
+import univalle.tedesoft.battleship.models.ships.Ship;
 import univalle.tedesoft.battleship.models.ShotOutcome;
 import univalle.tedesoft.battleship.models.state.IGameState;
 import univalle.tedesoft.battleship.threads.MachineTurnRunnable;
@@ -20,6 +23,11 @@ import univalle.tedesoft.battleship.views.GameView;
 import univalle.tedesoft.battleship.views.InstructionsView;
 
 import java.io.IOException;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 public class GameController {
 
@@ -52,6 +60,8 @@ public class GameController {
     // --- Estado interno del controlador ---
     private ShipType selectedShipToPlace;
     private Orientation chosenOrientation = Orientation.HORIZONTAL;
+    private Ship shipBeingDragged = null;
+    private Coordinate mouseClickOffsetInShip = null; // Para un arrastre suave
     private boolean isOpponentBoardVisible = false;
     private static final long MACHINE_TURN_THINK_DELAY_MS = 1500;
 
@@ -332,7 +342,6 @@ public class GameController {
         return false;
     }
 
-
     /**
      * Maneja el clic en una celda del tablero principal (territorio enemigo).
      * Se usa durante la fase de disparos.
@@ -370,8 +379,23 @@ public class GameController {
         }
     }
 
+    /**
+     * Procesa la lista de barcos pendientes del modelo y devuelve un mapa
+     * con el recuento de cada tipo de barco.
+     * Este es el formato de datos que la vista necesita para renderizar el panel de colocación.
+     *
+     * @return Un Map donde la clave es ShipType y el valor es la cantidad pendiente.
+     */
+    public Map<ShipType, Long> getPendingShipCounts() {
+        if (this.gameState == null) {
+            // Devuelve un mapa vacío si el estado del juego no está listo
+            return Collections.emptyMap();
+        }
 
-    // ------------ Métodos auxiliares
+        // Obtener la lista de barcos pendientes del modelo y agruparlos por tipo
+        List<ShipType> pendingShips = this.gameState.getPendingShipsToPlace();
+        return pendingShips.stream().collect(Collectors.groupingBy(Function.identity(), Collectors.counting()));
+    }
 
     /**
      * Maneja el clic en una celda del tablero de posición del jugador humano.
@@ -381,6 +405,11 @@ public class GameController {
      * @param col La columna de la celda clickeada.
      */
     public void handlePlacementCellClick(int row, int col) {
+        if (this.shipBeingDragged != null) {
+            // Si estamos en medio de un arrastre, un clic simple no debe hacer nada.
+            return;
+        }
+
         if (this.selectedShipToPlace == null) {
             this.gameView.displayMessage("Por favor, selecciona un barco para colocar.", true);
             return;
@@ -391,26 +420,105 @@ public class GameController {
                 // Si es un FRIGATE, por defecto la orientación es horizontal.
                 this.chosenOrientation = Orientation.HORIZONTAL;
             }
-            // Ya no usamos un valor por defecto, usamos la variable 'chosenOrientation'
             this.gameState.placeHumanPlayerShip(this.selectedShipToPlace, row, col, this.chosenOrientation);
 
             // Actualizar la vista del tablero
             this.gameView.drawBoard(this.humanPlayerBoardGrid, this.gameState.getHumanPlayerPositionBoard(), true);
             this.gameView.displayMessage("Barco " + this.selectedShipToPlace + " colocado.", false);
 
-            this.selectedShipToPlace = null; // Deseleccionar
-            this.gameView.showOrientationControls(false); // Ocultar controles de orientación
+            // Ocultar controles de orientación
+            this.selectedShipToPlace = null;
+            this.gameView.showOrientationControls(false);
 
             // Actualizar la lista de barcos a colocar
             this.gameView.showShipPlacementPhase(
                     this.gameState.getHumanPlayerPositionBoard(),
                     this.gameState.getPendingShipsToPlace()
             );
-
         } catch (Exception e) {
             this.gameView.displayMessage("Error: " + e.getMessage(), true);
         }
     }
+
+    /**
+     * Inicia el proceso de arrastre de un barco existente.
+     * Se activa con un doble clic presionado en una celda ocupada por un barco.
+     *
+     * @param row Fila donde se inició el arrastre.
+     * @param col Columna donde se inició el arrastre.
+     */
+    public void handleShipDragStart(int row, int col) {
+        if (this.gameState.getCurrentPhase() != GamePhase.PLACEMENT) {
+            return;
+        }
+
+        Ship clickedShip = this.gameState.getHumanPlayerPositionBoard().getShipAt(row, col);
+
+        if (clickedShip != null) {
+            this.shipBeingDragged = clickedShip;
+
+            Coordinate shipOrigin = clickedShip.getOccupiedCoordinates().get(0);
+            int offsetX = col - shipOrigin.getX();
+            int offsetY = row - shipOrigin.getY();
+            this.mouseClickOffsetInShip = new Coordinate(offsetX, offsetY);
+
+            // Notificar a la vista para que oculte el barco original.
+            this.gameView.startShipDrag(this.shipBeingDragged);
+
+            // Mostrar una previsualización inicial en la posición actual.
+            this.handleShipDrag(row, col);
+        }
+    }
+
+    /**
+     * Actualiza la posición de la previsualización del barco que se está arrastrando.
+     *
+     * @param row La fila actual del cursor sobre el tablero.
+     * @param col La columna actual del cursor sobre el tablero.
+     */
+    public void handleShipDrag(int row, int col) {
+        if (this.shipBeingDragged == null) {
+            return;
+        }
+
+        int newTopLeftCol = col - this.mouseClickOffsetInShip.getX();
+        int newTopLeftRow = row - this.mouseClickOffsetInShip.getY();
+
+        this.gameView.updateDragPreview(this.shipBeingDragged, newTopLeftRow, newTopLeftCol);
+    }
+
+    /**
+     * Finaliza el proceso de arrastre, intentando mover el barco a la nueva posición.
+     *
+     * @param row La fila donde se soltó el ratón.
+     * @param col La columna donde se soltó el ratón.
+     */
+    public void handleShipDragEnd(int row, int col) {
+        if (this.shipBeingDragged == null) {
+            return;
+        }
+
+        this.gameView.clearDragPreview();
+
+        int finalTopLeftCol = col - this.mouseClickOffsetInShip.getX();
+        int finalTopLeftRow = row - this.mouseClickOffsetInShip.getY();
+
+        try {
+            this.gameState.moveHumanPlayerShip(this.shipBeingDragged, finalTopLeftRow, finalTopLeftCol);
+            this.gameView.displayMessage("Barco " + this.shipBeingDragged.getShipType()  + " movido exitosamente.", false);
+        } catch (Exception e) {
+            this.gameView.displayMessage("Movimiento inválido: " + e.getMessage(), true);
+        } finally {
+            this.shipBeingDragged = null;
+            this.mouseClickOffsetInShip = null;
+
+            // Es crucial refrescar toda la UI para que el barco aparezca de nuevo,
+            // ya sea en su nueva posición o en la original si el movimiento falló.
+            this.gameView.refreshUI();
+        }
+    }
+
+    // ------------ Métodos auxiliares
 
     /**
      * Registra el tipo de barco que el jugador ha seleccionado del panel de colocación.

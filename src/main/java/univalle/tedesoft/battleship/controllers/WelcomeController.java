@@ -62,7 +62,7 @@ public class WelcomeController {
             // Personalizar el jugador con el nombre ingresado
             gameView.getController().getGameState().getHumanPlayerPositionBoard().resetBoard(); // Asegurar tablero limpio
             gameView.getController().getGameState().startNewGame(
-                    new univalle.tedesoft.battleship.models.Players.HumanPlayer(playerName)
+                    new univalle.tedesoft.battleship.models.players.HumanPlayer(playerName)
             );
 
             // Refrescar la UI

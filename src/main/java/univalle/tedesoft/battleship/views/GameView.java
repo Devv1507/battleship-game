@@ -14,6 +14,8 @@ import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
+import javafx.scene.paint.Color;
+import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Font;
 import javafx.scene.transform.Rotate;
 import javafx.scene.transform.Scale;
@@ -26,7 +28,12 @@ import univalle.tedesoft.battleship.models.enums.ShipType;
 import univalle.tedesoft.battleship.models.players.HumanPlayer;
 import univalle.tedesoft.battleship.models.ships.Ship;
 import univalle.tedesoft.battleship.models.Coordinate;
+import univalle.tedesoft.battleship.models.enums.CellState;
 import univalle.tedesoft.battleship.models.enums.Orientation;
+import univalle.tedesoft.battleship.models.enums.ShipType;
+import univalle.tedesoft.battleship.models.enums.GamePhase;
+import univalle.tedesoft.battleship.models.players.HumanPlayer;
+import univalle.tedesoft.battleship.models.ships.Ship;
 import univalle.tedesoft.battleship.models.state.GameState;
 import univalle.tedesoft.battleship.models.state.IGameState;
 import univalle.tedesoft.battleship.views.shapes.*;
@@ -50,6 +57,10 @@ public class GameView extends Stage {
     /** Mapa para las figuras de los marcadores de disparo */
     private final Map<CellState, IMarkerShape> markerShapeFactory;
     private static final int MAX_MESSAGES = 2; // Mostrar los últimos 2 mensajes
+    // Panel para dibujar la previsualización
+    private final Pane dragPreviewPane;
+    // Mapa para asociar un barco del modelo con su figura en la vista.
+    private final Map<Ship, Node> shipVisuals = new HashMap<>();
 
 
     /**
@@ -83,8 +94,8 @@ public class GameView extends Stage {
         IGameState gameState = new GameState();
         this.controller.setGameView(this);
         this.controller.setGameState(gameState);
-
         this.controller.initializeUI(this);
+
         gameState.startNewGame(new HumanPlayer("Capitán")); // Inicia el modelo con un jugador por defecto
         this.showShipPlacementPhase(
                 gameState.getHumanPlayerPositionBoard(),
@@ -93,6 +104,11 @@ public class GameView extends Stage {
 
         this.setTitle("Battleship Game");
         this.setScene(scene);
+
+        // Crear y añadir el panel de previsualización al StackPane del jugador humano
+        this.dragPreviewPane = new Pane();
+        this.dragPreviewPane.setMouseTransparent(true); // Para que no intercepte clics
+        this.controller.humanPlayerBoardContainer.getChildren().add(this.dragPreviewPane);
     }
 
 
@@ -102,33 +118,139 @@ public class GameView extends Stage {
      * @param controller La instancia del controlador para asignar listeners.
      */
     public void initializeUI(GameController controller) {
+        // Inicializar los tableros de juego.
         this.initializeBoardGrid(controller.humanPlayerBoardGrid, true);
         this.initializeBoardGrid(controller.machinePlayerBoardGrid, false);
+
+        // Definir el tamaño del tablero en función del tamaño de las celdas.
+        double boardSize = 10 * CELL_SIZE;
+
+        // Limitar el tamaño del canvas de dibujo para que no sea más grande que el tablero.
+        controller.humanPlayerDrawingPane.setMaxSize(boardSize, boardSize);
+        controller.machinePlayerDrawingPane.setMaxSize(boardSize, boardSize);
     }
 
 
     // ------------ Lógica principal
 
     private void initializeBoardGrid(GridPane boardGrid, boolean isHumanBoard) {
+        boardGrid.getChildren().clear();
+
+        if (isHumanBoard) {
+            // Asignar los manejadores de ARRASTRE y SOLTAR al GridPane completo.
+            // Esto asegura que los eventos se capturen en cualquier lugar del tablero.
+
+            // Manejador para el inicio del arrastre de un barco.
+            boardGrid.setOnMouseDragged(event -> {
+                // Calcular la fila y columna basándose en la posición del ratón dentro del GridPane.
+                int col = (int) (event.getX() / CELL_SIZE);
+                int row = (int) (event.getY() / CELL_SIZE);
+
+                // Asegurarse de que las coordenadas calculadas estén dentro de los límites.
+                if (row >= 0 && row < 10 && col >= 0 && col < 10) {
+                    this.controller.handleShipDrag(row, col);
+                }
+                event.consume();
+            });
+            // Manejador para el final del arrastre de un barco.
+            boardGrid.setOnMouseReleased(event -> {
+                int col = (int) (event.getX() / CELL_SIZE);
+                int row = (int) (event.getY() / CELL_SIZE);
+
+                if (row >= 0 && row < 10 && col >= 0 && col < 10) {
+                    this.controller.handleShipDragEnd(row, col);
+                }
+                event.consume();
+            });
+        }
+
+
+        // Se añaden las celdas al GridPane
         for (int row = 0; row < 10; row++) {
             for (int col = 0; col < 10; col++) {
                 Pane cellPane = new Pane();
-                cellPane.setStyle("-fx-background-color: transparent;");
+                // Cada celda tiene el fondo azul
+                cellPane.setStyle("-fx-background-color: rgba(74, 144, 226, 0.3);");
                 cellPane.setPrefSize(CELL_SIZE, CELL_SIZE);
 
                 // Las etiquetas de coordenadas se manejan dinámicamente en drawBoard()
                 final int finalRow = row;
                 final int finalCol = col;
 
-                cellPane.setOnMouseClicked(event -> {
-                    if (isHumanBoard) {
-                        this.controller.handlePlacementCellClick(finalRow, finalCol);
-                    } else {
+                if (isHumanBoard) {
+                    // Los eventos de INICIO (clic y doble clic) permanecen en la celda individual.
+
+                    // Manejador para COLOCAR un nuevo barco (un solo clic).
+                    cellPane.setOnMouseClicked(event -> {
+                        if (event.getClickCount() == 1) {
+                            this.controller.handlePlacementCellClick(finalRow, finalCol);
+                        }
+                        event.consume();
+                    });
+                    // Manejador para INICIAR el ARRASTRE (doble clic y mantener).
+                    cellPane.setOnMousePressed(event -> {
+                        if (event.getClickCount() == 2) {
+                            this.controller.handleShipDragStart(finalRow, finalCol);
+                        }
+                        event.consume();
+                    });
+                } else {
+                    // El tablero enemigo mantiene el comportamiento de clic simple para disparar.
+                    cellPane.setOnMouseClicked(event -> {
                         this.controller.handleFiringCellClick(finalRow, finalCol);
-                    }
-                });
+                    });
+                }
                 boardGrid.add(cellPane, col, row);
             }
+        }
+    }
+
+    /**
+     * Inicia la retroalimentación visual para el arrastre de un barco.
+     * Busca la figura del barco en el mapa `shipVisuals` y la oculta.
+     * @param ship El barco que se está empezando a arrastrar.
+     */
+    public void startShipDrag(Ship ship) {
+        Node visualNode = this.shipVisuals.get(ship);
+        if (visualNode != null) {
+            visualNode.setVisible(false);
+        }
+    }
+
+    /**
+     * Dibuja una previsualización ("fantasma") de las celdas del barco en una nueva posición.
+     * @param ship El barco que se arrastra.
+     * @param previewRow La fila de la esquina superior izquierda de la previsualización.
+     * @param previewCol La columna de la esquina superior izquierda de la previsualización.
+     */
+    public void updateDragPreview(Ship ship, int previewRow, int previewCol) {
+        this.clearDragPreview();
+
+        for (int i = 0; i < ship.getValueShip(); i++) {
+            int r = previewRow;
+            int c = previewCol;
+
+            if (ship.getOrientation() == Orientation.HORIZONTAL) {
+                c += i;
+            } else {
+                r += i;
+            }
+
+            Rectangle previewCell = new Rectangle(c * CELL_SIZE, r * CELL_SIZE, CELL_SIZE, CELL_SIZE);
+            previewCell.setFill(Color.web("#4a90e2", 0.7)); // Azul destacable y semitransparente
+            previewCell.setStroke(Color.WHITE);
+            previewCell.setStrokeWidth(2);
+            previewCell.setMouseTransparent(true);
+            this.dragPreviewPane.getChildren().add(previewCell);
+        }
+    }
+
+    /**
+     * Limpia la previsualización de arrastre del panel.
+     */
+    public void clearDragPreview() {
+        if (this.dragPreviewPane != null) {
+            this.dragPreviewPane.getChildren().clear();
         }
     }
 
@@ -138,46 +260,72 @@ public class GameView extends Stage {
         this.controller.finalizePlacementButton.setDisable(!shipsToPlace.isEmpty());
         this.controller.machinePlayerBoardGrid.setDisable(true);
         this.controller.humanPlayerBoardGrid.setDisable(false);
-
+        // Limpiar el contenido anterior del panel (excepto el control de orientación)
         this.controller.shipPlacementPane.getChildren().remove(1, this.controller.shipPlacementPane.getChildren().size());
 
-        // Definir los anchos deseados para cada tipo de barco en el panel de selección.
+        // Obtener el recuento de barcos pendientes del controlador
+        Map<ShipType, Long> pendingCounts = this.controller.getPendingShipCounts();
+        //  Definir los anchos deseados para cada tipo de barco en el panel de selección.
         final Map<ShipType, Double> targetWidths = Map.of(
-                ShipType.FRIGATE, 50.0,           // La más pequeña (la mitad del destructor).
-                ShipType.DESTROYER, 100.0,        // Nuestro tamaño base.
-                ShipType.SUBMARINE, 125.0,        // Proporcionalmente más grande.
-                ShipType.AIR_CRAFT_CARRIER, 200.0 // La más grande (el doble del destructor).
+                ShipType.FRIGATE, 50.0,
+                ShipType.DESTROYER, 100.0,
+                ShipType.SUBMARINE, 125.0,
+                ShipType.AIR_CRAFT_CARRIER, 200.0
+        );
+        // Definir el orden en que queremos mostrar los barcos
+        List<ShipType> displayOrder = List.of(
+                ShipType.AIR_CRAFT_CARRIER,
+                ShipType.SUBMARINE,
+                ShipType.DESTROYER,
+                ShipType.FRIGATE
         );
 
-        for (ShipType type : shipsToPlace) {
-            // Obtener la fábrica de formas correcta desde nuestro mapa usando polimorfismo.
+        for (ShipType type : displayOrder) {
+            long count = pendingCounts.getOrDefault(type, 0L);
+
+            // Crear un contenedor para la forma, para centrarla y manejarla fácilmente.
+            VBox shipContainer = new VBox(5);
+            shipContainer.setAlignment(Pos.CENTER);
+            shipContainer.getStyleClass().add("ship-selector-item");
+
+            // Etiqueta con el nombre y contador
+            String shipName = type.toString().replace("_", " ");
+            Label countLabel = new Label(String.format("%s: %dx", shipName, count));
+            countLabel.setFont(new Font("Arial Bold", 14));
+            countLabel.setTextFill(javafx.scene.paint.Color.WHITE);
+
+            // Forma Visual del Barco
             ShipShape shapeFactory = this.shipShapeFactory.get(type);
-
+            Node shipVisualNode = new Group();
             if (shapeFactory != null) {
-                // Crear la forma del barco. Esto nos devuelve un Node (un Group con todas las partes).
-                Node shipVisualNode = shapeFactory.createShape();
-                // Obtener el ancho objetivo dinámicamente del mapa.
+                // Crear la forma del barco.
+                shipVisualNode = shapeFactory.createShape();
+                // Obtener el ancho objetivo dinámicamente del mapa targetWidths.
                 double targetWidth = targetWidths.getOrDefault(type, 150.0);
-
-                // Calcular el factor de escala para que el barco encaje en el ancho deseado.
                 double originalWidth = shipVisualNode.getBoundsInLocal().getWidth();
-                double scaleFactor = targetWidth / originalWidth;
-
-                // Aplicar la transformación de escala.
-                Scale scale = new Scale(scaleFactor, scaleFactor);
-                shipVisualNode.getTransforms().add(scale);
-
-                // Crear un contenedor para la forma, para centrarla y manejarla fácilmente.
-                VBox container = new VBox(shipVisualNode);
-                container.setAlignment(Pos.CENTER);
-                container.setPadding(new Insets(5, 0, 5, 0)); // Espaciado vertical
-                container.getStyleClass().add("ship-selector-item"); // Para futuro estilo con CSS
-
-                container.setOnMouseClicked(event -> this.controller.handleShipSelection(type));
-
-                // 7. Añadir el contenedor (con el barco escalado dentro) al panel de colocación.
-                this.controller.shipPlacementPane.getChildren().add(container);
+                if (originalWidth > 0) {
+                    double scaleFactor = targetWidth / originalWidth;
+                    Scale scale = new Scale(scaleFactor, scaleFactor);
+                    shipVisualNode.getTransforms().add(scale);
+                }
             }
+
+            shipContainer.getChildren().addAll(countLabel, shipVisualNode);
+
+            if (count == 0) {
+                // Si ya no hay más barcos de este tipo por colocar,
+                // deshabilitar la interacción y hacerlo más tenue.
+                shipContainer.setOpacity(0.4);
+                shipContainer.setDisable(true);
+            } else {
+                // Si aún hay barcos por colocar, habilitar la interacción.
+                shipContainer.setOpacity(1.0);
+                shipContainer.setDisable(false);
+                shipContainer.setOnMouseClicked(event -> this.controller.handleShipSelection(type));
+                shipContainer.setStyle("-fx-cursor: hand;");
+            }
+            // Añadir el contenedor (con el barco escalado dentro) al panel de colocación.
+            this.controller.shipPlacementPane.getChildren().add(shipContainer);
         }
     }
 
@@ -199,27 +347,29 @@ public class GameView extends Stage {
             drawingPane = this.controller.machinePlayerDrawingPane;
         }
 
-        // 1. Limpieza del tablero
         // Limpiar el canvas de dibujo de barcos viejos.
         drawingPane.getChildren().clear();
+        if (gridPane == this.controller.humanPlayerBoardGrid) {
+            this.shipVisuals.clear(); // Limpiar solo para el tablero del jugador.
+        }
 
         // Limpiar los marcadores de las celdas del GridPane.
         for (Node node : gridPane.getChildren()) {
             if (node instanceof Pane) {
+                // Se restaura el color base de la celda en cada redibujado.
                 Pane cellPane = (Pane) node;
                 cellPane.getChildren().clear();
-                cellPane.setStyle(""); // Restaurar estilo por defecto.
+                cellPane.setStyle("-fx-background-color: rgba(74, 144, 226, 0.3);");
             }
         }
 
-        // Lógica de dibujo de barcos
-        // Primero, dibujamos todos los barcos que deben ser visibles.
+        // Dibujo de barcos
         Set<Ship> drawnShips = new HashSet<>();
         // Iteramos directamente sobre la lista de barcos
         for (Ship ship : board.getShips()) {
             if (drawnShips.contains(ship)) continue;
 
-            // La condición para dibujar el barco es la clave:
+            // La condición para dibujar el barco:
             // 1. Siempre se dibuja en el tablero del jugador humano.
             // 2. O el modo "showShips" (profesor) está activo.
             // 3. O el barco está hundido.
@@ -236,12 +386,20 @@ public class GameView extends Stage {
                     shipVisualNode.setOpacity(0.8);
                 }
 
+                if (isHumanBoard) {
+                    this.shipVisuals.put(ship, shipVisualNode);
+                    if (this.controller.getGameState().getCurrentPhase() == GamePhase.PLACEMENT) {
+                        // Resaltar las celdas del barco solo si estamos en la fase de colocación.
+                        this.highlightShipCells(gridPane, ship);
+                    }
+                }
+
                 drawingPane.getChildren().add(shipVisualNode);
                 drawnShips.add(ship);
             }
         }
 
-        // Lógica de dibujo de marcadores de estado de celdas y manejo de etiquetas de coordenadas
+        // Dibujo de marcadores de estado de celdas y manejo de etiquetas de coordenadas
         boolean isEnemyBoard = (gridPane == this.controller.machinePlayerBoardGrid);
         for (int row = 0; row < board.getSize(); row++) {
             for (int col = 0; col < board.getSize(); col++) {
@@ -263,7 +421,7 @@ public class GameView extends Stage {
                                 
                                 Label coordinateLabel = new Label(coordinateText);
                                 coordinateLabel.setFont(new Font("Arial Bold", 14));
-                                coordinateLabel.setStyle("-fx-text-fill: black; -fx-background-color: transparent;");
+                                coordinateLabel.setStyle("-fx-text-fill: rgba(255, 255, 255, 0.7);");
                                 coordinateLabel.setMouseTransparent(true);
                                 coordinateLabel.setPrefSize(CELL_SIZE, CELL_SIZE);
                                 coordinateLabel.setAlignment(Pos.CENTER);
@@ -277,7 +435,7 @@ public class GameView extends Stage {
                     }
                 }
                 
-                // Continuar con la lógica original de marcadores para celdas atacadas
+                // Dibujo de marcadores para celdas atacadas
                 if (state == CellState.EMPTY || state == CellState.SHIP) continue;
 
                 // Buscar en la fábrica si hay un marcador para el estado actual de la celda.
@@ -394,6 +552,8 @@ public class GameView extends Stage {
 
         this.displayMessage("¡Comienza la batalla! Haz clic en el tablero enemigo para disparar.", false);
 
+        // Redibujar el tablero del jugador para eliminar los resaltados de la fase de colocación.
+        this.drawBoard(this.controller.humanPlayerBoardGrid, this.controller.getGameState().getHumanPlayerPositionBoard(), true);
         // Dibujar el tablero enemigo vacío inicialmente (la vista normal)
         this.drawBoard(this.controller.machinePlayerBoardGrid, this.controller.getGameState().getMachinePlayerTerritoryBoard(), false);
     }
@@ -441,6 +601,8 @@ public class GameView extends Stage {
      * Redibuja los tableros y actualiza el estado de la interfaz.
      */
     public void refreshUI() {
+        // Limpiar la previsualización de arrastre si está activa
+        this.clearDragPreview();
         if (this.controller.getGameState() == null) {
             return;
         }
@@ -497,7 +659,29 @@ public class GameView extends Stage {
     // ------------ Métodos auxiliares
 
     /**
-     * Crea, escala, rota y posiciona el nodo visual de un barco.
+     * Resalta las celdas del GridPane que están ocupadas por un barco específico.
+     *
+     * @param gridPane El GridPane en el que se aplicará el resaltado.
+     * @param ship     El barco cuyas celdas se deben resaltar.
+     */
+    private void highlightShipCells(GridPane gridPane, Ship ship) {
+        // Estilo para la celda resaltada. Un azul ligeramente más claro y brillante.
+        String highlightStyle = "-fx-background-color: rgba(137, 197, 255, 0.6);";
+
+        // Iterar sobre cada coordenada que el barco ocupa.
+        for (Coordinate coord : ship.getOccupiedCoordinates()) {
+            // Encontrar el Pane correspondiente a esta coordenada.
+            Pane cellPane = getCellPane(gridPane, coord.getY(), coord.getX());
+            if (cellPane != null) {
+                // Aplicar el estilo de resaltado.
+                cellPane.setStyle(highlightStyle);
+            }
+        }
+    }
+
+    /**
+     * Crea, escala, rota y posiciona el nodo visual de un barco, asegurando
+     * que quede visualmente centrado dentro de su área de celdas.
      *
      * @param ship El objeto de barco del modelo.
      * @param col  La columna inicial del barco en la cuadrícula.
@@ -507,36 +691,47 @@ public class GameView extends Stage {
     private Node createAndPositionShipVisual(Ship ship, int col, int row) {
         ShipShape factory = this.shipShapeFactory.get(ship.getShipType());
         if (factory == null) {
-            return new Group(); // Devuelve un grupo vacío si no hay fábrica.
+            return new Group();
         }
 
         Node shipVisualNode = factory.createShape();
 
-        // Calcular escala
-        double originalWidth = shipVisualNode.getBoundsInLocal().getWidth();
+        // Aplicar escala primero para obtener las dimensiones finales
         double targetWidth = CELL_SIZE * ship.getValueShip();
+        double originalWidth = shipVisualNode.getBoundsInLocal().getWidth();
         double scaleFactor = targetWidth / originalWidth;
 
-        // Calcular posición en píxeles
-        double xPos = col * CELL_SIZE;
-        double yPos = row * CELL_SIZE;
+        Scale scale = new Scale(scaleFactor, scaleFactor);
+        shipVisualNode.getTransforms().add(scale);
 
-        shipVisualNode.setLayoutX(xPos);
-        shipVisualNode.setLayoutY(yPos);
+        // Lógica de centrado
+        double finalOffsetX = 0;
+        double finalOffsetY = 0;
 
-        // Aplicar transformaciones
         if (ship.getOrientation() == Orientation.VERTICAL) {
-            // Para rotación vertical, el pivote debe estar en el centro de la primera celda.
+            // Para orientación vertical
             double pivotX = CELL_SIZE / 2.0;
             double pivotY = CELL_SIZE / 2.0;
             Rotate rotation = new Rotate(90, pivotX, pivotY);
-            Scale scale = new Scale(scaleFactor, scaleFactor, pivotX, pivotY);
-            shipVisualNode.getTransforms().addAll(scale, rotation);
+            shipVisualNode.getTransforms().add(rotation);
+
+            // Obtener las dimensiones DESPUÉS de escalar y rotar
+            double finalBoundsWidth = shipVisualNode.getBoundsInParent().getWidth();
+            // Calcular el offset para centrarlo horizontalmente en la columna
+            finalOffsetX = (CELL_SIZE - finalBoundsWidth) / 2.0;
+
         } else {
-            // Para horizontal, el pivote puede ser (0,0)
-            Scale scale = new Scale(scaleFactor, scaleFactor, 0, 0);
-            shipVisualNode.getTransforms().add(scale);
+            // Para orientación horizontal
+            // Obtener las dimensiones DESPUÉS de escalar
+            double finalBoundsHeight = shipVisualNode.getBoundsInParent().getHeight();
+            // Calcular el offset para centrarlo verticalmente en la fila
+            finalOffsetY = (CELL_SIZE - finalBoundsHeight) / 2.0;
         }
+
+        // Posicionar la esquina superior izquierda de la celda y luego aplicar el offset de centrado
+        double xPos = col * CELL_SIZE;
+        double yPos = row * CELL_SIZE;
+        shipVisualNode.relocate(xPos + finalOffsetX, yPos + finalOffsetY);
 
         return shipVisualNode;
     }
