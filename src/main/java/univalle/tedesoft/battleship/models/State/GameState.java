@@ -585,8 +585,6 @@ public class GameState implements IGameState {
             this.humanPlayerBoard.placeShip(shipToMove, new Coordinate(newCol, newRow));
         } catch (OutOfBoundsException | OverlapException e) {
             // Si el movimiento falla, restaurar el barco a su estado original.
-            System.err.println("Movimiento inválido. Restaurando barco a la posición original.");
-
             // Limpiar cualquier coordenada parcial que se haya podido añadir.
             shipToMove.getOccupiedCoordinates().clear();
 
