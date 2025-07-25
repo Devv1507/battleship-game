@@ -63,8 +63,7 @@
         </Label>
         <!-- StackPane para superponer el tablero y el canvas de dibujo -->
         <StackPane fx:id="humanPlayerBoardContainer">
-          <GridPane fx:id="humanPlayerBoardGrid" gridLinesVisible="true" style="-fx-background-color: rgba(74, 144, 226, 0.3);">
-          </GridPane>
+          <GridPane fx:id="humanPlayerBoardGrid" hgap="1" vgap="1" style="-fx-background-color: #16222a;" />
           <!-- Pane transparente para dibujar los barcos encima del GridPane -->
           <Pane fx:id="humanPlayerDrawingPane" pickOnBounds="false" />
         </StackPane>
@@ -78,8 +77,7 @@
           </font>
         </Label>
         <StackPane fx:id="machinePlayerBoardContainer">
-          <GridPane fx:id="machinePlayerBoardGrid" gridLinesVisible="true" style="-fx-background-color: rgba(74, 144, 226, 0.3);">
-          </GridPane>
+          <GridPane fx:id="machinePlayerBoardGrid" hgap="1" vgap="1" style="-fx-background-color: #16222a;" />
           <Pane fx:id="machinePlayerDrawingPane" pickOnBounds="false" />
         </StackPane>
       </VBox>
