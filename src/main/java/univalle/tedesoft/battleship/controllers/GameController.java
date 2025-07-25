@@ -20,6 +20,11 @@ import univalle.tedesoft.battleship.views.GameView;
 import univalle.tedesoft.battleship.views.InstructionsView;
 
 import java.io.IOException;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 public class GameController {
 
@@ -332,7 +337,6 @@ public class GameController {
         return false;
     }
 
-
     /**
      * Maneja el clic en una celda del tablero principal (territorio enemigo).
      * Se usa durante la fase de disparos.
@@ -370,6 +374,24 @@ public class GameController {
         }
     }
 
+
+    /**
+     * Procesa la lista de barcos pendientes del modelo y devuelve un mapa
+     * con el recuento de cada tipo de barco.
+     * Este es el formato de datos que la vista necesita para renderizar el panel de colocación.
+     *
+     * @return Un Map donde la clave es ShipType y el valor es la cantidad pendiente.
+     */
+    public Map<ShipType, Long> getPendingShipCounts() {
+        if (this.gameState == null) {
+            // Devuelve un mapa vacío si el estado del juego no está listo
+            return Collections.emptyMap();
+        }
+
+        // Obtener la lista de barcos pendientes del modelo y agruparlos por tipo
+        List<ShipType> pendingShips = this.gameState.getPendingShipsToPlace();
+        return pendingShips.stream().collect(Collectors.groupingBy(Function.identity(), Collectors.counting()));
+    }
 
     // ------------ Métodos auxiliares
 
