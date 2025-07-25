@@ -25,6 +25,7 @@ import univalle.tedesoft.battleship.models.Coordinate;
 import univalle.tedesoft.battleship.models.Enums.CellState;
 import univalle.tedesoft.battleship.models.Enums.Orientation;
 import univalle.tedesoft.battleship.models.Enums.ShipType;
+import univalle.tedesoft.battleship.models.Enums.GamePhase;
 import univalle.tedesoft.battleship.models.Players.HumanPlayer;
 import univalle.tedesoft.battleship.models.Ships.Ship;
 import univalle.tedesoft.battleship.models.State.GameState;
@@ -217,7 +218,10 @@ public class GameView extends Stage {
         // Limpiar los marcadores de las celdas del GridPane.
         for (Node node : gridPane.getChildren()) {
             if (node instanceof Pane) {
-                ((Pane) node).getChildren().clear();
+                // Se restaura el color base de la celda en cada redibujado.
+                Pane cellPane = (Pane) node;
+                cellPane.getChildren().clear();
+                cellPane.setStyle("-fx-background-color: rgba(74, 144, 226, 0.3);");
             }
         }
 
@@ -242,6 +246,10 @@ public class GameView extends Stage {
                     // Desaturado y oscuro
                     shipVisualNode.setEffect(new ColorAdjust(0, -0.5, -0.2, 0));
                     shipVisualNode.setOpacity(0.8);
+                }
+                // Solo resaltar las celdas si el barco es visible
+                if (isHumanBoard && this.controller.getGameState().getCurrentPhase() == GamePhase.PLACEMENT) {
+                    this.highlightShipCells(gridPane, ship);
                 }
 
                 drawingPane.getChildren().add(shipVisualNode);
@@ -402,6 +410,8 @@ public class GameView extends Stage {
 
         this.displayMessage("¡Comienza la batalla! Haz clic en el tablero enemigo para disparar.", false);
 
+        // Redibujar el tablero del jugador para eliminar los resaltados de la fase de colocación.
+        this.drawBoard(this.controller.humanPlayerBoardGrid, this.controller.getGameState().getHumanPlayerPositionBoard(), true);
         // Dibujar el tablero enemigo vacío inicialmente (la vista normal)
         this.drawBoard(this.controller.machinePlayerBoardGrid, this.controller.getGameState().getMachinePlayerTerritoryBoard(), false);
     }
@@ -503,6 +513,27 @@ public class GameView extends Stage {
     }
 
     // ------------ Métodos auxiliares
+
+    /**
+     * Resalta las celdas del GridPane que están ocupadas por un barco específico.
+     *
+     * @param gridPane El GridPane en el que se aplicará el resaltado.
+     * @param ship     El barco cuyas celdas se deben resaltar.
+     */
+    private void highlightShipCells(GridPane gridPane, Ship ship) {
+        // Estilo para la celda resaltada. Un azul ligeramente más claro y brillante.
+        String highlightStyle = "-fx-background-color: rgba(137, 197, 255, 0.6);";
+
+        // Iterar sobre cada coordenada que el barco ocupa.
+        for (Coordinate coord : ship.getOccupiedCoordinates()) {
+            // Encontrar el Pane correspondiente a esta coordenada.
+            Pane cellPane = getCellPane(gridPane, coord.getY(), coord.getX());
+            if (cellPane != null) {
+                // Aplicar el estilo de resaltado.
+                cellPane.setStyle(highlightStyle);
+            }
+        }
+    }
 
     /**
      * Crea, escala, rota y posiciona el nodo visual de un barco, asegurando
