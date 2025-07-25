@@ -9,11 +9,11 @@ import javafx.scene.Group;
 import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.Label;
+import javafx.scene.effect.ColorAdjust;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Pane;
+import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
-import javafx.scene.paint.Color;
-import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Font;
 import javafx.scene.transform.Rotate;
 import javafx.scene.transform.Scale;
@@ -47,6 +47,8 @@ public class GameView extends Stage {
     private static final int CELL_SIZE = 40;
     /** Mapa para las figuras de los barcos */
     private final Map<ShipType, ShipShape> shipShapeFactory;
+    /** Mapa para las figuras de los marcadores de disparo */
+    private final Map<CellState, IMarkerShape> markerShapeFactory;
     private static final int MAX_MESSAGES = 2; // Mostrar los últimos 2 mensajes
 
 
@@ -65,12 +67,18 @@ public class GameView extends Stage {
         if (this.controller == null) {
             throw new IllegalStateException("El controlador no se pudo cargar desde el FXML. Revisa el campo fx:controller.");
         }
-
-        this.shipShapeFactory = new HashMap<>(); // <-- ESTO ES NUEVO
+        // Inicializar la fábrica de formas de barcos
+        this.shipShapeFactory = new HashMap<>();
         this.shipShapeFactory.put(ShipType.AIR_CRAFT_CARRIER, new AircraftShape());
         this.shipShapeFactory.put(ShipType.SUBMARINE, new SubmarineShape());
         this.shipShapeFactory.put(ShipType.DESTROYER, new DestroyerShape());
         this.shipShapeFactory.put(ShipType.FRIGATE, new FrigateShape());
+
+        // Inicializar la fábrica de formas de marcadores
+        this.markerShapeFactory = new HashMap<>();
+        this.markerShapeFactory.put(CellState.SHOT_LOST_IN_WATER, new WaterMarkerShape());
+        this.markerShapeFactory.put(CellState.HIT_SHIP, new TouchedMarkerShape());
+        this.markerShapeFactory.put(CellState.SUNK_SHIP_PART, new SunkenMarkerShape());
 
         IGameState gameState = new GameState();
         this.controller.setGameView(this);
@@ -105,11 +113,13 @@ public class GameView extends Stage {
         for (int row = 0; row < 10; row++) {
             for (int col = 0; col < 10; col++) {
                 Pane cellPane = new Pane();
-                cellPane.getStyleClass().add("cell"); // Para CSS
+                cellPane.setStyle("-fx-background-color: transparent;");
                 cellPane.setPrefSize(CELL_SIZE, CELL_SIZE);
 
+                // Las etiquetas de coordenadas se manejan dinámicamente en drawBoard()
                 final int finalRow = row;
                 final int finalCol = col;
+
                 cellPane.setOnMouseClicked(event -> {
                     if (isHumanBoard) {
                         this.controller.handlePlacementCellClick(finalRow, finalCol);
@@ -202,44 +212,104 @@ public class GameView extends Stage {
             }
         }
 
+        // Lógica de dibujo de barcos
+        // Primero, dibujamos todos los barcos que deben ser visibles.
         Set<Ship> drawnShips = new HashSet<>();
+        // Iteramos directamente sobre la lista de barcos
+        for (Ship ship : board.getShips()) {
+            if (drawnShips.contains(ship)) continue;
 
+            // La condición para dibujar el barco es la clave:
+            // 1. Siempre se dibuja en el tablero del jugador humano.
+            // 2. O el modo "showShips" (profesor) está activo.
+            // 3. O el barco está hundido.
+            boolean isHumanBoard = (gridPane == this.controller.humanPlayerBoardGrid);
+            if (isHumanBoard || showShips || ship.isSunk()) {
+
+                Coordinate headCoordinate = ship.getOccupiedCoordinates().get(0);
+                Node shipVisualNode = createAndPositionShipVisual(ship, headCoordinate.getX(), headCoordinate.getY());
+
+                // Aplicar efecto visual si está hundido
+                if (ship.isSunk()) {
+                    // Desaturado y oscuro
+                    shipVisualNode.setEffect(new ColorAdjust(0, -0.5, -0.2, 0));
+                    shipVisualNode.setOpacity(0.8);
+                }
+
+                drawingPane.getChildren().add(shipVisualNode);
+                drawnShips.add(ship);
+            }
+        }
+
+        // Lógica de dibujo de marcadores de estado de celdas y manejo de etiquetas de coordenadas
+        boolean isEnemyBoard = (gridPane == this.controller.machinePlayerBoardGrid);
         for (int row = 0; row < board.getSize(); row++) {
             for (int col = 0; col < board.getSize(); col++) {
-                // Lógica de dibujo de barcos
-                if (showShips) {
-                    Ship occupyingShip = board.getShipAt(row, col);
-                    if (occupyingShip != null && !drawnShips.contains(occupyingShip)) {
-                        // Solo dibujar si estamos en la primera coordenada del barco (la "cabeza").
-                        Coordinate headCoordinate = occupyingShip.getOccupiedCoordinates().get(0);
-                        if (headCoordinate.getY() == row && headCoordinate.getX() == col) {
-
-                            Node shipVisualNode = createAndPositionShipVisual(occupyingShip, col, row);
-                            drawingPane.getChildren().add(shipVisualNode);
-                            drawnShips.add(occupyingShip);
+                CellState state = board.getCellState(row, col);
+                Pane cellPane = this.getCellPane(gridPane, row, col);
+                
+                if (cellPane != null) {
+                    // En el tablero enemigo, manejar las etiquetas de coordenadas según el estado de la celda
+                    if (isEnemyBoard) {
+                        if (state == CellState.EMPTY || state == CellState.SHIP) {
+                            // Celda no atacada - mostrar etiqueta de coordenada si no existe
+                            boolean hasCoordinateLabel = cellPane.getChildren().stream()
+                                    .anyMatch(child -> child instanceof Label);
+                            
+                            if (!hasCoordinateLabel) {
+                                char columnLetter = (char) ('A' + col);
+                                int rowNumber = row + 1;
+                                String coordinateText = String.format("%c%d", columnLetter, rowNumber);
+                                
+                                Label coordinateLabel = new Label(coordinateText);
+                                coordinateLabel.setFont(new Font("Arial Bold", 14));
+                                coordinateLabel.setStyle("-fx-text-fill: black; -fx-background-color: transparent;");
+                                coordinateLabel.setMouseTransparent(true);
+                                coordinateLabel.setPrefSize(CELL_SIZE, CELL_SIZE);
+                                coordinateLabel.setAlignment(Pos.CENTER);
+                                
+                                cellPane.getChildren().add(coordinateLabel);
+                            }
+                        } else {
+                            // Celda atacada - remover etiqueta de coordenada si existe
+                            cellPane.getChildren().removeIf(child -> child instanceof Label);
                         }
                     }
                 }
+                
+                // Continuar con la lógica original de marcadores para celdas atacadas
+                if (state == CellState.EMPTY || state == CellState.SHIP) continue;
 
-                // Lógica de dibujo de marcadores de estado de celdas
-                CellState state = board.getCellState(row, col);
-                Pane cellPane = this.getCellPane(gridPane, row, col);
-                if (cellPane == null) continue;
+                // Buscar en la fábrica si hay un marcador para el estado actual de la celda.
+                IMarkerShape markerFactory = this.markerShapeFactory.get(state);
+                if (markerFactory != null) {
+                    // Crear el marcador visual
+                    Node markerVisualNode = markerFactory.createMarker();
 
-                if (state == CellState.HIT_SHIP || state == CellState.SUNK_SHIP_PART || state == CellState.SHOT_LOST_IN_WATER) {
-                    Rectangle marker = new Rectangle(CELL_SIZE - 2, CELL_SIZE - 2);
-                    marker.setArcWidth(10);
-                    marker.setArcHeight(10);
-                    marker.setOpacity(0.7);
+                    // Aplicar solo si el marcador es una instancia de FlameMarkerShape.
+                    if (markerFactory instanceof SunkenMarkerShape) {
+                        // Hacer la llama un 60% del tamaño de la celda
+                        double scaleFactor = 0.6;
+                        markerVisualNode.setScaleX(scaleFactor);
+                        markerVisualNode.setScaleY(scaleFactor);
 
-                    if (state == CellState.HIT_SHIP) {
-                        marker.setFill(Color.ORANGERED);
-                    } else if (state == CellState.SHOT_LOST_IN_WATER) {
-                        marker.setFill(Color.LIGHTSKYBLUE);
-                    } else { // SUNK_SHIP_PART
-                        marker.setFill(Color.DARKRED);
+                        // La llama debe estar ENCIMA del barco y CENTRADA.
+                        // Usar un StackPane para centrar la llama automáticamente.
+                        StackPane centeringContainer = new StackPane(markerVisualNode);
+
+                        // Posicionar el CONTENEDOR en la capa superior usando relocate().
+                        double xPos = col * CELL_SIZE;
+                        double yPos = row * CELL_SIZE;
+                        centeringContainer.relocate(xPos, yPos);
+
+                        // Añadir el contenedor a la capa de dibujo.
+                        drawingPane.getChildren().add(centeringContainer);
+                    } else {
+                        // Los otros marcadores (WATER, TOUCHED) van en la capa inferior (cellPane)
+                        if (cellPane != null) {
+                            cellPane.getChildren().add(markerVisualNode);
+                        }
                     }
-                    cellPane.getChildren().add(marker);
                 }
             }
         }
@@ -274,18 +344,19 @@ public class GameView extends Stage {
             for (int i = 0; i < controller.messageContainer.getChildren().size(); i++) {
                 Node node = controller.messageContainer.getChildren().get(i);
                 if (node instanceof Label label) {
-                    // El mensaje más reciente (i=0) tiene opacidad completa
                     if (i == 0) {
                         label.setOpacity(1.0);
                         if (isError) {
-                            label.setStyle("-fx-text-fill: red; -fx-font-weight: bold;");
+                            // Rojo claro para errores, visible sobre fondo oscuro
+                            label.setStyle("-fx-text-fill: #ff8a80; -fx-font-weight: bold;");
                         } else {
-                            label.setStyle("-fx-text-fill: black; -fx-font-weight: normal;");
+                            // Blanco para mensajes normales
+                            label.setStyle("-fx-text-fill: white; -fx-font-weight: normal;");
                         }
                     } else {
-                        // Los mensajes más antiguos se desvanecen
-                        label.setOpacity(0.6); // Opacidad para el mensaje anterior
-                        label.setStyle("-fx-text-fill: dimgray; -fx-font-weight: normal;");
+                        // Gris claro para mensajes antiguos
+                        label.setOpacity(0.7);
+                        label.setStyle("-fx-text-fill: #cccccc; -fx-font-weight: normal;");
                     }
                 }
             }
@@ -310,8 +381,9 @@ public class GameView extends Stage {
         this.controller.shipPlacementPane.setVisible(false);
         this.controller.orientationControlPane.setVisible(false);
 
-        // Ocultar el botón de finalizar
+        // Ocultar el botón de finalizar y el de colocar barcos aleatoriamente
         this.controller.finalizePlacementButton.setVisible(false);
+        this.controller.placeRandomlyButton.setVisible(false);
 
         // Habilitar el botón para ver el tablero del oponente
         this.controller.toggleOpponentBoardButton.setDisable(false);
@@ -400,6 +472,7 @@ public class GameView extends Stage {
                 );
                 this.controller.shipPlacementPane.setVisible(true);
                 this.controller.finalizePlacementButton.setVisible(true);
+                this.controller.placeRandomlyButton.setVisible(true);
                 this.controller.machinePlayerBoardGrid.setDisable(true);
                 this.controller.humanPlayerBoardGrid.setDisable(false);
                 break;
@@ -412,6 +485,7 @@ public class GameView extends Stage {
                 this.displayMessage("¡La partida ha terminado!", false);
                 this.controller.shipPlacementPane.setVisible(false);
                 this.controller.finalizePlacementButton.setVisible(false);
+                this.controller.placeRandomlyButton.setVisible(true);
                 this.controller.machinePlayerBoardGrid.setDisable(true);
                 this.controller.humanPlayerBoardGrid.setDisable(true);
                 break;

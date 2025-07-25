@@ -155,4 +155,9 @@ public interface IGameState {
      * @return La fase actual del juego
      */
     GamePhase getCurrentPhase();
+
+    /**
+     * Coloca todos los barcos del jugador humano de forma aleatoria en el tablero.
+     */
+    void placeHumanPlayerShipsRandomly();
 }
