@@ -288,4 +288,13 @@ public class Board {
         initializeGrid();
         this.ships.clear();
     }
+
+    /**
+     * Limpia solo la lista de barcos sin afectar el estado de las casillas.
+     * Útil para deserialización donde queremos mantener el estado de las casillas
+     * pero reemplazar completamente los barcos.
+     */
+    public void clearShipsOnly() {
+        this.ships.clear();
+    }
 }

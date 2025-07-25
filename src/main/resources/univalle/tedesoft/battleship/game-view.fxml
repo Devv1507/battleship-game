@@ -123,17 +123,6 @@
         </effect>
       </Button>
 
-      <Button fx:id="loadGameButton" onAction="#onLoadGameClick"
-              style="-fx-background-color: #2980b9; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 8;"
-              text="Cargar Juego">
-        <font>
-          <Font size="14.0" />
-        </font>
-        <effect>
-          <DropShadow />
-        </effect>
-      </Button>
-
       <Button fx:id="finalizePlacementButton" disable="true" onAction="#onFinalizePlacementClick"
               style="-fx-background-color: #f39c12; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 8;"
               text="Finalizar Colocación">

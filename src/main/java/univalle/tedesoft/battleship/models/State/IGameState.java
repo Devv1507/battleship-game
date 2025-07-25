@@ -173,4 +173,11 @@ public interface IGameState {
      * @throws InvalidShipPlacementException si el movimiento es inválido.
      */
     void moveHumanPlayerShip(Ship shipToMove, int newRow, int newCol) throws InvalidShipPlacementException, OverlapException, OutOfBoundsException;
+
+    /**
+     * Carga una partida específica por nickname.
+     * @param nickname El nombre del jugador cuya partida se quiere cargar
+     * @return true si se cargó exitosamente, false en caso contrario
+     */
+    boolean loadGameByNickname(String nickname);
 }
