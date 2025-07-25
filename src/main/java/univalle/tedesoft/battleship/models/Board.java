@@ -56,10 +56,10 @@ public class Board {
     public boolean placeShip(Ship ship, Coordinate startCoordinate) throws OutOfBoundsException, OverlapException {
         // Validación de límites
         if (ship.getOrientation() == Orientation.HORIZONTAL && startCoordinate.getX() + ship.getValueShip() > DEFAULT_SIZE) {
-            throw new OutOfBoundsException("Esta embarcacion no cabe horizontalmente en el tablero!");
+            throw new OutOfBoundsException("Fuera de los límites del tablero, el barco no cabe horizontalmente!");
         }
         if (ship.getOrientation() == Orientation.VERTICAL && startCoordinate.getY() + ship.getValueShip() > DEFAULT_SIZE) {
-            throw new OutOfBoundsException("Esta embarcacion no cabe verticalmente en el tablero!");
+            throw new OutOfBoundsException("Fuera de los límites del tablero, el barco no cabe verticalmente!");
         }
 
         List<Coordinate> coordsToPlace = new ArrayList<>();
@@ -74,13 +74,14 @@ public class Board {
             } else { // Si es HORIZONTAL
                 current_col += i;
             }
+            Coordinate currentCoordinate = new Coordinate(current_col, current_row);
 
             if (grid[current_row][current_col] != CellState.EMPTY) {
-                throw new OverlapException("Casilla (" + current_row + "," + current_col + ") Ocupada");
+                throw new OverlapException("Casilla " + currentCoordinate.toAlgebraicNotation() + " ocupada");
             }
 
             // Guardamos la coordenada que vamos a ocupar.
-            coordsToPlace.add(new Coordinate(current_col, current_row));
+            coordsToPlace.add(currentCoordinate);
         }
 
         // Si todas las verificaciones pasaron, ahora sí colocamos el barco.
