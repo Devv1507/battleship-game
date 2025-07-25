@@ -1,23 +1,15 @@
 package univalle.tedesoft.battleship.controllers;
 
 import javafx.application.Platform;
-import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
-import javafx.geometry.Insets;
-import javafx.geometry.Pos;
-import javafx.scene.Node;
 import javafx.scene.control.*;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
-import javafx.scene.text.Font;
 import univalle.tedesoft.battleship.models.State.SavedGameManager;
 import univalle.tedesoft.battleship.views.GameView;
 import univalle.tedesoft.battleship.views.InstructionsView;
 import univalle.tedesoft.battleship.views.WelcomeView;
 
 import java.io.IOException;
-import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 /**
@@ -26,22 +18,28 @@ import java.util.List;
  * y la transición a la vista principal del juego.
  */
 public class WelcomeController {
-
-    // Campos para nueva partida
+    // --- Componentes FXML ---
     @FXML private TextField nameTextField;
+    @FXML private Button startGameButton;
+    @FXML private Button showSavedGamesButton;
+    @FXML private Button exitButton;
+    @FXML private Button instructionsButton;
     // Campos para búsqueda de partidas guardadas
     @FXML private ScrollPane savedGamesScrollPane;
     @FXML private VBox savedGamesContainer;
-
     private WelcomeView welcomeView;
 
     /**
      * Establece la referencia a la vista de bienvenida que este controlador maneja.
+     * Esta referencia se utiliza para interactuar con la vista, como mostrar alertas o aplicar efectos visuales a los botones.
      * @param welcomeView La instancia de la vista de bienvenida.
      */
     public void setWelcomeView(WelcomeView welcomeView) {
         this.welcomeView = welcomeView;
+        this.initializeButtonEffects();
     }
+
+    // --------- Event handlers con FXML
 
     /**
      * Maneja el clic en el botón "¡A la Batalla!".
@@ -120,6 +118,8 @@ public class WelcomeController {
         Platform.exit();
     }
 
+    // ----- Lógica principal: carga de partidas guardadas y establecimiento de efectos visuales -----
+
     /**
      * Lógica para cargar una partida seleccionada.
      * @param gameToLoad La información de la partida que se va a cargar.
@@ -156,5 +156,15 @@ public class WelcomeController {
             this.welcomeView.show();
             this.welcomeView.showAlert(Alert.AlertType.ERROR, "Error al Cargar", "Ocurrió un error inesperado al cargar la partida: " + e.getMessage());
         }
+    }
+
+    /**
+     * Orquesta la aplicación de efectos visuales a los botones, delegando la lógica a la vista.
+     */
+    private void initializeButtonEffects() {
+        this.welcomeView.applyHoverScaleEffect(this.startGameButton);
+        this.welcomeView.applyHoverScaleEffect(this.showSavedGamesButton);
+        this.welcomeView.applyHoverScaleEffect(this.instructionsButton);
+        this.welcomeView.applyHoverScaleEffect(this.exitButton);
     }
 }

@@ -9,6 +9,7 @@ import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
+import javafx.scene.effect.DropShadow;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
@@ -170,6 +171,44 @@ public class WelcomeView extends Stage {
             case "FIRING": return "En Batalla";
             case "GAME_OVER": return "Juego Terminado";
             default: return phase;
+        }
+    }
+
+    /**
+     * Aplica un efecto de "hover" a un botón específico, haciendo que se agrande.
+     * Debe ser llamado por el controlador para configurar la interactividad de la UI.
+     * @param button El botón al cual se le aplicará el efecto.
+     */
+    public void applyHoverScaleEffect(Button button) {
+        if (button != null) {
+            // Guardamos el estilo original del botón para poder restaurarlo.
+            final String originalStyle = button.getStyle();
+            final double originalEffectRadius = button.getEffect() instanceof DropShadow ? ((DropShadow) button.getEffect()).getRadius() : 0;
+            final double originalEffectOffsetX = button.getEffect() instanceof DropShadow ? ((DropShadow) button.getEffect()).getOffsetX() : 0;
+            final double originalEffectOffsetY = button.getEffect() instanceof DropShadow ? ((DropShadow) button.getEffect()).getOffsetY() : 0;
+
+
+            // Evento que se dispara cuando el mouse entra en el área del botón.
+            button.setOnMouseEntered(event -> {
+                button.setScaleX(1.05);
+                button.setScaleY(1.05);
+                if(button.getEffect() instanceof DropShadow){
+                    ((DropShadow) button.getEffect()).setRadius(originalEffectRadius * 2);
+                    ((DropShadow) button.getEffect()).setOffsetX(originalEffectOffsetX * 2);
+                    ((DropShadow) button.getEffect()).setOffsetY(originalEffectOffsetY * 2);
+                }
+            });
+
+            // Evento que se dispara cuando el mouse sale del área del botón.
+            button.setOnMouseExited(event -> {
+                button.setScaleX(1.0);
+                button.setScaleY(1.0);
+                if(button.getEffect() instanceof DropShadow){
+                    ((DropShadow) button.getEffect()).setRadius(originalEffectRadius);
+                    ((DropShadow) button.getEffect()).setOffsetX(originalEffectOffsetX);
+                    ((DropShadow) button.getEffect()).setOffsetY(originalEffectOffsetY);
+                }
+            });
         }
     }
 }
