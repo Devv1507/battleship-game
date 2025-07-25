@@ -23,6 +23,7 @@ public class Board {
     private CellState[][] grid;
     /** Lista de barcos alojados en el tablero*/
     private List<Ship> ships;
+
     /**
      * Constructor que inicializa un tablero vacío con un tamaño específico.
      */
@@ -31,6 +32,7 @@ public class Board {
         this.ships = new ArrayList<>();
         this.initializeGrid();
     }
+
     /**
      * Inicializa todas las celdas del tablero a EMPTY.
      */
@@ -41,6 +43,7 @@ public class Board {
             }
         }
     }
+
     /**
      * Intenta colocar un barco en el tablero, si lo logra llena las casillas en la tabla
      * y en el arreglo del jugador, tambien agrega el barco al arreglo dentro de la clase Board.
@@ -91,6 +94,29 @@ public class Board {
 
         ships.add(ship);
         return true;
+    }
+
+    /**
+     * Elimina un barco del tablero.
+     * Restablece las celdas que ocupaba a EMPTY y lo quita de la lista de barcos.
+     * @param shipToRemove El barco que se va a eliminar.
+     * @return true si el barco fue encontrado y eliminado, false en caso contrario.
+     */
+    public boolean removeShip(Ship shipToRemove) {
+        if (this.ships.contains(shipToRemove)) {
+            // Limpiar las celdas de la grilla que ocupaba el barco
+            for (Coordinate coord : shipToRemove.getOccupiedCoordinates()) {
+                if (isValidCoordinate(coord.getY(), coord.getX())) {
+                    this.grid[coord.getY()][coord.getX()] = CellState.EMPTY;
+                }
+            }
+
+            // Quitar el barco de la lista de barcos del tablero
+            this.ships.remove(shipToRemove);
+
+            return true;
+        }
+        return false;
     }
 
     /**
@@ -153,6 +179,7 @@ public class Board {
         }
         return grid[row][col];
     }
+
     /**
      * Establece el estado de una celda especifica,
      * generalmente los estados se manejan por placeShip y receiveShot.
@@ -167,6 +194,7 @@ public class Board {
         }
         this.grid[row][col] = state;
     }
+
     /**
      * Verifica si todos los barcos en este tablero han sido hundidos.
      * @return true si todos los barcos están hundidos, false en caso contrario.(REVISAR ESTO)
@@ -182,6 +210,7 @@ public class Board {
         }
         return true;
     }
+
     /**
      * Devuelve la lista de barcos colocados en este tablero.
      * @return Una lista de los barcos.
@@ -197,7 +226,6 @@ public class Board {
     public void addShipDirectly(Ship ship) {
         this.ships.add(ship);
     }
-
 
     /**
      * Encuentra y devuelve el barco que ocupa una coordenada específica.
@@ -221,7 +249,6 @@ public class Board {
         // Si recorrimos todos los barcos y ninguno ocupa esa celda, devolvemos null.
         return null;
     }
-
 
     /**
      * Obtiene el tamaño del tablero.
