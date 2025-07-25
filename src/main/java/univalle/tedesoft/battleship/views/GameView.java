@@ -14,6 +14,8 @@ import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
+import javafx.scene.paint.Color;
+import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Font;
 import javafx.scene.transform.Rotate;
 import javafx.scene.transform.Scale;
@@ -51,6 +53,10 @@ public class GameView extends Stage {
     /** Mapa para las figuras de los marcadores de disparo */
     private final Map<CellState, IMarkerShape> markerShapeFactory;
     private static final int MAX_MESSAGES = 2; // Mostrar los últimos 2 mensajes
+    // Panel para dibujar la previsualización
+    private final Pane dragPreviewPane;
+    // Mapa para asociar un barco del modelo con su figura en la vista.
+    private final Map<Ship, Node> shipVisuals = new HashMap<>();
 
 
     /**
@@ -84,8 +90,8 @@ public class GameView extends Stage {
         IGameState gameState = new GameState();
         this.controller.setGameView(this);
         this.controller.setGameState(gameState);
-
         this.controller.initializeUI(this);
+
         gameState.startNewGame(new HumanPlayer("Capitán")); // Inicia el modelo con un jugador por defecto
         this.showShipPlacementPhase(
                 gameState.getHumanPlayerPositionBoard(),
@@ -94,6 +100,11 @@ public class GameView extends Stage {
 
         this.setTitle("Battleship Game");
         this.setScene(scene);
+
+        // Crear y añadir el panel de previsualización al StackPane del jugador humano
+        this.dragPreviewPane = new Pane();
+        this.dragPreviewPane.setMouseTransparent(true); // Para que no intercepte clics
+        this.controller.humanPlayerBoardContainer.getChildren().add(this.dragPreviewPane);
     }
 
 
@@ -121,6 +132,35 @@ public class GameView extends Stage {
     private void initializeBoardGrid(GridPane boardGrid, boolean isHumanBoard) {
         boardGrid.getChildren().clear();
 
+        if (isHumanBoard) {
+            // Asignar los manejadores de ARRASTRE y SOLTAR al GridPane completo.
+            // Esto asegura que los eventos se capturen en cualquier lugar del tablero.
+
+            // Manejador para el inicio del arrastre de un barco.
+            boardGrid.setOnMouseDragged(event -> {
+                // Calcular la fila y columna basándose en la posición del ratón dentro del GridPane.
+                int col = (int) (event.getX() / CELL_SIZE);
+                int row = (int) (event.getY() / CELL_SIZE);
+
+                // Asegurarse de que las coordenadas calculadas estén dentro de los límites.
+                if (row >= 0 && row < 10 && col >= 0 && col < 10) {
+                    this.controller.handleShipDrag(row, col);
+                }
+                event.consume();
+            });
+            // Manejador para el final del arrastre de un barco.
+            boardGrid.setOnMouseReleased(event -> {
+                int col = (int) (event.getX() / CELL_SIZE);
+                int row = (int) (event.getY() / CELL_SIZE);
+
+                if (row >= 0 && row < 10 && col >= 0 && col < 10) {
+                    this.controller.handleShipDragEnd(row, col);
+                }
+                event.consume();
+            });
+        }
+
+
         // Se añaden las celdas al GridPane
         for (int row = 0; row < 10; row++) {
             for (int col = 0; col < 10; col++) {
@@ -133,15 +173,80 @@ public class GameView extends Stage {
                 final int finalRow = row;
                 final int finalCol = col;
 
-                cellPane.setOnMouseClicked(event -> {
-                    if (isHumanBoard) {
-                        this.controller.handlePlacementCellClick(finalRow, finalCol);
-                    } else {
+                if (isHumanBoard) {
+                    // Los eventos de INICIO (clic y doble clic) permanecen en la celda individual.
+
+                    // Manejador para COLOCAR un nuevo barco (un solo clic).
+                    cellPane.setOnMouseClicked(event -> {
+                        if (event.getClickCount() == 1) {
+                            this.controller.handlePlacementCellClick(finalRow, finalCol);
+                        }
+                        event.consume();
+                    });
+                    // Manejador para INICIAR el ARRASTRE (doble clic y mantener).
+                    cellPane.setOnMousePressed(event -> {
+                        if (event.getClickCount() == 2) {
+                            this.controller.handleShipDragStart(finalRow, finalCol);
+                        }
+                        event.consume();
+                    });
+                } else {
+                    // El tablero enemigo mantiene el comportamiento de clic simple para disparar.
+                    cellPane.setOnMouseClicked(event -> {
                         this.controller.handleFiringCellClick(finalRow, finalCol);
-                    }
-                });
+                    });
+                }
                 boardGrid.add(cellPane, col, row);
             }
+        }
+    }
+
+    /**
+     * Inicia la retroalimentación visual para el arrastre de un barco.
+     * Busca la figura del barco en el mapa `shipVisuals` y la oculta.
+     * @param ship El barco que se está empezando a arrastrar.
+     */
+    public void startShipDrag(Ship ship) {
+        Node visualNode = this.shipVisuals.get(ship);
+        if (visualNode != null) {
+            visualNode.setVisible(false);
+        }
+    }
+
+    /**
+     * Dibuja una previsualización ("fantasma") de las celdas del barco en una nueva posición.
+     * @param ship El barco que se arrastra.
+     * @param previewRow La fila de la esquina superior izquierda de la previsualización.
+     * @param previewCol La columna de la esquina superior izquierda de la previsualización.
+     */
+    public void updateDragPreview(Ship ship, int previewRow, int previewCol) {
+        this.clearDragPreview();
+
+        for (int i = 0; i < ship.getValueShip(); i++) {
+            int r = previewRow;
+            int c = previewCol;
+
+            if (ship.getOrientation() == Orientation.HORIZONTAL) {
+                c += i;
+            } else {
+                r += i;
+            }
+
+            Rectangle previewCell = new Rectangle(c * CELL_SIZE, r * CELL_SIZE, CELL_SIZE, CELL_SIZE);
+            previewCell.setFill(Color.web("#4a90e2", 0.7)); // Azul destacable y semitransparente
+            previewCell.setStroke(Color.WHITE);
+            previewCell.setStrokeWidth(2);
+            previewCell.setMouseTransparent(true);
+            this.dragPreviewPane.getChildren().add(previewCell);
+        }
+    }
+
+    /**
+     * Limpia la previsualización de arrastre del panel.
+     */
+    public void clearDragPreview() {
+        if (this.dragPreviewPane != null) {
+            this.dragPreviewPane.getChildren().clear();
         }
     }
 
@@ -240,6 +345,9 @@ public class GameView extends Stage {
 
         // Limpiar el canvas de dibujo de barcos viejos.
         drawingPane.getChildren().clear();
+        if (gridPane == this.controller.humanPlayerBoardGrid) {
+            this.shipVisuals.clear(); // Limpiar solo para el tablero del jugador.
+        }
 
         // Limpiar los marcadores de las celdas del GridPane.
         for (Node node : gridPane.getChildren()) {
@@ -273,9 +381,13 @@ public class GameView extends Stage {
                     shipVisualNode.setEffect(new ColorAdjust(0, -0.5, -0.2, 0));
                     shipVisualNode.setOpacity(0.8);
                 }
-                // Solo resaltar las celdas si el barco es visible
-                if (isHumanBoard && this.controller.getGameState().getCurrentPhase() == GamePhase.PLACEMENT) {
-                    this.highlightShipCells(gridPane, ship);
+
+                if (isHumanBoard) {
+                    this.shipVisuals.put(ship, shipVisualNode);
+                    if (this.controller.getGameState().getCurrentPhase() == GamePhase.PLACEMENT) {
+                        // Resaltar las celdas del barco solo si estamos en la fase de colocación.
+                        this.highlightShipCells(gridPane, ship);
+                    }
                 }
 
                 drawingPane.getChildren().add(shipVisualNode);
@@ -485,6 +597,8 @@ public class GameView extends Stage {
      * Redibuja los tableros y actualiza el estado de la interfaz.
      */
     public void refreshUI() {
+        // Limpiar la previsualización de arrastre si está activa
+        this.clearDragPreview();
         if (this.controller.getGameState() == null) {
             return;
         }
