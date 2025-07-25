@@ -21,9 +21,6 @@ import java.time.format.DateTimeFormatter;
  * @author Juan Pablo Escamilla
  * @author David Valencia
  * @author Santiago Guerrero
- * @version 1.0
- * @see GameMemento
- * @see GameSerializer
  */
 public class GameCaretaker {
     private static final String SAVE_DIRECTORY = "src/main/resources/univalle/tedesoft/battleship/saves";
