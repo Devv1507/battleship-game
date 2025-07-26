@@ -259,7 +259,7 @@ public class GameController {
                     this.gameState.getMachinePlayerActualPositionBoard(),
                     false // false para ocultar los barcos
             );
-            this.gameView.updateToggleButtonText("Ver Tablero Oponente (Profesor)");
+            this.gameView.updateToggleButtonText("Ver Tablero Oponente");
         }
     }
 
@@ -567,7 +567,7 @@ public class GameController {
 
         // Actualizar la vista.
         this.gameView.resetToPlacementPhase();
-        this.gameView.updateToggleButtonText("Ver Tablero Oponente (Profesor)");
+        this.gameView.updateToggleButtonText("Ver Tablero Oponente");
         this.gameView.displayMessage("Juego reiniciado. Coloca tus barcos.", false);
     }
 
