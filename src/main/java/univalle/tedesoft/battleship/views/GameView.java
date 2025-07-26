@@ -548,8 +548,9 @@ public class GameView extends Stage {
         this.controller.finalizePlacementButton.setVisible(false);
         this.controller.placeRandomlyButton.setVisible(false);
 
-        // Habilitar el botón para ver el tablero del oponente
-        this.controller.toggleOpponentBoardButton.setDisable(false);
+        // Mostrar los botones de la fase de batalla
+        this.controller.restartGameButton.setVisible(true);
+        this.controller.toggleOpponentBoardButton.setVisible(true);
 
         // Deshabilitar clics en el tablero propio y habilitarlos en el del enemigo
         this.controller.humanPlayerBoardGrid.setDisable(true);
@@ -657,6 +658,37 @@ public class GameView extends Stage {
             default:
                 break;
         }
+    }
+
+
+    /**
+     * Restaura la interfaz de usuario al estado inicial de la fase de colocación.
+     * Es invocado por el controlador cuando se reinicia el juego.
+     */
+    public void resetToPlacementPhase() {
+        // Limpiar ambos tableros visualmente
+        this.drawBoard(this.controller.humanPlayerBoardGrid, this.controller.getGameState().getHumanPlayerPositionBoard(), true);
+        this.drawBoard(this.controller.machinePlayerBoardGrid, this.controller.getGameState().getMachinePlayerTerritoryBoard(), false);
+
+        // Restaurar la visibilidad de los componentes de la fase de colocación
+        this.controller.shipPlacementPane.setVisible(true);
+        this.controller.placeRandomlyButton.setVisible(true);
+        this.controller.finalizePlacementButton.setVisible(true);
+        this.controller.finalizePlacementButton.setDisable(true); // Deshabilitado hasta que se coloquen los barcos
+
+        // Ocultar componentes de la fase de batalla
+        this.controller.toggleOpponentBoardButton.setVisible(false);
+        this.controller.restartGameButton.setVisible(false);
+
+        // Habilitar y deshabilitar los tableros correspondientes
+        this.controller.humanPlayerBoardGrid.setDisable(false);
+        this.controller.machinePlayerBoardGrid.setDisable(true);
+
+        // Actualizar la lista de barcos para colocar
+        this.showShipPlacementPhase(
+                this.controller.getGameState().getHumanPlayerPositionBoard(),
+                this.controller.getGameState().getPendingShipsToPlace()
+        );
     }
 
     // ------------ Métodos auxiliares
@@ -925,5 +957,6 @@ public class GameView extends Stage {
         ViewUtils.applyHoverScaleEffect(this.controller.toggleOpponentBoardButton);
         ViewUtils.applyHoverScaleEffect(this.controller.horizontalButton);
         ViewUtils.applyHoverScaleEffect(this.controller.verticalButton);
+        ViewUtils.applyHoverScaleEffect(this.controller.restartGameButton);
     }
 }
