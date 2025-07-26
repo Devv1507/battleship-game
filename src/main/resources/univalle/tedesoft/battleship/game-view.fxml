@@ -147,9 +147,9 @@
         </effect>
       </Button>
 
-      <Button fx:id="saveGameButton" onAction="#onSaveGameClick"
+      <Button fx:id="toggleAutoSaveButton" onAction="#onToggleAutoSaveClick"
               style="-fx-background-color: #27ae60; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 8;"
-              text="Guardar Juego">
+              text="Guardado Automático ON">
         <font>
           <Font size="14.0" />
         </font>
