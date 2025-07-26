@@ -91,24 +91,25 @@ public class GameView extends Stage {
         this.markerShapeFactory.put(CellState.HIT_SHIP, new TouchedMarkerShape());
         this.markerShapeFactory.put(CellState.SUNK_SHIP_PART, new SunkenMarkerShape());
 
+        // Inicializar GameState sin auto-inicializar el juego
         IGameState gameState = new GameState();
         this.controller.setGameView(this);
         this.controller.setGameState(gameState);
         this.controller.initializeUI(this);
 
-        gameState.startNewGame(new HumanPlayer("Capitán")); // Inicia el modelo con un jugador por defecto
-        this.showShipPlacementPhase(
-                gameState.getHumanPlayerPositionBoard(),
-                gameState.getPendingShipsToPlace()
-        );
+        // No auto-inicializar el juego aquí - lo controlará WelcomeController
+        // gameState.startNewGame(new HumanPlayer("Capitán")); // Removido
+        // this.showShipPlacementPhase(
+        //         gameState.getHumanPlayerPositionBoard(),
+        //         gameState.getPendingShipsToPlace()
+        // ); // Removido
 
         this.setTitle("Battleship Game");
         this.setScene(scene);
 
-        // Crear y añadir el panel de previsualización al StackPane del jugador humano
+        // Crear el panel de previsualización (se agregará más tarde)
         this.dragPreviewPane = new Pane();
         this.dragPreviewPane.setMouseTransparent(true); // Para que no intercepte clics
-        this.controller.humanPlayerBoardContainer.getChildren().add(this.dragPreviewPane);
     }
 
 
@@ -260,6 +261,11 @@ public class GameView extends Stage {
         this.controller.finalizePlacementButton.setDisable(!shipsToPlace.isEmpty());
         this.controller.machinePlayerBoardGrid.setDisable(true);
         this.controller.humanPlayerBoardGrid.setDisable(false);
+        
+        // IMPORTANTE: Dibujar los barcos que ya están colocados en el tablero
+        // Esto es crucial para las partidas cargadas donde ya hay barcos colocados
+        this.drawBoard(this.controller.humanPlayerBoardGrid, playerPositionBoard, true);
+        
         // Limpiar el contenido anterior del panel (excepto el control de orientación)
         this.controller.shipPlacementPane.getChildren().remove(1, this.controller.shipPlacementPane.getChildren().size());
 
@@ -765,13 +771,92 @@ public class GameView extends Stage {
         return null; // No se encontró la celda.
     }
 
+    /**
+     * Inicializa un nuevo juego con el jugador especificado.
+     * Este método debe ser llamado desde WelcomeController después de obtener la instancia.
+     * @param player El jugador humano para el nuevo juego
+     */
+    public void initializeNewGame(HumanPlayer player) {
+        try {
+            IGameState gameState = this.controller.getGameState();
+            
+            // Configurar el panel de previsualización si no está ya agregado
+            setupDragPreviewPane();
+            
+            // Limpiar cualquier estado previo si es posible
+            gameState.getHumanPlayerPositionBoard().resetBoard();
+            
+            // Iniciar nuevo juego
+            gameState.startNewGame(player);
+            
+            // Mostrar la fase de colocación de barcos
+            this.showShipPlacementPhase(
+                    gameState.getHumanPlayerPositionBoard(),
+                    gameState.getPendingShipsToPlace()
+            );
+            
+        } catch (Exception e) {
+            System.err.println("Error al inicializar nuevo juego: " + e.getMessage());
+            e.printStackTrace();
+            throw new RuntimeException("Error al inicializar nuevo juego", e);
+        }
+    }
 
     /**
-     * Permite obtener la instancia del controlador asociado a esta vista.
-     * @return El GameController de la vista.
+     * Inicializa el juego con una partida cargada.
+     * Este método debe ser llamado después de cargar una partida desde WelcomeController.
+     */
+    public void initializeLoadedGame() {
+        try {
+            IGameState gameState = this.controller.getGameState();
+            
+            // Configurar el panel de previsualización si no está ya agregado
+            setupDragPreviewPane();
+            
+            // Determinar la fase del juego y mostrar la UI apropiada
+            GamePhase currentPhase = gameState.getCurrentPhase();
+            
+            // PASO 1: Refrescar completamente la visualización
+            refreshLoadedGameDisplay(gameState, currentPhase);
+            
+            // PASO 2: Configurar la UI específica para la fase
+            switch (currentPhase) {
+                case PLACEMENT:
+                    // Configurar la UI de colocación (esto YA dibuja los barcos gracias al fix anterior)
+                    this.showShipPlacementPhase(
+                            gameState.getHumanPlayerPositionBoard(),
+                            gameState.getPendingShipsToPlace()
+                    );
+                    break;
+                    
+                case FIRING:
+                case GAME_OVER:
+                    // Para estas fases, usar refreshUI que maneja todo
+                    this.refreshUI();
+                    break;
+                    
+                default:
+                    // Para cualquier otra fase, tratar como colocación
+                    this.showShipPlacementPhase(
+                            gameState.getHumanPlayerPositionBoard(),
+                            gameState.getPendingShipsToPlace()
+                    );
+                    break;
+            }
+            
+        } catch (Exception e) {
+            System.err.println("Error al inicializar juego cargado: " + e.getMessage());
+            e.printStackTrace();
+            throw new RuntimeException("Error al cargar el juego", e);
+        }
+    }
+
+    /**
+     * Obtiene el controlador del juego.
+     * @return El controlador de la vista del juego
      */
     public GameController getController() {
-        return controller;
+        return this.controller;
     }
 
     // --- Singleton Holder Pattern ---
@@ -785,6 +870,63 @@ public class GameView extends Stage {
             return GameViewHolder.INSTANCE;
         } else {
             return GameViewHolder.INSTANCE;
+        }
+    }
+
+    /**
+     * Resetea la instancia Singleton de GameView.
+     * Útil para limpiar estado entre diferentes juegos.
+     */
+    public static void resetInstance() {
+        if (GameViewHolder.INSTANCE != null) {
+            GameViewHolder.INSTANCE.close();
+            GameViewHolder.INSTANCE = null;
+        }
+    }
+
+    /**
+     * Configura el panel de previsualización de forma segura.
+     * Solo lo agrega si no está ya presente y los componentes están listos.
+     */
+    private void setupDragPreviewPane() {
+        try {
+            if (this.controller != null && 
+                this.controller.humanPlayerBoardContainer != null && 
+                this.dragPreviewPane != null) {
+                
+                // Verificar si ya está agregado para evitar duplicados
+                if (!this.controller.humanPlayerBoardContainer.getChildren().contains(this.dragPreviewPane)) {
+                    this.controller.humanPlayerBoardContainer.getChildren().add(this.dragPreviewPane);
+                }
+            }
+        } catch (Exception e) {
+            System.err.println("ERROR al configurar panel de previsualización: " + e.getMessage());
+            // No lanzar excepción aquí, es un componente opcional
+        }
+    }
+
+    /**
+     * Refresca completamente la visualización de una partida cargada.
+     * Asegura que tanto el modelo como la vista estén sincronizados.
+     */
+    private void refreshLoadedGameDisplay(IGameState gameState, GamePhase currentPhase) {
+        try {
+            // Limpiar cualquier estado visual previo
+            if (this.controller.humanPlayerDrawingPane != null) {
+                this.controller.humanPlayerDrawingPane.getChildren().clear();
+            }
+            if (this.controller.machinePlayerDrawingPane != null) {
+                this.controller.machinePlayerDrawingPane.getChildren().clear();
+            }
+            this.shipVisuals.clear();
+            
+            // Forzar redibujado completo de ambos tableros
+            this.drawBoard(this.controller.humanPlayerBoardGrid, gameState.getHumanPlayerPositionBoard(), true);
+            this.drawBoard(this.controller.machinePlayerBoardGrid, gameState.getMachinePlayerTerritoryBoard(), false);
+            
+        } catch (Exception e) {
+            System.err.println("ERROR al refrescar visualización: " + e.getMessage());
+            e.printStackTrace();
         }
     }
 }

@@ -37,7 +37,6 @@ public class GameController {
     @FXML public Button horizontalButton;
     @FXML public Button verticalButton;
     @FXML public Button saveGameButton;
-    @FXML public Button loadGameButton;
     @FXML public Button placeRandomlyButton;
     @FXML public Button instructionsButton;
 
@@ -140,6 +139,7 @@ public class GameController {
                 this.gameView.displayMessage("Aún debes colocar todos tus barcos.", true);
                 return;
             }
+            
             // Notificar al modelo para que coloque los barcos de la máquina
             this.gameState.finalizeShipPlacement();
 
@@ -212,30 +212,6 @@ public class GameController {
             this.gameView.displayMessage("¡Juego guardado exitosamente!", false);
         } catch (Exception e) {
             this.gameView.displayMessage("Error al guardar el juego: " + e.getMessage(), true);
-        }
-    }
-
-    /**
-     * Maneja el clic en el botón para cargar el juego.
-     */
-    @FXML
-    void onLoadGameClick(ActionEvent event) {
-        if (this.gameState == null) {
-            this.gameView.displayMessage("Error: No hay juego activo para cargar.", true);
-            return;
-        }
-
-        try {
-            boolean loaded = this.gameState.loadGame();
-            if (loaded) {
-                this.gameView.displayMessage("¡Juego cargado exitosamente!", false);
-                // Actualizar la vista con el estado cargado
-                this.gameView.refreshUI();
-            } else {
-                this.gameView.displayMessage("No hay un juego guardado disponible.", true);
-            }
-        } catch (Exception e) {
-            this.gameView.displayMessage("Error al cargar el juego: " + e.getMessage(), true);
         }
     }
 

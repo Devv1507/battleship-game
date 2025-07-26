@@ -165,6 +165,9 @@ public class GameState implements IGameState {
         }
         this.placeMachinePlayerShips();
         this.currentPhase = GamePhase.FIRING;
+        
+        // IMPORTANTE: El jugador humano siempre inicia la fase de disparos
+        this.currentPlayer = this.humanPlayer;
     }
 
     /**
@@ -372,15 +375,68 @@ public class GameState implements IGameState {
      */
     public void restoreFromMemento(GameMemento memento) {
         if (memento != null) {
-            // Restaurar el nickname del jugador
-            if (humanPlayer != null) {
-                humanPlayer.setName(memento.getHumanPlayerNickname());
-            }
+            // Asegurar que los jugadores estén inicializados
+            ensurePlayersInitialized(memento.getHumanPlayerNickname());
             
             // Restaurar la fase del juego
             this.currentPhase = memento.getCurrentPhase();
             
+            // IMPORTANTE: Establecer el turno correcto basado en la fase cargada
+            restoreCurrentPlayerBasedOnPhase(this.currentPhase);
+            
             System.out.println("Estado del juego restaurado desde memento: " + memento);
+        }
+    }
+
+    /**
+     * Asegura que los jugadores estén correctamente inicializados al cargar una partida.
+     * Esto es crucial para el funcionamiento correcto del sistema de turnos.
+     * 
+     * @param humanPlayerNickname El nickname del jugador humano
+     */
+    private void ensurePlayersInitialized(String humanPlayerNickname) {
+        // Inicializar jugador humano si no existe o si el nickname es diferente
+        if (this.humanPlayer == null || !humanPlayerNickname.equals(this.humanPlayer.getName())) {
+            this.humanPlayer = new univalle.tedesoft.battleship.models.Players.HumanPlayer(humanPlayerNickname);
+        }
+        
+        // Inicializar jugador máquina si no existe
+        if (this.machinePlayer == null) {
+            this.machinePlayer = new univalle.tedesoft.battleship.models.Players.MachinePlayer();
+        }
+    }
+
+
+
+    /**
+     * Establece el turno actual de forma inteligente basándose en la fase del juego.
+     * Esto es crucial para partidas cargadas donde el turno no se guarda explícitamente.
+     * 
+     * @param phase La fase del juego cargada
+     */
+    private void restoreCurrentPlayerBasedOnPhase(GamePhase phase) {
+        switch (phase) {
+            case INITIAL:
+            case PLACEMENT:
+                // En colocación, el jugador humano debe estar activo
+                this.currentPlayer = this.humanPlayer;
+                break;
+                
+            case FIRING:
+                // En disparos, por regla general el jugador humano inicia
+                // (Esto podría mejorarse guardando el turno actual en el futuro)
+                this.currentPlayer = this.humanPlayer;
+                break;
+                
+            case GAME_OVER:
+                // En juego terminado, no importa el turno, pero lo dejamos en humano
+                this.currentPlayer = this.humanPlayer;
+                break;
+                
+            default:
+                // Por seguridad, asignar al jugador humano
+                this.currentPlayer = this.humanPlayer;
+                break;
         }
     }
     
@@ -432,12 +488,38 @@ public class GameState implements IGameState {
     
     @Override
     public void saveGame() {
-        // Guardar el estado completo del juego incluyendo barcos y tableros
+        // Intentar guardar usando el nuevo sistema por nickname si hay un jugador humano
+        String nickname = getHumanPlayerNickname();
+        if (nickname != null && !nickname.trim().isEmpty()) {
+            boolean saved = saveGameByNickname(nickname);
+            if (saved) {
+                System.out.println("Juego guardado exitosamente para " + nickname + " usando sistema por nickname");
+                return;
+            }
+        }
+        
+        // Fallback al sistema original si no hay nickname o falla el guardado por nickname
         boolean saved = gameCaretaker.saveCompleteGame(this);
         if (saved) {
             System.out.println("Juego guardado exitosamente usando patrón Memento con serialización completa");
         } else {
             System.err.println("Error al guardar el juego");
+        }
+    }
+
+    /**
+     * Guarda la partida específica por nickname
+     * @param nickname El nombre del jugador para organizar la partida guardada
+     * @return true si se guardó exitosamente, false en caso contrario
+     */
+    public boolean saveGameByNickname(String nickname) {
+        boolean saved = gameCaretaker.saveCompleteGameByNickname(this, nickname);
+        if (saved) {
+            System.out.println("Juego guardado exitosamente para " + nickname + " usando sistema por nickname");
+            return true;
+        } else {
+            System.err.println("Error al guardar el juego para " + nickname);
+            return false;
         }
     }
 
@@ -457,6 +539,21 @@ public class GameState implements IGameState {
     @Override
     public boolean isSavedGameAvailable() {
         return gameCaretaker.isSavedGameAvailable();
+    }
+
+    /**
+     * Carga una partida específica por nickname
+     * @param nickname El nombre del jugador cuya partida se quiere cargar
+     * @return true si se cargó exitosamente, false en caso contrario
+     */
+    public boolean loadGameByNickname(String nickname) {
+        boolean loaded = gameCaretaker.loadCompleteGameByNickname(this, nickname);
+        if (loaded) {
+            // Recalcular los barcos pendientes basándose en los barcos ya colocados
+            recalculatePendingShips();
+            return true;
+        }
+        return false;
     }
 
     @Override
