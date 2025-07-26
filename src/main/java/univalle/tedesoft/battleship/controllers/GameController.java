@@ -1,8 +1,8 @@
 package univalle.tedesoft.battleship.controllers;
 
-import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
+import javafx.scene.control.ButtonType;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.StackPane;
@@ -21,11 +21,13 @@ import univalle.tedesoft.battleship.models.State.IGameState;
 import univalle.tedesoft.battleship.threads.MachineTurnRunnable;
 import univalle.tedesoft.battleship.views.GameView;
 import univalle.tedesoft.battleship.views.InstructionsView;
+import univalle.tedesoft.battleship.views.ViewUtils;
 
 import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -45,6 +47,8 @@ public class GameController {
     @FXML public Button placeRandomlyButton;
     /** Botón para mostrar la ventana de instrucciones del juego. */
     @FXML public Button instructionsButton;
+    /** Botón para reiniciar la partida actual al estado inicial de colocación. */
+    @FXML public Button restartGameButton;
     /** Tablero donde el jugador coloca sus barcos y recibe disparos. */
     @FXML public GridPane humanPlayerBoardGrid;
     /** Tablero de la máquina, donde el jugador dispara al oponente. */
@@ -142,6 +146,29 @@ public class GameController {
 
     // ----- Handlers o Manejadores de Eventos con FXML -----
 
+
+    /**
+     * Maneja el clic en el botón "Reiniciar Juego".
+     * Muestra una alerta de confirmación y, si el usuario acepta, reinicia el estado del juego.
+     */
+    @FXML
+    void onRestartGameClick() {
+        if (this.gameState == null || this.gameView == null) {
+            return;
+        }
+        // Llamar a ViewUtils para mostrar el diálogo de confirmación.
+        Optional<ButtonType> result = ViewUtils.showConfirmationDialog(
+                "Confirmar Reinicio",
+                "¿Está seguro de reiniciar?",
+                "Si no ha guardado, perderá todo el avance del juego."
+        );
+
+        // Si el usuario confirma, reiniciamos el juego.
+        if (result.isPresent() && result.get() == ButtonType.OK) {
+            this.restartGame();
+        }
+    }
+
     /**
      * Se activa cuando el jugador hace clic en el botón "Finalizar Colocación".
      * Notifica al modelo y actualiza la vista para pasar a la fase de disparos.
@@ -161,7 +188,6 @@ public class GameController {
             this.gameView.showFiringPhase();
         }
     }
-
 
     /**
      * Se activa cuando el jugador hace clic en el botón "Horizontal".
@@ -505,6 +531,26 @@ public class GameController {
             // ya sea en su nueva posición o en la original si el movimiento falló.
             this.gameView.refreshUI();
         }
+    }
+
+    /**
+     * Lógica centralizada para reiniciar el juego.
+     * Restablece el modelo y actualiza la vista al estado inicial.
+     */
+    private void restartGame() {
+        // Guardamos el jugador actual para no perder su nombre.
+        Player currentPlayer = new HumanPlayer(this.getGameState().getHumanPlayerNickname());
+
+        // Reiniciar el modelo.
+        this.getGameState().startNewGame(currentPlayer);
+
+        // Reiniciar el estado interno del controlador.
+        this.isOpponentBoardVisible = false;
+
+        // Actualizar la vista.
+        this.gameView.resetToPlacementPhase();
+        this.gameView.updateToggleButtonText("Ver Tablero Oponente (Profesor)");
+        this.gameView.displayMessage("Juego reiniciado. Coloca tus barcos.", false);
     }
 
     // ----- Métodos auxiliares -----
