@@ -45,6 +45,23 @@
           </Label>
         </VBox>
       </center>
+      <right>
+        <VBox alignment="TOP_RIGHT" BorderPane.alignment="TOP_RIGHT">
+          <padding>
+            <Insets right="10.0" top="10.0" />
+          </padding>
+          <children>
+            <Button fx:id="instructionsButton" onAction="#onInstructionsClick" style="-fx-background-color: #27ae60; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 8;" text="Instrucciones">
+              <font>
+                <Font size="12.0" />
+              </font>
+              <effect>
+                <DropShadow />
+              </effect>
+            </Button>
+          </children>
+        </VBox>
+      </right>
     </BorderPane>
   </top>
 
@@ -118,8 +135,18 @@
   <bottom>
     <HBox alignment="CENTER" prefHeight="50.0" spacing="20.0" BorderPane.alignment="CENTER">
       <padding>
-        <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
+        <Insets bottom="10.0" left="20.0" right="20.0" top="10.0" />
       </padding>
+
+      <Button fx:id="restartGameButton" onAction="#onRestartGameClick" visible="false"  style="-fx-background-color: #c0392b; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 8;" text="Reiniciar Juego">
+        <font>
+          <Font size="14.0" />
+        </font>
+        <effect>
+          <DropShadow />
+        </effect>
+      </Button>
+
       <Button fx:id="saveGameButton" onAction="#onSaveGameClick"
               style="-fx-background-color: #27ae60; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 8;"
               text="Guardar Juego">
@@ -142,21 +169,16 @@
         </effect>
       </Button>
 
-      <Button fx:id="instructionsButton" onAction="#onInstructionsClick"
-              style="-fx-background-color: #27ae60; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 8;"
-              text="Instrucciones">
+      <Button fx:id="toggleOpponentBoardButton" onAction="#onToggleOpponentBoardClick" visible="false" style="-fx-background-color: #708090; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 8;" text="Ver Tablero Oponente (Profesor)">
         <font>
-          <Font size="14.0" />
+          <Font size="12.0" />
         </font>
         <effect>
           <DropShadow />
         </effect>
-      </Button>
-
-      <Button fx:id="toggleOpponentBoardButton" onAction="#onToggleOpponentBoardClick" style="-fx-background-color: #708090; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 8;" text="Ver Tablero Oponente">
-        <effect>
-          <DropShadow />
-        </effect>
+        <HBox.margin>
+          <Insets left="50.0" />
+        </HBox.margin>
       </Button>
     </HBox>
   </bottom>
