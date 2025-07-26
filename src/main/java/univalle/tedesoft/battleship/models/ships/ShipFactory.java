@@ -5,6 +5,9 @@ import univalle.tedesoft.battleship.models.enums.ShipType;
 /**
  * Fábrica para crear objetos Ship.
  * Implementa el patrón Factory Method para centralizar la lógica de creación.
+ * @author David Esteban Valencia
+ * @author Santiago David Guerrero
+ * @author Juan Pablo Escamilla
  */
 public class ShipFactory {
 

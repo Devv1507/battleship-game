@@ -16,7 +16,7 @@ import java.util.List;
  * @author Santiago David Guerrero
  * @author Juan Pablo Escamilla
  */
-public class Board {
+public class Board extends BoardAdapter {
     /** Tamaño estandar del tablero*/
     private static final int DEFAULT_SIZE = 10; // Tamaño estándar del tablero 10x10
     /** Matriz de celdas, para guardar los estados de cada celda de forma ordenada por coordenadas*/
