@@ -1,4 +1,4 @@
-package univalle.tedesoft.battleship.models.Enums;
+package univalle.tedesoft.battleship.models.enums;
 
 /**
  * Enum para describir la orientacion de una embarcacion.

@@ -1,11 +1,11 @@
-package univalle.tedesoft.battleship.models.State;
+package univalle.tedesoft.battleship.models.state;
 
 import univalle.tedesoft.battleship.models.Board;
 import univalle.tedesoft.battleship.models.Coordinate;
-import univalle.tedesoft.battleship.models.Enums.CellState;
-import univalle.tedesoft.battleship.models.Enums.Orientation;
-import univalle.tedesoft.battleship.models.Enums.ShipType;
-import univalle.tedesoft.battleship.models.Ships.*;
+import univalle.tedesoft.battleship.models.enums.CellState;
+import univalle.tedesoft.battleship.models.enums.Orientation;
+import univalle.tedesoft.battleship.models.enums.ShipType;
+import univalle.tedesoft.battleship.models.ships.*;
 
 import java.io.*;
 import java.nio.file.Files;
@@ -244,6 +244,7 @@ public class GameSerializer {
      * @throws IllegalArgumentException si el tipo de barco no es reconocido
      */
     private static Ship createShipFromType(ShipType shipType) {
+        /*
         switch (shipType) {
             case AIR_CRAFT_CARRIER:
                 return new AirCraftCarrier();
@@ -256,6 +257,9 @@ public class GameSerializer {
             default:
                 throw new IllegalArgumentException("Tipo de barco desconocido: " + shipType);
         }
+
+         */
+        return ShipFactory.createShip(shipType);
     }
     
     /**

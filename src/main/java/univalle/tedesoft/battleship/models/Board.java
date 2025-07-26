@@ -2,10 +2,10 @@ package univalle.tedesoft.battleship.models;
 
 import univalle.tedesoft.battleship.exceptions.OutOfBoundsException;
 import univalle.tedesoft.battleship.exceptions.OverlapException;
-import univalle.tedesoft.battleship.models.Enums.CellState;
-import univalle.tedesoft.battleship.models.Enums.Orientation;
-import univalle.tedesoft.battleship.models.Enums.ShotResult;
-import univalle.tedesoft.battleship.models.Ships.Ship;
+import univalle.tedesoft.battleship.models.enums.CellState;
+import univalle.tedesoft.battleship.models.enums.Orientation;
+import univalle.tedesoft.battleship.models.enums.ShotResult;
+import univalle.tedesoft.battleship.models.ships.Ship;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -16,7 +16,7 @@ import java.util.List;
  * @author Santiago David Guerrero
  * @author Juan Pablo Escamilla
  */
-public class Board {
+public class Board extends BoardAdapter {
     /** Tamaño estandar del tablero*/
     private static final int DEFAULT_SIZE = 10; // Tamaño estándar del tablero 10x10
     /** Matriz de celdas, para guardar los estados de cada celda de forma ordenada por coordenadas*/

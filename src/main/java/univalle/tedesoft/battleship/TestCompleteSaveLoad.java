@@ -1,9 +1,9 @@
 package univalle.tedesoft.battleship;
 
-import univalle.tedesoft.battleship.models.Players.HumanPlayer;
-import univalle.tedesoft.battleship.models.State.GameState;
-import univalle.tedesoft.battleship.models.Enums.ShipType;
-import univalle.tedesoft.battleship.models.Enums.Orientation;
+import univalle.tedesoft.battleship.models.enums.Orientation;
+import univalle.tedesoft.battleship.models.players.HumanPlayer;
+import univalle.tedesoft.battleship.models.state.GameState;
+import univalle.tedesoft.battleship.models.enums.ShipType;
 
 /**
  * Clase de prueba para verificar la serialización completa del juego.

@@ -1,4 +1,4 @@
-package univalle.tedesoft.battleship.models.Enums;
+package univalle.tedesoft.battleship.models.enums;
 /**
  * Enum para los resultados de un ataque.
  * @author Santiago David Guerrero

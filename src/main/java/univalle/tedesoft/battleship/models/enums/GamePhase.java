@@ -1,4 +1,4 @@
-package univalle.tedesoft.battleship.models.Enums;
+package univalle.tedesoft.battleship.models.enums;
 
 /**
  * Enum que representa el estado del juego.

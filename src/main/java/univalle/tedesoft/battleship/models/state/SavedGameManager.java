@@ -1,4 +1,4 @@
-package univalle.tedesoft.battleship.models.State;
+package univalle.tedesoft.battleship.models.state;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -15,16 +15,16 @@ import java.util.List;
 /**
  * Clase para gestionar múltiples partidas guardadas organizadas por nickname.
  * Permite buscar, listar y obtener información de partidas guardadas específicas.
- * 
+ *
  * @author Juan Pablo Escamilla
- * @author David Valencia  
+ * @author David Valencia
  * @author Santiago Guerrero
  */
 public class SavedGameManager {
     private static final String SAVE_DIRECTORY = "src/main/resources/univalle/tedesoft/battleship/saves";
     private static final String GAME_INFO_FILE = "game_info.txt";
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-    
+
     /**
      * Clase interna para representar información básica de una partida guardada
      */
@@ -35,8 +35,8 @@ public class SavedGameManager {
         private final String gamePhase;
         private final LocalDateTime saveDate;
         private final String saveDirectory;
-        
-        public SavedGameInfo(String nickname, int humanSunkShips, int computerSunkShips, 
+
+        public SavedGameInfo(String nickname, int humanSunkShips, int computerSunkShips,
                            String gamePhase, LocalDateTime saveDate, String saveDirectory) {
             this.nickname = nickname;
             this.humanSunkShips = humanSunkShips;
@@ -45,21 +45,21 @@ public class SavedGameManager {
             this.saveDate = saveDate;
             this.saveDirectory = saveDirectory;
         }
-        
+
         public String getNickname() { return nickname; }
         public int getHumanSunkShips() { return humanSunkShips; }
         public int getComputerSunkShips() { return computerSunkShips; }
         public String getGamePhase() { return gamePhase; }
         public LocalDateTime getSaveDate() { return saveDate; }
         public String getSaveDirectory() { return saveDirectory; }
-        
+
         @Override
         public String toString() {
-            return String.format("Partida de %s - %s (Guardada: %s)", 
+            return String.format("Partida de %s - %s (Guardada: %s)",
                 nickname, gamePhase, saveDate.format(DATE_FORMATTER));
         }
     }
-    
+
     /**
      * Busca todas las partidas guardadas para un nickname específico
      * @param nickname El nombre del jugador
@@ -68,11 +68,11 @@ public class SavedGameManager {
     public static List<SavedGameInfo> findSavedGamesByNickname(String nickname) {
         List<SavedGameInfo> savedGames = new ArrayList<>();
         Path savesPath = Paths.get(SAVE_DIRECTORY);
-        
+
         if (!Files.exists(savesPath)) {
             return savedGames;
         }
-        
+
         try (DirectoryStream<Path> stream = Files.newDirectoryStream(savesPath)) {
             for (Path entry : stream) {
                 if (Files.isDirectory(entry)) {
@@ -88,10 +88,10 @@ public class SavedGameManager {
         } catch (IOException e) {
             System.err.println("Error al buscar partidas guardadas: " + e.getMessage());
         }
-        
+
         return savedGames;
     }
-    
+
     /**
      * Obtiene la última partida guardada para un nickname específico
      * @param nickname El nombre del jugador
@@ -99,11 +99,11 @@ public class SavedGameManager {
      */
     public static SavedGameInfo getLastSavedGame(String nickname) {
         List<SavedGameInfo> savedGames = findSavedGamesByNickname(nickname);
-        
+
         if (savedGames.isEmpty()) {
             return null;
         }
-        
+
         // Encontrar la partida más reciente
         SavedGameInfo lastGame = savedGames.get(0);
         for (SavedGameInfo game : savedGames) {
@@ -111,10 +111,10 @@ public class SavedGameManager {
                 lastGame = game;
             }
         }
-        
+
         return lastGame;
     }
-    
+
     /**
      * Verifica si existe al menos una partida guardada para un nickname
      * @param nickname El nombre del jugador
@@ -123,7 +123,7 @@ public class SavedGameManager {
     public static boolean hasAnyGameSaved(String nickname) {
         return !findSavedGamesByNickname(nickname).isEmpty();
     }
-    
+
     /**
      * Obtiene todas las partidas guardadas de todos los jugadores
      * @return Lista de todas las partidas guardadas
@@ -131,11 +131,11 @@ public class SavedGameManager {
     public static List<SavedGameInfo> getAllSavedGames() {
         List<SavedGameInfo> allSavedGames = new ArrayList<>();
         Path savesPath = Paths.get(SAVE_DIRECTORY);
-        
+
         if (!Files.exists(savesPath)) {
             return allSavedGames;
         }
-        
+
         try (DirectoryStream<Path> stream = Files.newDirectoryStream(savesPath)) {
             for (Path entry : stream) {
                 if (Files.isDirectory(entry)) {
@@ -148,10 +148,10 @@ public class SavedGameManager {
         } catch (IOException e) {
             System.err.println("Error al cargar todas las partidas guardadas: " + e.getMessage());
         }
-        
+
         return allSavedGames;
     }
-    
+
     /**
      * Carga la información de una partida desde un directorio específico
      * @param directoryPath La ruta del directorio que contiene la partida
@@ -159,25 +159,25 @@ public class SavedGameManager {
      */
     private static SavedGameInfo loadGameInfoFromDirectory(String directoryPath) {
         Path gameInfoPath = Paths.get(directoryPath, GAME_INFO_FILE);
-        
+
         if (!Files.exists(gameInfoPath)) {
             return null;
         }
-        
+
         try (BufferedReader reader = Files.newBufferedReader(gameInfoPath)) {
             String nickname = null;
             int humanSunkShips = 0;
             int computerSunkShips = 0;
             String gamePhase = "UNKNOWN";
             LocalDateTime saveDate = LocalDateTime.now();
-            
+
             String line;
             while ((line = reader.readLine()) != null) {
                 String[] parts = line.split(":", 2);
                 if (parts.length == 2) {
                     String key = parts[0].trim();
                     String value = parts[1].trim();
-                    
+
                     switch (key) {
                         case "NICKNAME":
                             nickname = value;
@@ -201,19 +201,19 @@ public class SavedGameManager {
                     }
                 }
             }
-            
+
             if (nickname != null) {
-                return new SavedGameInfo(nickname, humanSunkShips, computerSunkShips, 
+                return new SavedGameInfo(nickname, humanSunkShips, computerSunkShips,
                                        gamePhase, saveDate, directoryPath);
             }
-            
+
         } catch (IOException | NumberFormatException e) {
             System.err.println("Error al cargar información del juego desde " + directoryPath + ": " + e.getMessage());
         }
-        
+
         return null;
     }
-    
+
     /**
      * Crea el directorio de guardado si no existe
      */
@@ -227,7 +227,7 @@ public class SavedGameManager {
             System.err.println("Error al crear directorio de guardado: " + e.getMessage());
         }
     }
-    
+
     /**
      * Crea el directorio específico para un nickname si no existe
      * @param nickname El nombre del jugador
@@ -236,7 +236,7 @@ public class SavedGameManager {
     public static String createPlayerSaveDirectory(String nickname) {
         String playerDir = Paths.get(SAVE_DIRECTORY, nickname).toString();
         Path playerPath = Paths.get(playerDir);
-        
+
         try {
             if (!Files.exists(playerPath)) {
                 Files.createDirectories(playerPath);
@@ -244,7 +244,7 @@ public class SavedGameManager {
         } catch (IOException e) {
             System.err.println("Error al crear directorio para jugador " + nickname + ": " + e.getMessage());
         }
-        
+
         return playerDir;
     }
-} 
+}

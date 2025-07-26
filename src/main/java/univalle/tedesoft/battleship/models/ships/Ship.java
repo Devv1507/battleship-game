@@ -1,8 +1,8 @@
-package univalle.tedesoft.battleship.models.Ships;
+package univalle.tedesoft.battleship.models.ships;
 
 import univalle.tedesoft.battleship.models.Coordinate;
-import univalle.tedesoft.battleship.models.Enums.Orientation;
-import univalle.tedesoft.battleship.models.Enums.ShipType;
+import univalle.tedesoft.battleship.models.enums.Orientation;
+import univalle.tedesoft.battleship.models.enums.ShipType;
 
 import java.util.ArrayList;
 import java.util.List;

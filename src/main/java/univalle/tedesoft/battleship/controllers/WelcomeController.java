@@ -8,7 +8,7 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.VBox;
-import univalle.tedesoft.battleship.models.State.SavedGameManager;
+import univalle.tedesoft.battleship.models.state.SavedGameManager;
 import univalle.tedesoft.battleship.views.GameView;
 import univalle.tedesoft.battleship.views.InstructionsView;
 import univalle.tedesoft.battleship.views.WelcomeView;
@@ -17,7 +17,7 @@ import java.io.IOException;
 
 /**
  * Controlador para la pantalla de bienvenida del juego Battleship.
- * Gestiona la entrada del nombre del jugador, la búsqueda de partidas guardadas 
+ * Gestiona la entrada del nombre del jugador, la búsqueda de partidas guardadas
  * y la transición a la vista principal del juego.
  */
 public class WelcomeController {
@@ -25,14 +25,14 @@ public class WelcomeController {
     // Campos para nueva partida
     @FXML private TextField nameTextField;
     @FXML private Button startGameButton;
-    
+
     // Campos para búsqueda de partidas guardadas
     @FXML private TextField searchTextField;
     @FXML private Button searchGameButton;
     @FXML private VBox gameResultArea;
     @FXML private Label gameResultLabel;
     @FXML private Button loadGameButton;
-    
+
     // Botones de navegación
     @FXML private Button exitButton;
     @FXML private Button instructionsButton;
@@ -71,30 +71,30 @@ public class WelcomeController {
             this.welcomeView.hide();
 
             GameView gameView = GameView.getInstance();
-            gameView.initializeNewGame(new univalle.tedesoft.battleship.models.Players.HumanPlayer(playerName));
+            gameView.initializeNewGame(new univalle.tedesoft.battleship.models.players.HumanPlayer(playerName));
 
             gameView.show();
 
         } catch (IOException e) {
             System.err.println("ERROR IOException al cargar GameView: " + e.getMessage());
             e.printStackTrace();
-            
+
             // Mostrar la ventana de bienvenida nuevamente
             this.welcomeView.show();
-            
+
             Alert alert = new Alert(Alert.AlertType.ERROR);
             alert.setTitle("Error de Carga");
             alert.setHeaderText("No se pudo cargar la vista del juego.");
             alert.setContentText("Error al cargar archivos FXML del juego: " + e.getMessage());
             alert.showAndWait();
-            
+
         } catch (Exception e) {
             System.err.println("ERROR general al iniciar juego: " + e.getMessage());
             e.printStackTrace();
-            
+
             // Mostrar la ventana de bienvenida nuevamente
             this.welcomeView.show();
-            
+
             Alert alert = new Alert(Alert.AlertType.ERROR);
             alert.setTitle("Error al Iniciar");
             alert.setHeaderText("No se pudo iniciar el juego.");
@@ -130,31 +130,31 @@ public class WelcomeController {
         if (lastSavedGame != null) {
             // Se encontró una partida guardada
             currentFoundGame = lastSavedGame;
-            
+
             String resultText = String.format(
-                "✓ Última partida encontrada para '%s':\n" +
-                "Fase: %s\n" +
-                "Barcos hundidos (Jugador): %d\n" +
-                "Barcos hundidos (Computadora): %d\n" +
-                "Guardada: %s",
-                lastSavedGame.getNickname(),
-                translateGamePhase(lastSavedGame.getGamePhase()),
-                lastSavedGame.getHumanSunkShips(),
-                lastSavedGame.getComputerSunkShips(),
-                lastSavedGame.getSaveDate().format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm"))
+                    "✓ Última partida encontrada para '%s':\n" +
+                            "Fase: %s\n" +
+                            "Barcos hundidos (Jugador): %d\n" +
+                            "Barcos hundidos (Computadora): %d\n" +
+                            "Guardada: %s",
+                    lastSavedGame.getNickname(),
+                    translateGamePhase(lastSavedGame.getGamePhase()),
+                    lastSavedGame.getHumanSunkShips(),
+                    lastSavedGame.getComputerSunkShips(),
+                    lastSavedGame.getSaveDate().format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm"))
             );
 
             gameResultLabel.setText(resultText);
             loadGameButton.setVisible(true);
-            
+
         } else {
             // No se encontró ninguna partida guardada
             currentFoundGame = null;
-            
+
             String resultText = String.format(
-                "✗ No se encontraron partidas guardadas para '%s'.\n" +
-                "Este jugador no tiene partidas guardadas disponibles.",
-                searchNickname
+                    "✗ No se encontraron partidas guardadas para '%s'.\n" +
+                            "Este jugador no tiene partidas guardadas disponibles.",
+                    searchNickname
             );
 
             gameResultLabel.setText(resultText);
@@ -188,25 +188,25 @@ public class WelcomeController {
             // Cargar la partida específica usando el nuevo sistema por nickname
             String nickname = currentFoundGame.getNickname();
             boolean gameLoaded = gameView.getController().getGameState().loadGameByNickname(nickname);
-            
+
             if (gameLoaded) {
                 // Inicializar la vista con la partida cargada
                 gameView.initializeLoadedGame();
-                
+
                 // Mostrar la ventana del juego
                 gameView.show();
-                
+
                 // Mostrar mensaje de confirmación
                 Alert alert = new Alert(Alert.AlertType.INFORMATION);
                 alert.setTitle("Partida Cargada");
                 alert.setHeaderText("¡Éxito!");
                 alert.setContentText("La partida de " + currentFoundGame.getNickname() + " se ha cargado correctamente.");
                 alert.show();
-                
+
             } else {
                 // Error al cargar
                 this.welcomeView.show(); // Volver a mostrar la ventana de bienvenida
-                
+
                 Alert alert = new Alert(Alert.AlertType.ERROR);
                 alert.setTitle("Error al Cargar");
                 alert.setHeaderText("No se pudo cargar la partida");
@@ -225,7 +225,7 @@ public class WelcomeController {
             e.printStackTrace();
             // Mostrar la ventana de bienvenida nuevamente si hay un error
             this.welcomeView.show();
-            
+
             Alert alert = new Alert(Alert.AlertType.ERROR);
             alert.setTitle("Error al Cargar");
             alert.setHeaderText("No se pudo cargar la partida.");
@@ -244,21 +244,21 @@ public class WelcomeController {
         try {
             InstructionsView instructionsView = InstructionsView.getInstance();
             instructionsView.show();
-            
+
         } catch (IOException e) {
             System.err.println("ERROR IOException al cargar InstructionsView: " + e.getMessage());
             e.printStackTrace();
-            
+
             Alert alert = new Alert(Alert.AlertType.ERROR);
             alert.setTitle("Error de Carga");
             alert.setHeaderText("No se pudieron cargar las instrucciones.");
             alert.setContentText("Error al cargar archivo FXML de instrucciones: " + e.getMessage());
             alert.showAndWait();
-            
+
         } catch (Exception e) {
             System.err.println("ERROR general al abrir instrucciones: " + e.getMessage());
             e.printStackTrace();
-            
+
             Alert alert = new Alert(Alert.AlertType.ERROR);
             alert.setTitle("Error al Abrir Instrucciones");
             alert.setHeaderText("No se pudieron abrir las instrucciones.");
