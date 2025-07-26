@@ -46,7 +46,7 @@ import java.util.*;
  * utilizando los componentes FXML que le proporciona el GameController.
  */
 public class GameView extends Stage {
-    private GameController controller;
+    private final GameController controller;
     private static final int CELL_SIZE = 40;
     /** Mapa para las figuras de los barcos */
     private final Map<ShipType, IShape> shipShapeFactory;
@@ -890,17 +890,6 @@ public class GameView extends Stage {
      */
     public GameController getController() {
         return this.controller;
-    }
-
-    /**
-     * Resetea la instancia Singleton de GameView.
-     * Útil para limpiar estado entre diferentes juegos.
-     */
-    public static void resetInstance() {
-        if (GameViewHolder.INSTANCE != null) {
-            GameViewHolder.INSTANCE.close();
-            GameViewHolder.INSTANCE = null;
-        }
     }
 
     /**
