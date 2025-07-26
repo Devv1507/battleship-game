@@ -46,6 +46,7 @@ import java.util.*;
  * utilizando los componentes FXML que le proporciona el GameController.
  */
 public class GameView extends Stage {
+    /** Controlador asociado a esta vista de juego, maneja la lógica de la UI. */
     private final GameController controller;
     /** Define el tamaño estándar (ancho y alto) en píxeles para cada celda en las cuadrículas del juego. */
     private static final int CELL_SIZE = 40;
