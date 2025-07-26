@@ -15,7 +15,7 @@ import javafx.scene.text.Font;
 import javafx.stage.Stage;
 import univalle.tedesoft.battleship.Main;
 import univalle.tedesoft.battleship.controllers.WelcomeController;
-import univalle.tedesoft.battleship.models.state.SavedGameManager;
+import univalle.tedesoft.battleship.models.state.GamePersistenceManager;
 
 import java.io.IOException;
 import java.time.format.DateTimeFormatter;
@@ -92,7 +92,7 @@ public class WelcomeView extends Stage {
      * @param games      La lista de información de partidas guardadas obtenida del modelo.
      * @param loadAction La acción (del controlador) a ejecutar cuando se presiona el botón "Cargar".
      */
-    public void displaySavedGames(VBox container, List<SavedGameManager.SavedGameInfo> games, Consumer<SavedGameManager.SavedGameInfo> loadAction) {
+    public void displaySavedGames(VBox container, List<GamePersistenceManager.SavedGameInfo> games, Consumer<GamePersistenceManager.SavedGameInfo> loadAction) {
         container.getChildren().clear();
 
         if (games.isEmpty()) {
@@ -101,7 +101,7 @@ public class WelcomeView extends Stage {
             noGamesLabel.setStyle("-fx-text-fill: #cccccc;");
             container.getChildren().add(noGamesLabel);
         } else {
-            for (SavedGameManager.SavedGameInfo gameInfo : games) {
+            for (GamePersistenceManager.SavedGameInfo gameInfo : games) {
                 Node gameCard = this.createSavedGameCard(gameInfo, loadAction);
                 container.getChildren().add(gameCard);
             }
@@ -114,7 +114,7 @@ public class WelcomeView extends Stage {
      * @param loadAction La acción a vincular al botón "Cargar" de esta tarjeta.
      * @return Un nodo de JavaFX que representa la tarjeta.
      */
-    private Node createSavedGameCard(SavedGameManager.SavedGameInfo gameInfo, Consumer<SavedGameManager.SavedGameInfo> loadAction) {
+    private Node createSavedGameCard(GamePersistenceManager.SavedGameInfo gameInfo, Consumer<GamePersistenceManager.SavedGameInfo> loadAction) {
         HBox card = new HBox(15);
         card.setAlignment(Pos.CENTER_LEFT);
         card.setStyle("-fx-background-color: rgba(255, 255, 255, 0.1); -fx-background-radius: 10; -fx-border-color: #f39c12; -fx-border-radius: 10;");

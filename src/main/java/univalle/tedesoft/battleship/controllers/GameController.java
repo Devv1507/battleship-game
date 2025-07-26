@@ -70,17 +70,25 @@ public class GameController {
     @FXML public VBox messageContainer;
 
     // --- Referencias principales ---
+    /** Referencia al modelo del juego (GameState). El controlador delega toda la lógica de negocio y manipulación de datos a esta instancia. */
     private IGameState gameState;
+    /** Referencia a la vista del juego (GameView). El controlador se comunica con la vista para actualizar la UI y recibir eventos. */
     private GameView gameView;
-
+    /** Hilo que maneja el turno de la máquina. Se usa para introducir un retraso de "pensamiento" antes de que la máquina dispare. */
     private Thread machineTurnThread;
 
     // --- Estado interno del controlador ---
+    /** Tipo de barco seleccionado por el jugador para colocar en el tablero. */
     private ShipType selectedShipToPlace;
+    /** Orientación elegida para colocar el barco seleccionado (Horizontal o Vertical). */
     private Orientation chosenOrientation = Orientation.HORIZONTAL;
+    /** Barco que se está arrastrando actualmente. Se usa para mover barcos ya colocados en el tablero. */
     private Ship shipBeingDragged = null;
-    private Coordinate mouseClickOffsetInShip = null; // Para un arrastre suave
+    /** Desplazamiento del clic del ratón dentro del barco arrastrado. */
+    private Coordinate mouseClickOffsetInShip = null;
+    /** Indica si el tablero del oponente está visible. Se usa para alternar entre mostrar el tablero real de la máquina o su vista normal. */
     private boolean isOpponentBoardVisible = false;
+    /** Tiempo de espera en milisegundos antes de que la máquina realice su turno. Este valor se usa para simular el "tiempo de pensamiento" de la máquina. */
     private static final long MACHINE_TURN_THINK_DELAY_MS = 1500;
 
     /**
@@ -145,8 +153,25 @@ public class GameController {
     }
 
 
-    // ----- Handlers o Manejadores de Eventos con FXML -----
+    /**
+     * Procesa la lista de barcos pendientes del modelo y devuelve un mapa
+     * con el recuento de cada tipo de barco.
+     * Este es el formato de datos que la vista necesita para renderizar el panel de colocación.
+     *
+     * @return Un Map donde la clave es ShipType y el valor es la cantidad pendiente.
+     */
+    public Map<ShipType, Long> getPendingShipCounts() {
+        if (this.gameState == null) {
+            // Devuelve un mapa vacío si el estado del juego no está listo
+            return Collections.emptyMap();
+        }
 
+        // Obtener la lista de barcos pendientes del modelo y agruparlos por tipo
+        List<ShipType> pendingShips = this.gameState.getPendingShipsToPlace();
+        return pendingShips.stream().collect(Collectors.groupingBy(Function.identity(), Collectors.counting()));
+    }
+
+    // ----- Handlers o Manejadores de Eventos con FXML -----
 
     /**
      * Maneja el clic en el botón "Reiniciar Juego".
@@ -293,6 +318,13 @@ public class GameController {
 
     // ----- Métodos con lógica central del juego -----
 
+    /**
+     * Agenda e inicia el turno de la máquina en un hilo de ejecución separado.
+     * Crea un hilo con MachineTurnRunnable para introducir un retraso de "pensamiento".
+     * Maneja el caso de que el juego ya haya terminado y cancela cualquier turno de máquina
+     *  previo que aún estuviera en ejecución para evitar condiciones de carrera.
+     * @see MachineTurnRunnable
+     */
     private void scheduleMachineTurn() {
         if (this.gameState.isGameOver()) return;
 
@@ -309,6 +341,12 @@ public class GameController {
         this.machineTurnThread.start();
     }
 
+    /**
+     * Ejecuta la lógica central para un único disparo de la máquina.
+     * Pide al modelo que realice un disparo, actualiza el tablero del jugador humano con el resultado
+     *  y muestra un mensaje con el resultado del disparo.
+     * @see MachineTurnRunnable
+     */
     public void executeMachineTurnLogic() {
         if (this.gameState.isGameOver()) return;
         ShotOutcome outcome = this.gameState.handleMachinePlayerTurn();
@@ -321,6 +359,12 @@ public class GameController {
         this.processTurnContinuation(outcome);
     }
 
+    /**
+     * Comprueba si la partida ha finalizado y, si es así, gestiona el estado de fin de juego.
+     * Si el juego ha terminado, determina al ganador, muestra un mensaje de victoria/derrota
+     *  y deshabilita la interacción con ambos tableros.
+     * @return true si el juego ha terminado, false si la partida continúa.
+     */
     private boolean checkAndHandleGameOver() {
         if (this.gameState.isGameOver()) {
             Player winner = this.gameState.getWinner();
@@ -384,24 +428,6 @@ public class GameController {
         } catch (OutOfBoundsException e) {
             this.gameView.displayMessage("Error: " + e.getMessage(), true);
         }
-    }
-
-    /**
-     * Procesa la lista de barcos pendientes del modelo y devuelve un mapa
-     * con el recuento de cada tipo de barco.
-     * Este es el formato de datos que la vista necesita para renderizar el panel de colocación.
-     *
-     * @return Un Map donde la clave es ShipType y el valor es la cantidad pendiente.
-     */
-    public Map<ShipType, Long> getPendingShipCounts() {
-        if (this.gameState == null) {
-            // Devuelve un mapa vacío si el estado del juego no está listo
-            return Collections.emptyMap();
-        }
-
-        // Obtener la lista de barcos pendientes del modelo y agruparlos por tipo
-        List<ShipType> pendingShips = this.gameState.getPendingShipsToPlace();
-        return pendingShips.stream().collect(Collectors.groupingBy(Function.identity(), Collectors.counting()));
     }
 
     /**

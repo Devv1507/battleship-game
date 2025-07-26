@@ -8,7 +8,7 @@ import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.VBox;
 import univalle.tedesoft.battleship.models.players.HumanPlayer;
-import univalle.tedesoft.battleship.models.state.SavedGameManager;
+import univalle.tedesoft.battleship.models.state.GamePersistenceManager;
 import univalle.tedesoft.battleship.views.GameView;
 import univalle.tedesoft.battleship.views.InstructionsView;
 import univalle.tedesoft.battleship.views.ViewUtils;
@@ -96,7 +96,7 @@ public class WelcomeController {
 
         if (this.welcomeView.toggleSavedGamesVisibility(this.savedGamesScrollPane)) {
             // El panel ahora está visible, así que buscamos y poblamos los datos.
-            List<SavedGameManager.SavedGameInfo> savedGames = SavedGameManager.findSavedGamesByNickname(nicknameFilter);
+            List<GamePersistenceManager.SavedGameInfo> savedGames = GamePersistenceManager.findSavedGamesByNickname(nicknameFilter);
             // Le pedimos a la vista que muestre los juegos, pasándole el contenedor y la lógica de carga.
             this.welcomeView.displaySavedGames(this.savedGamesContainer, savedGames, this::handleLoadGame);
         }
@@ -130,7 +130,7 @@ public class WelcomeController {
      * Lógica para cargar una partida seleccionada.
      * @param gameToLoad La información de la partida que se va a cargar.
      */
-    public void handleLoadGame(SavedGameManager.SavedGameInfo gameToLoad) {
+    public void handleLoadGame(GamePersistenceManager.SavedGameInfo gameToLoad) {
         if (gameToLoad == null) {
             ViewUtils.showAlert(AlertType.ERROR, "Error", "No hay partida para cargar.");
             return;
@@ -141,7 +141,7 @@ public class WelcomeController {
             GameView gameView = GameView.getInstance();
 
             String nickname = gameToLoad.getNickname();
-            boolean gameLoaded = gameView.getController().getGameState().loadGameByNickname(nickname);
+            boolean gameLoaded = gameView.getController().getGameState().loadGame(nickname);
 
             if (gameLoaded) {
                 gameView.initializeLoadedGame();

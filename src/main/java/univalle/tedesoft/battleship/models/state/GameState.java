@@ -16,9 +16,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
-// Imports para el patrón Memento
-
-
 /**
  * Clase que representa la instancia del juego.
  * @author David Esteban Valencia
@@ -27,9 +24,9 @@ import java.util.Random;
  */
 public class GameState implements IGameState {
     /**Tableros de juego*/
-    private Board humanPlayerBoard;
-    private Board machinePlayerBoard;
-    private Board machinePlayerTerritoryBoard;
+    private final Board humanPlayerBoard;
+    private final Board machinePlayerBoard;
+    private final Board machinePlayerTerritoryBoard;
     /**Jugadores*/
     private Player humanPlayer;
     private Player machinePlayer;
@@ -37,10 +34,7 @@ public class GameState implements IGameState {
     /**Fase actual del juego*/
     private GamePhase currentPhase;
     /**Cantidad de Barcos que el humano tiene a su disposicion para colocar en la tabla*/
-    private List<ShipType> pendingShipsToPlaceForHuman;
-    
-    /**Caretaker para gestionar los mementos del juego*/
-    private GameCaretaker gameCaretaker;
+    private final List<ShipType> pendingShipsToPlaceForHuman;
 
     /** Constructor de la Clase*/
     public GameState() {
@@ -51,9 +45,8 @@ public class GameState implements IGameState {
         //Fase inicial del juego.
         this.currentPhase = GamePhase.INITIAL;
         this.pendingShipsToPlaceForHuman = new ArrayList<>();
-        //Inicializar el caretaker para el patrón Memento
-        this.gameCaretaker = new GameCaretaker();
     }
+
     /**
      * Inicia una nueva partida.
      * Prepara los tableros para el jugador humano y la máquina.
@@ -77,6 +70,7 @@ public class GameState implements IGameState {
         //Barcos que el humano debe movilizar en la tabla.
         this.pendingShipsToPlaceForHuman.addAll(createFleetShipTypes());
     }
+
     /**
      * Intenta colocar un barco para el jugador humano en su tablero de posición, la mayor parte
      * de esta tarea se realiza en Board.
@@ -110,35 +104,11 @@ public class GameState implements IGameState {
         }
     };
 
-    // Candidato a eliminar.
-    /**
-     * Metodo de fábrica privado para crear una instancia de Ship a partir de su tipo.
-     * Esto centraliza la lógica de creación de barcos.
-     * @param type El enum ShipType del barco a crear.
-     * @return una nueva instancia del barco correspondiente.
-     */
-    private Ship createShipFromType(ShipType type) {
-        switch (type) {
-            case AIR_CRAFT_CARRIER:
-                return new AirCraftCarrier();
-            case SUBMARINE:
-                return new Submarine();
-            case DESTROYER:
-                return new Destroyer();
-            case FRIGATE:
-                return new Frigate();
-            default:
-                // Esto no debería ocurrir si el enum está completo.
-                throw new IllegalArgumentException("Tipo de barco desconocido: " + type);
-        }
-    }
-
-
     /**
      * Este metodo crea la lista de TIPOS de barcos que cada jugador debe poseer.
      * @return una lista de ShipType con la flota completa.
      */
-    public List<ShipType> createFleetShipTypes() {
+    private List<ShipType> createFleetShipTypes() {
         List<ShipType> fleetTypes = new ArrayList<>();
         fleetTypes.add(ShipType.AIR_CRAFT_CARRIER); // 1
         fleetTypes.add(ShipType.SUBMARINE);        // 2
@@ -195,6 +165,7 @@ public class GameState implements IGameState {
      * en el tablero del jugador humano.
      * @return Un objeto ShotOutcome que indica las coordenadas del disparo y su resultado.
      */
+    @Override
     public ShotOutcome handleMachinePlayerTurn() {
         Random random = new Random();
         Coordinate shotCoordinate;
@@ -322,6 +293,7 @@ public class GameState implements IGameState {
         System.err.println("Estado inesperado: isGameOver() es true pero no se puede determinar el ganador.");
         return null;
     }
+
     /**
      * Obtiene el jugador cuyo turno es actualmente.
      * @return El Player del jugador actual.
@@ -343,6 +315,11 @@ public class GameState implements IGameState {
         }
     }
 
+    /**
+     * Obtiene la lista de barcos que el jugador aún necesita colocar.
+     * Esta lista se utiliza para mostrar los barcos pendientes en la interfaz de usuario.
+     * @return Una lista de ShipType que representa los barcos pendientes de colocar por el jugador humano.
+     */
     @Override
     public List<ShipType> getPendingShipsToPlace() {
         return new ArrayList<>(this.pendingShipsToPlaceForHuman);
@@ -352,15 +329,17 @@ public class GameState implements IGameState {
      * Obtiene la fase actual del juego
      * @return La fase actual del juego
      */
+    @Override
     public GamePhase getCurrentPhase() {
         return this.currentPhase;
     }
 
-    // Métodos no implementados (guardar/cargar, contadores, etc.)
+    // ----- Métodos de Guardado y Carga -----
     /**
      * Crea un memento con el estado actual del juego
      * @return El memento creado
      */
+    @Override
     public GameMemento createMemento() {
         String nickname = (humanPlayer != null) ? humanPlayer.getName() : "Unknown";
         int humanSunkShips = countSunkShips(humanPlayerBoard);
@@ -373,6 +352,7 @@ public class GameState implements IGameState {
      * Restaura el estado del juego desde un memento
      * @param memento El memento a restaurar
      */
+    @Override
     public void restoreFromMemento(GameMemento memento) {
         if (memento != null) {
             // Asegurar que los jugadores estén inicializados
@@ -405,8 +385,6 @@ public class GameState implements IGameState {
             this.machinePlayer = new univalle.tedesoft.battleship.models.players.MachinePlayer();
         }
     }
-
-
 
     /**
      * Establece el turno actual de forma inteligente basándose en la fase del juego.
@@ -441,36 +419,6 @@ public class GameState implements IGameState {
     }
     
     /**
-     * Recalcula la lista de barcos pendientes basándose en los barcos ya colocados
-     * en el tablero del jugador humano.
-     */
-    private void recalculatePendingShips() {
-        // Crear una lista completa de todos los barcos que deberían estar en el tablero
-        List<ShipType> allShipTypes = createFleetShipTypes();
-        
-        // Obtener los tipos de barcos ya colocados en el tablero
-        List<ShipType> placedShipTypes = new ArrayList<>();
-        for (Ship ship : humanPlayerBoard.getShips()) {
-            placedShipTypes.add(ship.getShipType());
-        }
-        
-        // Limpiar la lista de pendientes y recalcular
-        pendingShipsToPlaceForHuman.clear();
-        
-        // Para cada tipo de barco en la flota completa
-        for (ShipType shipType : allShipTypes) {
-            // Si no está en la lista de barcos colocados, agregarlo a pendientes
-            if (!placedShipTypes.isEmpty() && placedShipTypes.contains(shipType)) {
-                placedShipTypes.remove(shipType); // Remover una ocurrencia
-            } else {
-                pendingShipsToPlaceForHuman.add(shipType);
-            }
-        }
-        
-        System.out.println("Barcos pendientes recalculados: " + pendingShipsToPlaceForHuman.size() + " barcos por colocar");
-    }
-    
-    /**
      * Cuenta los barcos hundidos en un tablero
      * @param board El tablero a revisar
      * @return El número de barcos hundidos
@@ -485,97 +433,49 @@ public class GameState implements IGameState {
         }
         return sunkShips;
     }
-    
+
+    /**
+     * Guarda el estado completo del juego en un archivo.
+     * Delega la lógica de persistencia al GamePersistenceManager.
+     * @see GamePersistenceManager
+     */
     @Override
     public void saveGame() {
-        // Intentar guardar usando el nuevo sistema por nickname si hay un jugador humano
-        String nickname = getHumanPlayerNickname();
-        if (nickname != null && !nickname.trim().isEmpty()) {
-            boolean saved = saveGameByNickname(nickname);
-            if (saved) {
-                System.out.println("Juego guardado exitosamente para " + nickname + " usando sistema por nickname");
-                return;
-            }
-        }
-        
-        // Fallback al sistema original si no hay nickname o falla el guardado por nickname
-        boolean saved = gameCaretaker.saveCompleteGame(this);
-        if (saved) {
-            System.out.println("Juego guardado exitosamente usando patrón Memento con serialización completa");
-        } else {
-            System.err.println("Error al guardar el juego");
-        }
+        // Lógica para guardar el estado del juego completo
+        GamePersistenceManager.saveGame(this);
     }
 
     /**
-     * Guarda la partida específica por nickname
-     * @param nickname El nombre del jugador para organizar la partida guardada
-     * @return true si se guardó exitosamente, false en caso contrario
+     * Carga una partida guardada por el jugador humano.
+     * Delega la operación de carga al GamePersistenceManager.
+     * Si la carga es exitosa, el estado de la instancia actual de GameState será completamente sobrescrito
+     * con los datos de la partida cargada, incluyendo el estado de los tableros, los barcos y la fase del juego.
+     * @param nickname El nombre del jugador cuya partida se quiere cargar.
+     * @return true si la carga fue exitosa, false en caso contrario.
+     * @see GamePersistenceManager
      */
-    public boolean saveGameByNickname(String nickname) {
-        boolean saved = gameCaretaker.saveCompleteGameByNickname(this, nickname);
-        if (saved) {
-            System.out.println("Juego guardado exitosamente para " + nickname + " usando sistema por nickname");
-            return true;
-        } else {
-            System.err.println("Error al guardar el juego para " + nickname);
-            return false;
-        }
-    }
-
     @Override
-    public boolean loadGame() {
-        // Cargar el estado completo del juego incluyendo barcos y tableros
-        boolean loaded = gameCaretaker.loadCompleteGame(this);
-        if (loaded) {
-            // Recalcular los barcos pendientes basándose en los barcos ya colocados
-            recalculatePendingShips();
-            System.out.println("Juego cargado exitosamente con estado completo");
-            return true;
-        }
-        return false;
-    }
-
-    @Override
-    public boolean isSavedGameAvailable() {
-        return gameCaretaker.isSavedGameAvailable();
+    public boolean loadGame(String nickname) {
+        return GamePersistenceManager.loadGame(this, nickname);
     }
 
     /**
-     * Carga una partida específica por nickname
-     * @param nickname El nombre del jugador cuya partida se quiere cargar
-     * @return true si se cargó exitosamente, false en caso contrario
+     * Obtiene el nickname del jugador humano.
+     * @return El nickname del jugador humano, o null si no está definido.
      */
-    public boolean loadGameByNickname(String nickname) {
-        boolean loaded = gameCaretaker.loadCompleteGameByNickname(this, nickname);
-        if (loaded) {
-            // Recalcular los barcos pendientes basándose en los barcos ya colocados
-            recalculatePendingShips();
-            return true;
-        }
-        return false;
-    }
-
     @Override
     public String getHumanPlayerNickname() {
-        return (humanPlayer != null) ? humanPlayer.getName() : null;
-    }
-    
-    @Override
-    public int getHumanPlayerSunkShipCount() {
-        return countSunkShips(machinePlayerBoard);
-    }
-    
-    @Override
-    public int getComputerPlayerSunkShipCount() {
-        return countSunkShips(humanPlayerBoard);
+        if (this.humanPlayer != null) {
+            return this.humanPlayer.getName();
+        }
+        return null;
     }
 
     /**
      * Metodo que crea la cantidad de barcos que cada jugador debe poseer en su tablero.
      * @return fleet flota de barcos especificada en los requerimientos.
      */
-    public List<Ship> createFleet() {
+    private List<Ship> createFleet() {
         List<Ship> fleet = new ArrayList<>();
         fleet.add(new AirCraftCarrier());
         fleet.add(new Submarine());
