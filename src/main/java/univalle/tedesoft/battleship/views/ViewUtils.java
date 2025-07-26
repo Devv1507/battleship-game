@@ -36,7 +36,7 @@ public final class ViewUtils {
      * @param button El botón al cual se le aplicará el efecto.
      */
     public static void applyHoverScaleEffect(Button button) {
-        if (button != null && button.getEffect() instanceof DropShadow) {
+        if (button != null) {
             final DropShadow shadow = (DropShadow) button.getEffect();
 
             // Guardamos todas las propiedades originales del efecto.
