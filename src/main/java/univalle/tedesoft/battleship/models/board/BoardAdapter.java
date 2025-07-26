@@ -1,4 +1,4 @@
-package univalle.tedesoft.battleship.models;
+package univalle.tedesoft.battleship.models.board;
 
 import univalle.tedesoft.battleship.exceptions.OutOfBoundsException;
 import univalle.tedesoft.battleship.exceptions.OverlapException;

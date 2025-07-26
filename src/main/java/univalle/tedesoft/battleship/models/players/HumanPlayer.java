@@ -1,4 +1,5 @@
 package univalle.tedesoft.battleship.models.players;
+
 /**
  * Clase que representa al jugador humano.
  * @author David Esteban Valencia

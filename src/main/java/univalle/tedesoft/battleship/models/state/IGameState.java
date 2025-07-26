@@ -7,9 +7,9 @@ import univalle.tedesoft.battleship.models.enums.Orientation;
 import univalle.tedesoft.battleship.models.enums.ShipType;
 import univalle.tedesoft.battleship.models.enums.GamePhase;
 import univalle.tedesoft.battleship.models.players.Player; // Necesitará ser definida
-import univalle.tedesoft.battleship.models.Board;
+import univalle.tedesoft.battleship.models.board.Board;
 import univalle.tedesoft.battleship.models.ships.Ship;
-import univalle.tedesoft.battleship.models.ShotOutcome;
+import univalle.tedesoft.battleship.models.board.ShotOutcome;
 
 
 import java.util.List;

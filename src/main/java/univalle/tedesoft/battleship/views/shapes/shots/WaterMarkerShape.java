@@ -1,4 +1,4 @@
-package univalle.tedesoft.battleship.views.shapes;
+package univalle.tedesoft.battleship.views.shapes.shots;
 
 import javafx.scene.Group;
 import javafx.scene.Node;
@@ -6,19 +6,21 @@ import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.shape.Line;
 import javafx.scene.shape.StrokeLineCap;
+import univalle.tedesoft.battleship.views.shapes.IShape;
 
 /**
  * Representa la forma visual para un disparo que cae en el AGUA.
  * Crea un cuadrado azul semitransparente con una 'X' blanca encima.
  */
-public class WaterMarkerShape implements IMarkerShape {
+public class WaterMarkerShape implements IShape {
+    double CELL_SIZE = 40;
 
     /**
      * Construye la representación visual de un fallo en el agua.
      * @return Un nodo (Group) de JavaFX que contiene el fondo y la 'X'.
      */
     @Override
-    public Node createMarker() {
+    public Node createShape() {
         Group group = new Group();
 
         // Fondo azul claro semitransparente para el efecto de agua.

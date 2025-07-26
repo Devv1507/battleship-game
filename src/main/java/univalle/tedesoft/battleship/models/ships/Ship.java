@@ -1,6 +1,6 @@
 package univalle.tedesoft.battleship.models.ships;
 
-import univalle.tedesoft.battleship.models.Coordinate;
+import univalle.tedesoft.battleship.models.board.Coordinate;
 import univalle.tedesoft.battleship.models.enums.Orientation;
 import univalle.tedesoft.battleship.models.enums.ShipType;
 

@@ -1,4 +1,4 @@
-package univalle.tedesoft.battleship.views.shapes;
+package univalle.tedesoft.battleship.views.shapes.ships;
 
 import javafx.scene.Group;
 import javafx.scene.Node;
@@ -8,12 +8,13 @@ import javafx.scene.paint.CycleMethod;
 import javafx.scene.paint.LinearGradient;
 import javafx.scene.paint.Stop;
 import javafx.scene.shape.*;
+import univalle.tedesoft.battleship.views.shapes.IShape;
 
 /**
  * Representa la forma 2D de una Fragata.
  * Hereda de ShipShape e implementa la lógica de dibujo específica para este tipo de barco.
  */
-public class FrigateShape extends ShipShape {
+public class FrigateShape implements IShape {
 
     /**
      * Construye y devuelve la representación visual de una Fragata.

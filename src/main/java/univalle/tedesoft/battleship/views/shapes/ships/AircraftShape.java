@@ -1,16 +1,17 @@
-package univalle.tedesoft.battleship.views.shapes;
+package univalle.tedesoft.battleship.views.shapes.ships;
 
 import javafx.scene.Group;
 import javafx.scene.Node;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Polygon;
 import javafx.scene.shape.Rectangle;
+import univalle.tedesoft.battleship.views.shapes.IShape;
 
 /**
  * Representa la forma 2D de un Portaaviones (Air-Craft Carrier).
  * Hereda de ShipShape e implementa la lógica de dibujo específica para este tipo de barco.
  */
-public class AircraftShape extends ShipShape {
+public class AircraftShape implements IShape {
 
     /**
      * Construye y devuelve la representación visual de un Portaaviones.
