@@ -31,7 +31,11 @@ import univalle.tedesoft.battleship.models.enums.Orientation;
 import univalle.tedesoft.battleship.models.enums.GamePhase;
 import univalle.tedesoft.battleship.models.state.GameState;
 import univalle.tedesoft.battleship.models.state.IGameState;
-import univalle.tedesoft.battleship.views.shapes.*;
+import univalle.tedesoft.battleship.views.shapes.ships.*;
+import univalle.tedesoft.battleship.views.shapes.IShape;
+import univalle.tedesoft.battleship.views.shapes.shots.SunkenMarkerShape;
+import univalle.tedesoft.battleship.views.shapes.shots.TouchedMarkerShape;
+import univalle.tedesoft.battleship.views.shapes.shots.WaterMarkerShape;
 
 import java.io.IOException;
 import java.util.*;
@@ -45,9 +49,9 @@ public class GameView extends Stage {
     private GameController controller;
     private static final int CELL_SIZE = 40;
     /** Mapa para las figuras de los barcos */
-    private final Map<ShipType, ShipShape> shipShapeFactory;
+    private final Map<ShipType, IShape> shipShapeFactory;
     /** Mapa para las figuras de los marcadores de disparo */
-    private final Map<CellState, IMarkerShape> markerShapeFactory;
+    private final Map<CellState, IShape> markerShapeFactory;
     private static final int MAX_MESSAGES = 2; // Mostrar los últimos 2 mensajes
     // Panel para dibujar la previsualización
     private final Pane dragPreviewPane;
@@ -301,7 +305,7 @@ public class GameView extends Stage {
             countLabel.setTextFill(javafx.scene.paint.Color.WHITE);
 
             // Forma Visual del Barco
-            ShipShape shapeFactory = this.shipShapeFactory.get(type);
+            IShape shapeFactory = this.shipShapeFactory.get(type);
             Node shipVisualNode = new Group();
             if (shapeFactory != null) {
                 // Crear la forma del barco.
@@ -445,10 +449,10 @@ public class GameView extends Stage {
                 if (state == CellState.EMPTY || state == CellState.SHIP) continue;
 
                 // Buscar en la fábrica si hay un marcador para el estado actual de la celda.
-                IMarkerShape markerFactory = this.markerShapeFactory.get(state);
+                IShape markerFactory = this.markerShapeFactory.get(state);
                 if (markerFactory != null) {
                     // Crear el marcador visual
-                    Node markerVisualNode = markerFactory.createMarker();
+                    Node markerVisualNode = markerFactory.createShape();
 
                     // Aplicar solo si el marcador es una instancia de FlameMarkerShape.
                     if (markerFactory instanceof SunkenMarkerShape) {
@@ -724,7 +728,7 @@ public class GameView extends Stage {
      * @return El nodo JavaFX listo para ser añadido al canvas de dibujo.
      */
     private Node createAndPositionShipVisual(Ship ship, int col, int row) {
-        ShipShape factory = this.shipShapeFactory.get(ship.getShipType());
+        IShape factory = this.shipShapeFactory.get(ship.getShipType());
         if (factory == null) {
             return new Group();
         }
