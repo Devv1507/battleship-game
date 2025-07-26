@@ -47,21 +47,36 @@ import java.util.*;
  */
 public class GameView extends Stage {
     private final GameController controller;
+    /** Define el tamaño estándar (ancho y alto) en píxeles para cada celda en las cuadrículas del juego. */
     private static final int CELL_SIZE = 40;
-    /** Mapa para las figuras de los barcos */
+    /** Mapa que funciona como una fábrica de formas para los barcos, asocia cada tipo de barco con su figura correspondiente. */
     private final Map<ShipType, IShape> shipShapeFactory;
-    /** Mapa para las figuras de los marcadores de disparo */
+    /** Mapa para las figuras de los marcadores de disparo, asocia cada estado de celda con su figura correspondiente. */
     private final Map<CellState, IShape> markerShapeFactory;
-    private static final int MAX_MESSAGES = 2; // Mostrar los últimos 2 mensajes
-    // Panel para dibujar la previsualización
+    /** Número máximo de mensajes que se mostrarán en el contenedor de mensajes. */
+    private static final int MAX_MESSAGES = 2;
+    /** Panel de previsualización para arrastre de barcos. */
     private final Pane dragPreviewPane;
-    // Mapa para asociar un barco del modelo con su figura en la vista.
+    /**
+     * Mapa que asocia una instancia de un Ship del modelo con su correspondiente
+     * nodo visual en la pantalla. Es esencial para manipular la figura de un barco específico durante el arrastre.
+     */
     private final Map<Ship, Node> shipVisuals = new HashMap<>();
 
+    /**
+     * Clase interna estática para implementar el patrón Singleton.
+     * Contiene una instancia única de GameView.
+     */
     private static class GameViewHolder {
         private static GameView INSTANCE;
     }
 
+    /**
+     * Devuelve la instancia única (Singleton) de la GameView.
+     * Si no existe, crea una nueva instancia; si ya existe, la devuelve.
+     * @return La instancia única de GameView.
+     * @throws IOException si ocurre un error al cargar el archivo FXML durante la primera creación.
+     */
     public static GameView getInstance() throws IOException {
         if (GameViewHolder.INSTANCE == null) {
             GameViewHolder.INSTANCE = new GameView();
@@ -138,6 +153,16 @@ public class GameView extends Stage {
 
     // ------------ Lógica principal
 
+    /**
+     * Inicializa una grilla para que funcione como un tablero de juego interactivo.
+     * Configura una cuadrícula de 10x10 con celdas individuales y, de forma crucial,
+     *  asigna los manejadores de eventos (listeners) apropiados según si es el tablero del jugador
+     *  o de la máquina.
+     * @param boardGrid El componente GridPane que se va a configurar como tablero.
+     * @param isHumanBoard Un flag que determina el tipo de listeners a adjuntar,
+     *                     true para el tablero del jugador (lógica de colocar/arrastrar barcos),
+     *                     false para el tablero del oponente (lógica de disparo).
+     */
     private void initializeBoardGrid(GridPane boardGrid, boolean isHumanBoard) {
         boardGrid.getChildren().clear();
 
@@ -168,7 +193,6 @@ public class GameView extends Stage {
                 event.consume();
             });
         }
-
 
         // Se añaden las celdas al GridPane
         for (int row = 0; row < 10; row++) {
@@ -259,6 +283,15 @@ public class GameView extends Stage {
         }
     }
 
+    /**
+     * Configura y muestra la interfaz de usuario para la fase de colocación de barcos.
+     * Gestiona la visibilidad de los paneles, habilita/deshabilita los tableros
+     *  y actualiza dinámicamente el panel lateral para mostrar los barcos que el jugador
+     *  aún necesita colocar, incluyendo su representación visual y la cantidad pendiente.
+     * @param playerPositionBoard El modelo del tablero del jugador, necesario para dibujar
+     *                            los barcos que ya han sido colocados.
+     * @param shipsToPlace La lista de tipos de barcos (ShipType) que aún faltan por colocar.
+     */
     public void showShipPlacementPhase(Board playerPositionBoard, List<ShipType> shipsToPlace) {
         this.controller.shipPlacementPane.setVisible(true);
         // El botón solo se habilita si no quedan barcos por colocar.
