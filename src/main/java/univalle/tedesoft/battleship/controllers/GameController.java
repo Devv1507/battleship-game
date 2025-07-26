@@ -645,7 +645,6 @@ public class GameController {
                     this.gameView.displayMessage("¡Buen tiro! Vuelves a disparar.", false);
                     // No se hace nada más, el control permanece con el jugador humano.
                 } else {
-                    this.gameView.displayMessage("La máquina ha acertado. ¡Vuelve a disparar!", false);
                     // Se programa otro turno para la máquina.
                     this.scheduleMachineTurn();
                 }
