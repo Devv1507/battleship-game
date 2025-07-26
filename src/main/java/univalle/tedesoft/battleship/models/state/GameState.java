@@ -55,20 +55,22 @@ public class GameState implements IGameState {
      */
     @Override
     public void startNewGame(Player humanPlayer) {
-        //Jugadores.
+        //  Jugadores.
         this.humanPlayer = humanPlayer;
         this.machinePlayer = new MachinePlayer();
         this.currentPlayer = this.humanPlayer;
-        //Se inicializa las tablas.
+        //  Se inicializa las tablas.
         this.humanPlayerBoard.resetBoard();
         this.machinePlayerBoard.resetBoard();
         this.machinePlayerTerritoryBoard.resetBoard();
-        //El juego empieza en su fase inicial.
+        //  El juego empieza en su fase inicial.
         this.currentPhase = GamePhase.PLACEMENT;
-        //Barcos que el humano ha colocado.
+        //  Barcos que el humano ha colocado.
         this.pendingShipsToPlaceForHuman.clear();
-        //Barcos que el humano debe movilizar en la tabla.
+        //  Barcos que el humano debe movilizar en la tabla.
         this.pendingShipsToPlaceForHuman.addAll(createFleetShipTypes());
+        // Colocar los barcos de la máquina inmediatamente al iniciar una nueva partida.
+        this.placeMachinePlayerShips();
     }
 
     /**
@@ -133,10 +135,8 @@ public class GameState implements IGameState {
         if (!this.pendingShipsToPlaceForHuman.isEmpty()) {
             return;
         }
-        this.placeMachinePlayerShips();
         this.currentPhase = GamePhase.FIRING;
-        
-        // IMPORTANTE: El jugador humano siempre inicia la fase de disparos
+        // El jugador humano siempre inicia la fase de disparos
         this.currentPlayer = this.humanPlayer;
     }
 
@@ -232,8 +232,6 @@ public class GameState implements IGameState {
 
     /**
      * Obtiene el tablero de posición real de la máquina.
-     * Este método es para la HU-3 (visualización del tablero del oponente por el profesor).
-     * No debe ser accesible para la lógica normal del juego del jugador.
      * @return El objeto Board con la disposición real de los barcos de la máquina.
      */
     @Override

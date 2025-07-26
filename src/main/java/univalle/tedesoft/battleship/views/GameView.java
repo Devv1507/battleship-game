@@ -295,15 +295,15 @@ public class GameView extends Stage {
      */
     public void showShipPlacementPhase(Board playerPositionBoard, List<ShipType> shipsToPlace) {
         this.controller.shipPlacementPane.setVisible(true);
-        // El botón solo se habilita si no quedan barcos por colocar.
-        this.controller.finalizePlacementButton.setDisable(!shipsToPlace.isEmpty());
-        this.controller.machinePlayerBoardGrid.setDisable(true);
         this.controller.humanPlayerBoardGrid.setDisable(false);
+        this.controller.machinePlayerBoardGrid.setDisable(true);
+        // El botón para finalizar el posicionamiento solo se habilita si no quedan barcos por colocar.
+        this.controller.finalizePlacementButton.setDisable(!shipsToPlace.isEmpty());
+        // Habilitar el botón para revisar el tablero del oponente.
+        this.controller.toggleOpponentBoardButton.setVisible(true);
         
-        // IMPORTANTE: Dibujar los barcos que ya están colocados en el tablero
-        // Esto es crucial para las partidas cargadas donde ya hay barcos colocados
+        // Dibujar los barcos que ya están colocados en el tablero
         this.drawBoard(this.controller.humanPlayerBoardGrid, playerPositionBoard, true);
-        
         // Limpiar el contenido anterior del panel (excepto el control de orientación)
         this.controller.shipPlacementPane.getChildren().remove(1, this.controller.shipPlacementPane.getChildren().size());
 
@@ -588,7 +588,7 @@ public class GameView extends Stage {
 
         // Mostrar los botones de la fase de batalla
         this.controller.restartGameButton.setVisible(true);
-        this.controller.toggleOpponentBoardButton.setVisible(true);
+        this.controller.toggleOpponentBoardButton.setVisible(false);
 
         // Deshabilitar clics en el tablero propio y habilitarlos en el del enemigo
         this.controller.humanPlayerBoardGrid.setDisable(true);
@@ -715,7 +715,7 @@ public class GameView extends Stage {
         this.controller.finalizePlacementButton.setDisable(true); // Deshabilitado hasta que se coloquen los barcos
 
         // Ocultar componentes de la fase de batalla
-        this.controller.toggleOpponentBoardButton.setVisible(false);
+        this.controller.toggleOpponentBoardButton.setVisible(true);
         this.controller.restartGameButton.setVisible(false);
 
         // Habilitar y deshabilitar los tableros correspondientes
@@ -840,7 +840,7 @@ public class GameView extends Stage {
 
     /**
      * Inicializa un nuevo juego con el jugador especificado.
-     * Este método debe ser llamado desde WelcomeController después de obtener la instancia.
+     * Debe ser llamado desde WelcomeController después de obtener la instancia.
      * @param player El jugador humano para el nuevo juego
      */
     public void initializeNewGame(HumanPlayer player) {
@@ -871,7 +871,7 @@ public class GameView extends Stage {
 
     /**
      * Inicializa el juego con una partida cargada.
-     * Este método debe ser llamado después de cargar una partida desde WelcomeController.
+     * Debe ser llamado después de cargar una partida desde WelcomeController.
      */
     public void initializeLoadedGame() {
         try {
@@ -898,7 +898,7 @@ public class GameView extends Stage {
                     
                 case FIRING:
                 case GAME_OVER:
-                    // Para estas fases, usar refreshUI que maneja todo
+                    // Para estas fases, usar refreshUI
                     this.refreshUI();
                     break;
                     
