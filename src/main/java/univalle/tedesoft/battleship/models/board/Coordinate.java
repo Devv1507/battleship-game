@@ -1,4 +1,4 @@
-package univalle.tedesoft.battleship.models;
+package univalle.tedesoft.battleship.models.board;
 
 /**
  * Clase que representa una coordenada en el tablero de la batalla naval.

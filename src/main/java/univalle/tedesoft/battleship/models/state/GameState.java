@@ -3,13 +3,13 @@ package univalle.tedesoft.battleship.models.state;
 import univalle.tedesoft.battleship.exceptions.InvalidShipPlacementException;
 import univalle.tedesoft.battleship.exceptions.OutOfBoundsException;
 import univalle.tedesoft.battleship.exceptions.OverlapException;
-import univalle.tedesoft.battleship.models.Board;
-import univalle.tedesoft.battleship.models.Coordinate;
+import univalle.tedesoft.battleship.models.board.Board;
+import univalle.tedesoft.battleship.models.board.Coordinate;
 import univalle.tedesoft.battleship.models.players.Player;
 import univalle.tedesoft.battleship.models.enums.*;
 import univalle.tedesoft.battleship.models.players.MachinePlayer;
 import univalle.tedesoft.battleship.models.ships.*;
-import univalle.tedesoft.battleship.models.ShotOutcome;
+import univalle.tedesoft.battleship.models.board.ShotOutcome;
 import univalle.tedesoft.battleship.models.ships.ShipFactory;
 
 import java.util.ArrayList;
