@@ -1,4 +1,4 @@
-package univalle.tedesoft.battleship.views.shapes;
+package univalle.tedesoft.battleship.views.shapes.shots;
 
 import javafx.scene.Node;
 import javafx.scene.effect.Glow;
@@ -9,20 +9,22 @@ import javafx.scene.paint.Stop;
 import javafx.scene.shape.CubicCurveTo;
 import javafx.scene.shape.MoveTo;
 import javafx.scene.shape.Path;
+import univalle.tedesoft.battleship.views.shapes.IShape;
 
 /**
  * Representa la forma visual para un disparo que HUNDE un barco (SUNKEN).
  * Esta versión se enfoca únicamente en crear la forma y el color correctos,
  * dejando el escalado y posicionamiento a la vista principal.
  */
-public class SunkenMarkerShape implements IMarkerShape {
+public class SunkenMarkerShape implements IShape {
+    double CELL_SIZE = 40;
 
     /**
      * Construye la representación visual de un barco hundido con efecto de llama.
      * @return Un nodo Path de JavaFX que representa la llama a tamaño completo (40x40).
      */
     @Override
-    public Node createMarker() {
+    public Node createShape() {
         Path flamePath = new Path();
 
         MoveTo startPoint = new MoveTo(CELL_SIZE * 0.5, CELL_SIZE);

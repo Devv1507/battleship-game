@@ -1,4 +1,4 @@
-package univalle.tedesoft.battleship.views.shapes;
+package univalle.tedesoft.battleship.views.shapes.shots;
 
 import javafx.scene.Group;
 import javafx.scene.Node;
@@ -6,19 +6,21 @@ import javafx.scene.paint.Color;
 import javafx.scene.shape.Line;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.shape.StrokeLineCap;
+import univalle.tedesoft.battleship.views.shapes.IShape;
 
 /**
  * Representa la forma visual para un disparo que IMPACTA un barco (TOUCHED).
  * Siguiendo la nueva especificación, crea un cuadrado rojo semitransparente con una 'X' blanca encima.
  */
-public class TouchedMarkerShape implements IMarkerShape {
+public class TouchedMarkerShape implements IShape {
+    double CELL_SIZE = 40;
 
     /**
      * Construye la representación visual de un impacto.
      * @return Un nodo (Group) de JavaFX que contiene el fondo rojo y la 'X'.
      */
     @Override
-    public Node createMarker() {
+    public Node createShape() {
         Group group = new Group();
 
         // Fondo rojo semitransparente. Opacidad del 40% (se ve el fondo en un 60%).
