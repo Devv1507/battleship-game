@@ -14,6 +14,7 @@ import univalle.tedesoft.battleship.models.enums.GamePhase;
 import univalle.tedesoft.battleship.models.enums.Orientation;
 import univalle.tedesoft.battleship.models.enums.ShipType;
 import univalle.tedesoft.battleship.models.players.HumanPlayer;
+import univalle.tedesoft.battleship.models.players.MachinePlayer;
 import univalle.tedesoft.battleship.models.players.Player;
 import univalle.tedesoft.battleship.models.ships.Ship;
 import univalle.tedesoft.battleship.models.board.ShotOutcome;
@@ -310,21 +311,14 @@ public class GameController {
 
     public void executeMachineTurnLogic() {
         if (this.gameState.isGameOver()) return;
-
         ShotOutcome outcome = this.gameState.handleMachinePlayerTurn();
-
+        // Construir y mostrar el mensaje del resultado del disparo de la máquina.
         String message = this.buildShotMessage("Máquina disparó a " + outcome.getCoordinate().toAlgebraicNotation(), outcome);
         this.gameView.displayMessage(message, false);
-
+        // Actualizar el tablero del jugador para mostrar el disparo de la máquina.
         this.gameView.drawBoard(this.humanPlayerBoardGrid, this.gameState.getHumanPlayerPositionBoard(), true);
-
-        if (this.checkAndHandleGameOver()) {
-            return;
-        }
-
-        this.gameState.switchTurn();
-        this.gameView.displayMessage("¡Es tu turno!", false);
-        this.gameView.setBoardInteraction(this.machinePlayerBoardGrid, true);
+        // Lógica de cambio de turno
+        this.processTurnContinuation(outcome);
     }
 
     private boolean checkAndHandleGameOver() {
@@ -372,23 +366,21 @@ public class GameController {
 
         try {
             ShotOutcome outcome = this.gameState.handleHumanPlayerShot(row, col);
-
+            // Construir y mostrar el mensaje del resultado del disparo.
             String message = this.buildShotMessage("Disparo a " + outcome.getCoordinate().toAlgebraicNotation(), outcome);
             this.gameView.displayMessage(message, false);
-
+            // Actualizar el tablero del oponente para mostrar el resultado.
             this.gameView.drawBoard(this.machinePlayerBoardGrid, this.gameState.getMachinePlayerActualPositionBoard(), false);
-
+            // Comprobar si el juego ha terminado después del disparo.
             if (this.checkAndHandleGameOver()) {
                 return;
             }
-
-            this.gameState.switchTurn();
-            this.scheduleMachineTurn();
+            // Lógica de cambio de turno
+            this.processTurnContinuation(outcome);
 
         } catch (OverlapException e) {
-            // El jugador disparó a una casilla repetida. Mostramos el error y le permitimos disparar de nuevo.
+            // El jugador disparó a una casilla repetida. Mostrar el error y permitir disparar de nuevo.
             this.gameView.displayMessage(e.getMessage() + " Por favor, selecciona otra casilla.", true);
-            // IMPORTANTE: No cambiamos de turno.
         } catch (OutOfBoundsException e) {
             this.gameView.displayMessage("Error: " + e.getMessage(), true);
         }
@@ -590,5 +582,58 @@ public class GameController {
         // Impresión en consola para depuración
         System.out.println("Mensaje generado: " + message);
         return message;
+    }
+
+    /**
+     * Procesa el resultado de un disparo y determina la continuación del turno.
+     * Permite centralizar la lógica de turnos entre el turno del jugador humano y el de la máquina.
+     *
+     * @param outcome El resultado del disparo que acaba de ocurrir.
+     */
+    private void processTurnContinuation(ShotOutcome outcome) {
+        // Verificar si el juego terminó después de este disparo.
+        if (this.checkAndHandleGameOver()) {
+            return;
+        }
+        // Identificar quién es el jugador actual para aplicar la lógica correcta.
+        Player currentPlayer = this.gameState.getCurrentTurnPlayer();
+
+        switch (outcome.getResult()) {
+            case TOUCHED:
+            case SUNKEN:
+                // En caso de acierto, el turno continúa con el mismo jugador.
+                if (currentPlayer instanceof HumanPlayer) {
+                    this.gameView.displayMessage("¡Buen tiro! Vuelves a disparar.", false);
+                    // No se hace nada más, el control permanece con el jugador humano.
+                } else {
+                    this.gameView.displayMessage("La máquina ha acertado. ¡Vuelve a disparar!", false);
+                    // Se programa otro turno para la máquina.
+                    this.scheduleMachineTurn();
+                }
+                break;
+
+            case ALREADY_HIT:
+                // En caso de disparo repetido, el jugador actual tiene otra oportunidad.
+                // Para el jugador humano, este caso es manejado principalmente por la excepción OverlapException
+                if (currentPlayer instanceof MachinePlayer) {
+                    this.scheduleMachineTurn();
+                }
+                break;
+
+            case WATER:
+            default:
+                // En caso de fallo o disparo repetido, se cambia el turno al otro jugador.
+                this.gameState.switchTurn();
+
+                if (currentPlayer instanceof HumanPlayer) {
+                    // Si el humano acaba de fallar, es el turno de la máquina.
+                    this.scheduleMachineTurn();
+                } else {
+                    // Si la máquina acaba de fallar, es el turno del humano.
+                    this.gameView.displayMessage("¡Es tu turno!", false);
+                    this.gameView.setBoardInteraction(this.machinePlayerBoardGrid, true);
+                }
+                break;
+        }
     }
 }
