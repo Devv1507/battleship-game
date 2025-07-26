@@ -43,7 +43,7 @@ public class GameController {
     /** Botón para seleccionar la orientación vertical al colocar un barco. */
     @FXML public Button verticalButton;
     /** Botón para guardar el estado actual de la partida. */
-    @FXML public Button saveGameButton;
+    @FXML public Button toggleAutoSaveButton;
     /** Botón para que el sistema coloque los barcos del jugador de forma aleatoria. */
     @FXML public Button placeRandomlyButton;
     /** Botón para mostrar la ventana de instrucciones del juego. */
@@ -90,6 +90,8 @@ public class GameController {
     private boolean isOpponentBoardVisible = false;
     /** Tiempo de espera en milisegundos antes de que la máquina realice su turno. Este valor se usa para simular el "tiempo de pensamiento" de la máquina. */
     private static final long MACHINE_TURN_THINK_DELAY_MS = 1500;
+    /** Flag que indica si el guardado automático está activado. Por defecto, está habilitado. */
+    private boolean isAutoSaveEnabled = true;
 
     /**
      * Inicialización de JavaFX.
@@ -131,7 +133,6 @@ public class GameController {
         }
     }
 
-
     /**
      * Establece la referencia al modelo del juego.
      *
@@ -140,7 +141,6 @@ public class GameController {
     public void setGameState(IGameState gameState) {
         this.gameState = gameState;
     }
-
 
     /**
      * Devuelve la instancia actual del estado del juego.
@@ -151,7 +151,6 @@ public class GameController {
     public IGameState getGameState() {
         return this.gameState;
     }
-
 
     /**
      * Procesa la lista de barcos pendientes del modelo y devuelve un mapa
@@ -267,17 +266,21 @@ public class GameController {
      * Maneja el clic en el botón para guardar el juego.
      */
     @FXML
-    void onSaveGameClick() {
+    void onToggleAutoSaveClick() {
         if (this.gameState == null) {
             this.gameView.displayMessage("Error: No hay juego activo para guardar.", true);
             return;
         }
-
-        try {
+        // Invertir el estado actual del guardado automático.
+        this.isAutoSaveEnabled = !this.isAutoSaveEnabled;
+        // Pedir a la vista que actualice el estilo y texto del botón.
+        this.gameView.updateAutoSaveButton(this.isAutoSaveEnabled);
+        // Mostrar un mensaje al usuario sobre el estado del guardado automático.
+        if (this.isAutoSaveEnabled) {
+            this.gameView.displayMessage("Guardado automático ACTIVADO.", false);
             this.gameState.saveGame();
-            this.gameView.displayMessage("¡Juego guardado exitosamente!", false);
-        } catch (Exception e) {
-            this.gameView.displayMessage("Error al guardar el juego: " + e.getMessage(), true);
+        } else {
+            this.gameView.displayMessage("Guardado automático DESACTIVADO.", false);
         }
     }
 
@@ -300,6 +303,9 @@ public class GameController {
                 this.gameState.getPendingShipsToPlace()
         );
         this.gameView.displayMessage("¡Tus barcos han sido colocados aleatoriamente! Presiona 'Finalizar Colocación'.", false);
+
+        // Guardar el estado del juego si el guardado automático está habilitado.
+        this.autoSaveIfEnabled();
     }
 
     /**
@@ -355,6 +361,8 @@ public class GameController {
         this.gameView.displayMessage(message, false);
         // Actualizar el tablero del jugador para mostrar el disparo de la máquina.
         this.gameView.drawBoard(this.humanPlayerBoardGrid, this.gameState.getHumanPlayerPositionBoard(), true);
+        // Guardar el estado del juego si el guardado automático está habilitado.
+        this.autoSaveIfEnabled();
         // Lógica de cambio de turno
         this.processTurnContinuation(outcome);
     }
@@ -415,6 +423,8 @@ public class GameController {
             this.gameView.displayMessage(message, false);
             // Actualizar el tablero del oponente para mostrar el resultado.
             this.gameView.drawBoard(this.machinePlayerBoardGrid, this.gameState.getMachinePlayerActualPositionBoard(), false);
+            // Guardar el estado del juego si el guardado automático está habilitado.
+            this.autoSaveIfEnabled();
             // Comprobar si el juego ha terminado después del disparo.
             if (this.checkAndHandleGameOver()) {
                 return;
@@ -468,6 +478,10 @@ public class GameController {
                     this.gameState.getHumanPlayerPositionBoard(),
                     this.gameState.getPendingShipsToPlace()
             );
+
+            // Guardar el estado del juego si el guardado automático está habilitado.
+            this.autoSaveIfEnabled();
+
         } catch (Exception e) {
             this.gameView.displayMessage("Error: " + e.getMessage(), true);
         }
@@ -539,6 +553,7 @@ public class GameController {
         try {
             this.gameState.moveHumanPlayerShip(this.shipBeingDragged, finalTopLeftRow, finalTopLeftCol);
             this.gameView.displayMessage("Barco " + this.shipBeingDragged.getShipType()  + " movido exitosamente.", false);
+            this.autoSaveIfEnabled();
         } catch (Exception e) {
             this.gameView.displayMessage("Movimiento inválido: " + e.getMessage(), true);
         } finally {
@@ -658,6 +673,23 @@ public class GameController {
                     this.gameView.setBoardInteraction(this.machinePlayerBoardGrid, true);
                 }
                 break;
+        }
+    }
+
+    /**
+     * Guarda el estado del juego si la opción de autoguardado está habilitada.
+     * Muestra un mensaje sutil al usuario para confirmar la acción.
+     */
+    private void autoSaveIfEnabled() {
+        if (this.isAutoSaveEnabled) {
+            if (this.gameState == null) {
+                return;
+            }
+            try {
+                this.gameState.saveGame();
+            } catch (Exception e) {
+                this.gameView.displayMessage("Error en el guardado automático: " + e.getMessage(), true);
+            }
         }
     }
 }

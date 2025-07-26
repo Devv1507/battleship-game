@@ -132,7 +132,6 @@ public class GameView extends Stage {
         this.initializeButtonEffects();
     }
 
-
     /**
      * Inicializa la apariencia visual de la UI. Se llama desde el controlador
      * una vez que la vista ha sido enlazada.
@@ -698,7 +697,6 @@ public class GameView extends Stage {
         }
     }
 
-
     /**
      * Restaura la interfaz de usuario al estado inicial de la fase de colocación.
      * Es invocado por el controlador cuando se reinicia el juego.
@@ -730,6 +728,30 @@ public class GameView extends Stage {
     }
 
     // ------------ Métodos auxiliares
+
+    /**
+     * Actualiza la apariencia visual del botón de guardado automático para reflejar su estado.
+     * Cambia el color, la opacidad y el texto del botón.
+     *
+     * @param isEnabled true si el guardado automático está activado, false en caso contrario.
+     */
+    public void updateAutoSaveButton(boolean isEnabled) {
+        if (this.controller.toggleAutoSaveButton == null) {
+            return;
+        }
+
+        if (isEnabled) {
+            // Estilo para el estado "Activado": verde sólido
+            this.controller.toggleAutoSaveButton.setText("Guardado Automático ON");
+            this.controller.toggleAutoSaveButton.setStyle("-fx-background-color: #27ae60; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 8;");
+            this.controller.toggleAutoSaveButton.setOpacity(1.0);
+        } else {
+            // Estilo para el estado "Desactivado": verde opaco y traslúcido
+            this.controller.toggleAutoSaveButton.setText("Guardado Automático OFF");
+            this.controller.toggleAutoSaveButton.setStyle("-fx-background-color: #27ae60; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 8;");
+            this.controller.toggleAutoSaveButton.setOpacity(0.5);
+        }
+    }
 
     /**
      * Resalta las celdas del GridPane que están ocupadas por un barco específico.
@@ -977,7 +999,7 @@ public class GameView extends Stage {
      * utilizando la clase de utilidad ViewUtils.
      */
     private void initializeButtonEffects() {
-        ViewUtils.applyHoverScaleEffect(this.controller.saveGameButton);
+        ViewUtils.applyHoverScaleEffect(this.controller.toggleAutoSaveButton);
         ViewUtils.applyHoverScaleEffect(this.controller.placeRandomlyButton);
         ViewUtils.applyHoverScaleEffect(this.controller.instructionsButton);
         ViewUtils.applyHoverScaleEffect(this.controller.finalizePlacementButton);
