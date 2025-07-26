@@ -15,9 +15,8 @@ import java.io.IOException;
  * de esta ventana en la aplicación.
  */
 public class InstructionsView extends Stage {
-
     /**
-     * Clase interna estática (Holder) para implementar el patrón Singleton de forma segura y perezosa.
+     * Clase interna estática (Holder) para implementar el patrón Singleton de forma segura.
      */
     private static class InstructionsViewHolder {
         /** Instancia única de InstructionsView. */
