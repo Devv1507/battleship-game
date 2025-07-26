@@ -24,10 +24,10 @@ import java.util.List;
 public class WelcomeController {
     // --- Componentes FXML ---
     @FXML private TextField nameTextField;
-    @FXML private Button startGameButton;
-    @FXML private Button showSavedGamesButton;
-    @FXML private Button exitButton;
-    @FXML private Button instructionsButton;
+    @FXML public Button startGameButton;
+    @FXML public Button showSavedGamesButton;
+    @FXML public Button exitButton;
+    @FXML public Button instructionsButton;
     // Campos para búsqueda de partidas guardadas
     @FXML private ScrollPane savedGamesScrollPane;
     @FXML private VBox savedGamesContainer;
@@ -35,15 +35,13 @@ public class WelcomeController {
 
     /**
      * Establece la referencia a la vista de bienvenida que este controlador maneja.
-     * Esta referencia se utiliza para interactuar con la vista, como mostrar alertas o aplicar efectos visuales a los botones.
      * @param welcomeView La instancia de la vista de bienvenida.
      */
     public void setWelcomeView(WelcomeView welcomeView) {
         this.welcomeView = welcomeView;
-        this.initializeButtonEffects();
     }
 
-    // --------- Event handlers con FXML
+    // ----- Handlers o Manejadores de Eventos con FXML -----
 
     /**
      * Maneja el clic en el botón "¡A la Batalla!".
@@ -152,15 +150,5 @@ public class WelcomeController {
             this.welcomeView.show();
             ViewUtils.showAlert(AlertType.ERROR, "Error al Cargar", "Ocurrió un error inesperado al cargar la partida: " + e.getMessage());
         }
-    }
-
-    /**
-     * Orquesta la aplicación de efectos visuales a los botones, delegando la lógica a la vista.
-     */
-    private void initializeButtonEffects() {
-        ViewUtils.applyHoverScaleEffect(this.startGameButton);
-        ViewUtils.applyHoverScaleEffect(this.showSavedGamesButton);
-        ViewUtils.applyHoverScaleEffect(this.instructionsButton);
-        ViewUtils.applyHoverScaleEffect(this.exitButton);
     }
 }

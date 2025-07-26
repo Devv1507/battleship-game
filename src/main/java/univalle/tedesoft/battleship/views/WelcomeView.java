@@ -27,6 +27,8 @@ import java.util.function.Consumer;
  * Es la primera ventana que ve el usuario y se encarga de la manipulación de la UI de bienvenida.
  */
 public class WelcomeView extends Stage {
+    private final WelcomeController controller;
+
     /**
      * Clase interna estática (Holder) para implementar el patrón Singleton de forma segura.
      */
@@ -56,14 +58,16 @@ public class WelcomeView extends Stage {
     private WelcomeView() throws IOException {
         FXMLLoader loader = new FXMLLoader(Main.class.getResource("welcome-view.fxml"));
         Scene scene = new Scene(loader.load());
-        WelcomeController controller = loader.getController();
+        this.controller = loader.getController();
 
         if (controller == null) {
             throw new IOException("No se pudo obtener el WelcomeController desde el FXML.");
         }
-
         // Enlazar la vista con el controlador
-        controller.setWelcomeView(this);
+        this.controller.setWelcomeView(this);
+        // Inicializar efectos de botones
+        this.initializeButtonEffects();
+        // Configurar la escena y el título de la ventana
         this.setTitle("Battleship - Puesto de Mando");
         this.setScene(scene);
     }
@@ -142,5 +146,16 @@ public class WelcomeView extends Stage {
 
         card.getChildren().addAll(infoContainer, spacer, loadButton);
         return card;
+    }
+
+    /**
+     * Orquesta la aplicación de efectos visuales a los botones de esta vista,
+     * utilizando la clase de utilidad ViewUtils.
+     */
+    private void initializeButtonEffects() {
+        ViewUtils.applyHoverScaleEffect(this.controller.startGameButton);
+        ViewUtils.applyHoverScaleEffect(this.controller.showSavedGamesButton);
+        ViewUtils.applyHoverScaleEffect(this.controller.instructionsButton);
+        ViewUtils.applyHoverScaleEffect(this.controller.exitButton);
     }
 }
