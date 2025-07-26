@@ -3,7 +3,6 @@ package univalle.tedesoft.battleship.views;
 
 import javafx.application.Platform;
 import javafx.fxml.FXMLLoader;
-import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Group;
 import javafx.scene.Node;
@@ -43,10 +42,7 @@ import java.util.*;
  * utilizando los componentes FXML que le proporciona el GameController.
  */
 public class GameView extends Stage {
-
     private GameController controller;
-
-    // ------------ Constantes
     private static final int CELL_SIZE = 40;
     /** Mapa para las figuras de los barcos */
     private final Map<ShipType, ShipShape> shipShapeFactory;
@@ -58,13 +54,25 @@ public class GameView extends Stage {
     // Mapa para asociar un barco del modelo con su figura en la vista.
     private final Map<Ship, Node> shipVisuals = new HashMap<>();
 
+    private static class GameViewHolder {
+        private static GameView INSTANCE;
+    }
+
+    public static GameView getInstance() throws IOException {
+        if (GameViewHolder.INSTANCE == null) {
+            GameViewHolder.INSTANCE = new GameView();
+            return GameViewHolder.INSTANCE;
+        } else {
+            return GameViewHolder.INSTANCE;
+        }
+    }
 
     /**
      * Constructor privado Singleton.
      * Carga el FXML, obtiene la referencia al controlador y se la pasa a sí mismo (el Stage).
      * @throws IOException si el archivo FXML no se puede cargar.
      */
-    public GameView() throws IOException {
+    private GameView() throws IOException {
         FXMLLoader fxmlLoader = new FXMLLoader(
                 Main.class.getResource("game-view.fxml")
         );
@@ -74,6 +82,19 @@ public class GameView extends Stage {
         if (this.controller == null) {
             throw new IllegalStateException("El controlador no se pudo cargar desde el FXML. Revisa el campo fx:controller.");
         }
+        // Inicializar GameState
+        IGameState gameState = new GameState();
+        this.controller.setGameView(this);
+        this.controller.setGameState(gameState);
+        // Inicializar el controlador con la vista
+        this.controller.initializeUI(this);
+        // Configurar la escena y el título de la ventana
+        this.setTitle("Battleship Game");
+        this.setScene(scene);
+        // Crear el panel de previsualización (se agregará más tarde)
+        this.dragPreviewPane = new Pane();
+        this.dragPreviewPane.setMouseTransparent(true); // Para que no intercepte clics
+
         // Inicializar la fábrica de formas de barcos
         this.shipShapeFactory = new HashMap<>();
         this.shipShapeFactory.put(ShipType.AIR_CRAFT_CARRIER, new AircraftShape());
@@ -87,25 +108,8 @@ public class GameView extends Stage {
         this.markerShapeFactory.put(CellState.HIT_SHIP, new TouchedMarkerShape());
         this.markerShapeFactory.put(CellState.SUNK_SHIP_PART, new SunkenMarkerShape());
 
-        // Inicializar GameState sin auto-inicializar el juego
-        IGameState gameState = new GameState();
-        this.controller.setGameView(this);
-        this.controller.setGameState(gameState);
-        this.controller.initializeUI(this);
-
-        // No auto-inicializar el juego aquí - lo controlará WelcomeController
-        // gameState.startNewGame(new HumanPlayer("Capitán")); // Removido
-        // this.showShipPlacementPhase(
-        //         gameState.getHumanPlayerPositionBoard(),
-        //         gameState.getPendingShipsToPlace()
-        // ); // Removido
-
-        this.setTitle("Battleship Game");
-        this.setScene(scene);
-
-        // Crear el panel de previsualización (se agregará más tarde)
-        this.dragPreviewPane = new Pane();
-        this.dragPreviewPane.setMouseTransparent(true); // Para que no intercepte clics
+        // Inicializar los efectos de los botones
+        this.initializeButtonEffects();
     }
 
 
@@ -523,7 +527,6 @@ public class GameView extends Stage {
         });
     }
 
-
     /**
      * Muestra u oculta el panel de control de orientación.
      * @param show True para mostrar, false para ocultar.
@@ -579,7 +582,6 @@ public class GameView extends Stage {
         }
     }
 
-
     /**
      * Habilita o deshabilita la interacción con un tablero específico.
      * @param gridPane El tablero (GridPane) a modificar.
@@ -588,7 +590,6 @@ public class GameView extends Stage {
     public void setBoardInteraction(GridPane gridPane, boolean enabled) {
         gridPane.setDisable(!enabled);
     }
-
 
     /**
      * Actualiza el texto del botón para ver/ocultar el tablero del oponente.
@@ -855,20 +856,6 @@ public class GameView extends Stage {
         return this.controller;
     }
 
-    // --- Singleton Holder Pattern ---
-    private static class GameViewHolder {
-        private static GameView INSTANCE;
-    }
-
-    public static GameView getInstance() throws IOException {
-        if (GameViewHolder.INSTANCE == null) {
-            GameViewHolder.INSTANCE = new GameView();
-            return GameViewHolder.INSTANCE;
-        } else {
-            return GameViewHolder.INSTANCE;
-        }
-    }
-
     /**
      * Resetea la instancia Singleton de GameView.
      * Útil para limpiar estado entre diferentes juegos.
@@ -924,5 +911,19 @@ public class GameView extends Stage {
             System.err.println("ERROR al refrescar visualización: " + e.getMessage());
             e.printStackTrace();
         }
+    }
+
+    /**
+     * Orquesta la aplicación de efectos visuales a los botones de esta vista,
+     * utilizando la clase de utilidad ViewUtils.
+     */
+    private void initializeButtonEffects() {
+        ViewUtils.applyHoverScaleEffect(this.controller.saveGameButton);
+        ViewUtils.applyHoverScaleEffect(this.controller.placeRandomlyButton);
+        ViewUtils.applyHoverScaleEffect(this.controller.instructionsButton);
+        ViewUtils.applyHoverScaleEffect(this.controller.finalizePlacementButton);
+        ViewUtils.applyHoverScaleEffect(this.controller.toggleOpponentBoardButton);
+        ViewUtils.applyHoverScaleEffect(this.controller.horizontalButton);
+        ViewUtils.applyHoverScaleEffect(this.controller.verticalButton);
     }
 }
