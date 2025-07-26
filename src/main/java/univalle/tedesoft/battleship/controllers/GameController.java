@@ -605,8 +605,6 @@ public class GameController {
             case SUNKEN -> baseMessage + ", ¡Acierto! Hundiste un " + outcome.getSunkenShip().getShipType() + " del enemigo.";
             case ALREADY_HIT -> baseMessage + ", ¡disparo repetido!";
         };
-        // Impresión en consola para depuración
-        System.out.println("Mensaje generado: " + message);
         return message;
     }
 
