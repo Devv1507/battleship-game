@@ -397,12 +397,12 @@ public class GameState implements IGameState {
     private void ensurePlayersInitialized(String humanPlayerNickname) {
         // Inicializar jugador humano si no existe o si el nickname es diferente
         if (this.humanPlayer == null || !humanPlayerNickname.equals(this.humanPlayer.getName())) {
-            this.humanPlayer = new univalle.tedesoft.battleship.models.Players.HumanPlayer(humanPlayerNickname);
+            this.humanPlayer = new univalle.tedesoft.battleship.models.players.HumanPlayer(humanPlayerNickname);
         }
         
         // Inicializar jugador máquina si no existe
         if (this.machinePlayer == null) {
-            this.machinePlayer = new univalle.tedesoft.battleship.models.Players.MachinePlayer();
+            this.machinePlayer = new univalle.tedesoft.battleship.models.players.MachinePlayer();
         }
     }
 
