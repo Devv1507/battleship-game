@@ -160,7 +160,7 @@
 
       <Button fx:id="finalizePlacementButton" disable="true" onAction="#onFinalizePlacementClick"
               style="-fx-background-color: #f39c12; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 8;"
-              text="Finalizar Colocación">
+              text="Listo para la Batalla!">
         <font>
           <Font size="14.0" />
         </font>
