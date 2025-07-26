@@ -12,7 +12,6 @@ import java.util.Optional;
  * como mostrar alertas o aplicar efectos visuales a los componentes.
  */
 public final class ViewUtils {
-
     /**
      * Constructor privado para prevenir la instanciación de la clase de utilidad.
      */
@@ -31,7 +30,6 @@ public final class ViewUtils {
         alert.setContentText(content);
         alert.showAndWait();
     }
-
 
     /**
      * Muestra un diálogo de confirmación con botones OK y Cancelar.

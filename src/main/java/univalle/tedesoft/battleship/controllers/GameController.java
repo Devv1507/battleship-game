@@ -259,7 +259,7 @@ public class GameController {
                     this.gameState.getMachinePlayerActualPositionBoard(),
                     false // false para ocultar los barcos
             );
-            this.gameView.updateToggleButtonText("Ver Tablero Oponente (Profesor)");
+            this.gameView.updateToggleButtonText("Ver Tablero Oponente");
         }
     }
 
@@ -567,7 +567,7 @@ public class GameController {
 
         // Actualizar la vista.
         this.gameView.resetToPlacementPhase();
-        this.gameView.updateToggleButtonText("Ver Tablero Oponente (Profesor)");
+        this.gameView.updateToggleButtonText("Ver Tablero Oponente");
         this.gameView.displayMessage("Juego reiniciado. Coloca tus barcos.", false);
     }
 
@@ -605,8 +605,6 @@ public class GameController {
             case SUNKEN -> baseMessage + ", ¡Acierto! Hundiste un " + outcome.getSunkenShip().getShipType() + " del enemigo.";
             case ALREADY_HIT -> baseMessage + ", ¡disparo repetido!";
         };
-        // Impresión en consola para depuración
-        System.out.println("Mensaje generado: " + message);
         return message;
     }
 

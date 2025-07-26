@@ -160,7 +160,7 @@
 
       <Button fx:id="finalizePlacementButton" disable="true" onAction="#onFinalizePlacementClick"
               style="-fx-background-color: #f39c12; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 8;"
-              text="Finalizar Colocación">
+              text="Listo para la Batalla!">
         <font>
           <Font size="14.0" />
         </font>
@@ -169,7 +169,7 @@
         </effect>
       </Button>
 
-      <Button fx:id="toggleOpponentBoardButton" onAction="#onToggleOpponentBoardClick" visible="false" style="-fx-background-color: #708090; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 8;" text="Ver Tablero Oponente (Profesor)">
+      <Button fx:id="toggleOpponentBoardButton" onAction="#onToggleOpponentBoardClick" visible="false" style="-fx-background-color: #708090; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 8;" text="Ver Tablero Oponente">
         <font>
           <Font size="12.0" />
         </font>
