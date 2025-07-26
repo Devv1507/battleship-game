@@ -2,7 +2,10 @@ package univalle.tedesoft.battleship.controllers;
 
 import javafx.application.Platform;
 import javafx.fxml.FXML;
-import javafx.scene.control.*;
+import javafx.scene.control.Alert.AlertType;
+import javafx.scene.control.Button;
+import javafx.scene.control.ScrollPane;
+import javafx.scene.control.TextField;
 import javafx.scene.layout.VBox;
 import univalle.tedesoft.battleship.models.State.SavedGameManager;
 import univalle.tedesoft.battleship.views.GameView;
@@ -51,7 +54,7 @@ public class WelcomeController {
         String playerName = this.nameTextField.getText().trim();
 
         if (playerName.isEmpty()) {
-            ViewUtils.showAlert(Alert.AlertType.WARNING, "Nombre Requerido", "Por favor, ingrese un nombre de capitán para comenzar la batalla.");
+            ViewUtils.showAlert(AlertType.WARNING, "Nombre Requerido", "Por favor, ingrese un nombre de capitán para comenzar la batalla.");
             return;
         }
 
@@ -61,13 +64,11 @@ public class WelcomeController {
             gameView.initializeNewGame(new univalle.tedesoft.battleship.models.Players.HumanPlayer(playerName));
             gameView.show();
         } catch (IOException e) {
-            System.err.println("ERROR IOException al cargar GameView: " + e.getMessage());
             this.welcomeView.show();
-            ViewUtils.showAlert(Alert.AlertType.ERROR, "Error de Carga", "No se pudo cargar la vista del juego: " + e.getMessage());
+            ViewUtils.showAlert(AlertType.ERROR, "Error de Carga", "No se pudo cargar la vista del juego: " + e.getMessage());
         } catch (Exception e) {
-            System.err.println("ERROR general al iniciar juego: " + e.getMessage());
             this.welcomeView.show();
-            ViewUtils.showAlert(Alert.AlertType.ERROR, "Error al Iniciar", "Ocurrió un error inesperado al iniciar el juego: " + e.getMessage());
+            ViewUtils.showAlert(AlertType.ERROR, "Error al Iniciar", "Ocurrió un error inesperado al iniciar el juego: " + e.getMessage());
         }
     }
 
@@ -81,7 +82,7 @@ public class WelcomeController {
         String nicknameFilter = this.nameTextField.getText().trim();
 
         if (nicknameFilter.isEmpty()) {
-            ViewUtils.showAlert(Alert.AlertType.WARNING, "Nombre Requerido", "Por favor, ingrese un nombre de capitán para buscar sus partidas guardadas.");
+            ViewUtils.showAlert(AlertType.WARNING, "Nombre Requerido", "Por favor, ingrese un nombre de capitán para buscar sus partidas guardadas.");
             return;
         }
 
@@ -102,8 +103,7 @@ public class WelcomeController {
         try {
             InstructionsView.getInstance().show();
         } catch (IOException e) {
-            System.err.println("ERROR IOException al cargar InstructionsView: " + e.getMessage());
-            ViewUtils.showAlert(Alert.AlertType.ERROR, "Error de Carga", "No se pudieron cargar las instrucciones: " + e.getMessage());
+            ViewUtils.showAlert(AlertType.ERROR, "Error de Carga", "No se pudieron cargar las instrucciones: " + e.getMessage());
         }
     }
 
@@ -124,7 +124,7 @@ public class WelcomeController {
      */
     public void handleLoadGame(SavedGameManager.SavedGameInfo gameToLoad) {
         if (gameToLoad == null) {
-            ViewUtils.showAlert(Alert.AlertType.ERROR, "Error", "No hay partida para cargar.");
+            ViewUtils.showAlert(AlertType.ERROR, "Error", "No hay partida para cargar.");
             return;
         }
 
@@ -140,17 +140,17 @@ public class WelcomeController {
                 gameView.show();
                 // Usamos Platform.runLater para asegurar que la alerta se muestre después de que la ventana del juego esté visible.
                 Platform.runLater(() ->
-                        ViewUtils.showAlert(Alert.AlertType.INFORMATION, "Partida Cargada", "La partida de " + gameToLoad.getNickname() + " se ha cargado correctamente.")
+                        ViewUtils.showAlert(AlertType.INFORMATION, "Partida Cargada", "La partida de " + gameToLoad.getNickname() + " se ha cargado correctamente.")
                 );
             } else {
                 this.welcomeView.show();
-                ViewUtils.showAlert(Alert.AlertType.ERROR, "Error al Cargar", "No se pudo cargar la partida. Los archivos pueden estar corruptos.");
+                ViewUtils.showAlert(AlertType.ERROR, "Error al Cargar", "No se pudo cargar la partida. Los archivos pueden estar corruptos.");
             }
         } catch (IOException e) {
-            ViewUtils.showAlert(Alert.AlertType.ERROR, "Error Crítico", "No se pudo iniciar el juego: " + e.getMessage());
+            ViewUtils.showAlert(AlertType.ERROR, "Error Crítico", "No se pudo iniciar el juego: " + e.getMessage());
         } catch (Exception e) {
             this.welcomeView.show();
-            ViewUtils.showAlert(Alert.AlertType.ERROR, "Error al Cargar", "Ocurrió un error inesperado al cargar la partida: " + e.getMessage());
+            ViewUtils.showAlert(AlertType.ERROR, "Error al Cargar", "Ocurrió un error inesperado al cargar la partida: " + e.getMessage());
         }
     }
 
