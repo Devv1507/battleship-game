@@ -37,14 +37,12 @@ public final class ViewUtils {
      */
     public static void applyHoverScaleEffect(Button button) {
         if (button != null && button.getEffect() instanceof DropShadow) {
-            // Es seguro hacer el casting porque ya lo hemos verificado.
             final DropShadow shadow = (DropShadow) button.getEffect();
 
             // Guardamos todas las propiedades originales del efecto.
             final double originalRadius = shadow.getRadius();
             final double originalOffsetX = shadow.getOffsetX();
             final double originalOffsetY = shadow.getOffsetY();
-            final Color originalColor = shadow.getColor();
 
             // Evento que se dispara cuando el mouse entra en el área del botón.
             button.setOnMouseEntered(event -> {
@@ -54,7 +52,6 @@ public final class ViewUtils {
                     ((DropShadow) button.getEffect()).setRadius(originalRadius * 2);
                     ((DropShadow) button.getEffect()).setOffsetX(originalOffsetX * 2);
                     ((DropShadow) button.getEffect()).setOffsetY(originalOffsetY * 2);
-                    ((DropShadow) button.getEffect()).setColor(Color.WHITE);
                 }
             });
 
@@ -66,7 +63,6 @@ public final class ViewUtils {
                     ((DropShadow) button.getEffect()).setRadius(originalRadius);
                     ((DropShadow) button.getEffect()).setOffsetX(originalOffsetX);
                     ((DropShadow) button.getEffect()).setOffsetY(originalOffsetY);
-                    ((DropShadow) button.getEffect()).setColor(originalColor);
                 }
             });
         }
