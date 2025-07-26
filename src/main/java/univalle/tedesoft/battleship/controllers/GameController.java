@@ -87,7 +87,7 @@ public class GameController {
         gameView.initializeUI(this);
     }
 
-    // --------- Setters y getters
+    // ----- Setters y getters -----
 
     /**
      * Establece la referencia a la GameView y arranca la configuración inicial de la UI.
@@ -126,7 +126,7 @@ public class GameController {
     }
 
 
-    // --------- Event handlers con FXML
+    // ----- Handlers o Manejadores de Eventos con FXML -----
 
     /**
      * Se activa cuando el jugador hace clic en el botón "Finalizar Colocación".
@@ -251,7 +251,7 @@ public class GameController {
         }
     }
 
-    // ------------ Métodos con lógica central del juego
+    // ----- Métodos con lógica central del juego -----
 
     private void scheduleMachineTurn() {
         if (this.gameState.isGameOver()) return;
@@ -494,7 +494,7 @@ public class GameController {
         }
     }
 
-    // ------------ Métodos auxiliares
+    // ----- Métodos auxiliares -----
 
     /**
      * Registra el tipo de barco que el jugador ha seleccionado del panel de colocación.
