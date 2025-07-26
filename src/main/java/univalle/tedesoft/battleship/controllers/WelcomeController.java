@@ -22,15 +22,21 @@ import java.util.List;
  * y la transición a la vista principal del juego.
  */
 public class WelcomeController {
-    // --- Componentes FXML ---
+    /** Campo de texto donde el usuario ingresa su nombre de capitán para iniciar una nueva partida o buscar una existente. */
     @FXML private TextField nameTextField;
+    /** Botón de nueva partida */
     @FXML public Button startGameButton;
+    /** Botón que inicia la búsqueda de partidas guardadas correspondientes al capitán ingresado. */
     @FXML public Button showSavedGamesButton;
+    /** Botón para salir de la aplicación. */
     @FXML public Button exitButton;
+    /** Botón que abre la ventana de instrucciones con las reglas del juego. */
     @FXML public Button instructionsButton;
-    // Campos para búsqueda de partidas guardadas
+    /** Contenedor con barra de desplazamiento que se hace visible para mostrar la lista de partidas guardadas. */
     @FXML private ScrollPane savedGamesScrollPane;
+    /** Contenedor VBox donde se añaden dinámicamente las tarjetas de información de cada partida guardada. */
     @FXML private VBox savedGamesContainer;
+    /** nReferencia a la instancia de la vista (`WelcomeView`) que este controlador gestiona. */
     private WelcomeView welcomeView;
 
     /**

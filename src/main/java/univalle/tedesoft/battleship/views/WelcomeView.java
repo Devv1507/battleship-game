@@ -27,6 +27,7 @@ import java.util.function.Consumer;
  * Es la primera ventana que ve el usuario y se encarga de la manipulación de la UI de bienvenida.
  */
 public class WelcomeView extends Stage {
+    /** Controlador asociado a esta vista de bienvenida, maneja la lógica de la UI. */
     private final WelcomeController controller;
 
     /**
