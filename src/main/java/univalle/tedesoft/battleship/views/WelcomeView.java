@@ -5,11 +5,9 @@ import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.Scene;
-import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
-import javafx.scene.effect.DropShadow;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
@@ -29,6 +27,9 @@ import java.util.function.Consumer;
  * Es la primera ventana que ve el usuario y se encarga de la manipulación de la UI de bienvenida.
  */
 public class WelcomeView extends Stage {
+    /**
+     * Clase interna estática (Holder) para implementar el patrón Singleton de forma segura.
+     */
     private static class WelcomeViewHolder {
         private static WelcomeView INSTANCE;
     }
@@ -65,21 +66,6 @@ public class WelcomeView extends Stage {
         controller.setWelcomeView(this);
         this.setTitle("Battleship - Puesto de Mando");
         this.setScene(scene);
-    }
-
-    /**
-     * Muestra una alerta en la pantalla.
-     *
-     * @param alertType El tipo de alerta (ERROR, WARNING, INFORMATION).
-     * @param title     El título de la ventana de alerta.
-     * @param content   El mensaje principal de la alerta.
-     */
-    public void showAlert(Alert.AlertType alertType, String title, String content) {
-        Alert alert = new Alert(alertType);
-        alert.setTitle(title);
-        alert.setHeaderText(null);
-        alert.setContentText(content);
-        alert.showAndWait();
     }
 
     /**
@@ -141,7 +127,7 @@ public class WelcomeView extends Stage {
         dateLabel.setFont(new Font("Arial", 12));
         dateLabel.setStyle("-fx-text-fill: #e0e0e0;");
 
-        Label phaseLabel = new Label("Fase: " + this.translateGamePhase(gameInfo.getGamePhase()));
+        Label phaseLabel = new Label("Fase: " + ViewUtils.translateGamePhase(gameInfo.getGamePhase()));
         phaseLabel.setFont(new Font("Arial", 12));
         phaseLabel.setStyle("-fx-text-fill: #e0e0e0;");
 
@@ -156,59 +142,5 @@ public class WelcomeView extends Stage {
 
         card.getChildren().addAll(infoContainer, spacer, loadButton);
         return card;
-    }
-
-    /**
-     * Traduce las fases del juego a texto más amigable para el usuario.
-     * @param phase La fase del juego en inglés
-     * @return La traducción en español
-     */
-    private String translateGamePhase(String phase) {
-        if (phase == null) return "Desconocida";
-        switch (phase.toUpperCase()) {
-            case "INITIAL": return "Inicial";
-            case "PLACEMENT": return "Colocación de Barcos";
-            case "FIRING": return "En Batalla";
-            case "GAME_OVER": return "Juego Terminado";
-            default: return phase;
-        }
-    }
-
-    /**
-     * Aplica un efecto de "hover" a un botón específico, haciendo que se agrande.
-     * Debe ser llamado por el controlador para configurar la interactividad de la UI.
-     * @param button El botón al cual se le aplicará el efecto.
-     */
-    public void applyHoverScaleEffect(Button button) {
-        if (button != null) {
-            // Guardamos el estilo original del botón para poder restaurarlo.
-            final String originalStyle = button.getStyle();
-            final double originalEffectRadius = button.getEffect() instanceof DropShadow ? ((DropShadow) button.getEffect()).getRadius() : 0;
-            final double originalEffectOffsetX = button.getEffect() instanceof DropShadow ? ((DropShadow) button.getEffect()).getOffsetX() : 0;
-            final double originalEffectOffsetY = button.getEffect() instanceof DropShadow ? ((DropShadow) button.getEffect()).getOffsetY() : 0;
-
-
-            // Evento que se dispara cuando el mouse entra en el área del botón.
-            button.setOnMouseEntered(event -> {
-                button.setScaleX(1.05);
-                button.setScaleY(1.05);
-                if(button.getEffect() instanceof DropShadow){
-                    ((DropShadow) button.getEffect()).setRadius(originalEffectRadius * 2);
-                    ((DropShadow) button.getEffect()).setOffsetX(originalEffectOffsetX * 2);
-                    ((DropShadow) button.getEffect()).setOffsetY(originalEffectOffsetY * 2);
-                }
-            });
-
-            // Evento que se dispara cuando el mouse sale del área del botón.
-            button.setOnMouseExited(event -> {
-                button.setScaleX(1.0);
-                button.setScaleY(1.0);
-                if(button.getEffect() instanceof DropShadow){
-                    ((DropShadow) button.getEffect()).setRadius(originalEffectRadius);
-                    ((DropShadow) button.getEffect()).setOffsetX(originalEffectOffsetX);
-                    ((DropShadow) button.getEffect()).setOffsetY(originalEffectOffsetY);
-                }
-            });
-        }
     }
 }
