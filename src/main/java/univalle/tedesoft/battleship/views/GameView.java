@@ -3,7 +3,6 @@ package univalle.tedesoft.battleship.views;
 
 import javafx.application.Platform;
 import javafx.fxml.FXMLLoader;
-import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Group;
 import javafx.scene.Node;
@@ -47,10 +46,7 @@ import java.util.*;
  * utilizando los componentes FXML que le proporciona el GameController.
  */
 public class GameView extends Stage {
-
     private GameController controller;
-
-    // ------------ Constantes
     private static final int CELL_SIZE = 40;
     /** Mapa para las figuras de los barcos */
     private final Map<ShipType, ShipShape> shipShapeFactory;
@@ -62,13 +58,25 @@ public class GameView extends Stage {
     // Mapa para asociar un barco del modelo con su figura en la vista.
     private final Map<Ship, Node> shipVisuals = new HashMap<>();
 
+    private static class GameViewHolder {
+        private static GameView INSTANCE;
+    }
+
+    public static GameView getInstance() throws IOException {
+        if (GameViewHolder.INSTANCE == null) {
+            GameViewHolder.INSTANCE = new GameView();
+            return GameViewHolder.INSTANCE;
+        } else {
+            return GameViewHolder.INSTANCE;
+        }
+    }
 
     /**
      * Constructor privado Singleton.
      * Carga el FXML, obtiene la referencia al controlador y se la pasa a sí mismo (el Stage).
      * @throws IOException si el archivo FXML no se puede cargar.
      */
-    public GameView() throws IOException {
+    private GameView() throws IOException {
         FXMLLoader fxmlLoader = new FXMLLoader(
                 Main.class.getResource("game-view.fxml")
         );
@@ -78,6 +86,19 @@ public class GameView extends Stage {
         if (this.controller == null) {
             throw new IllegalStateException("El controlador no se pudo cargar desde el FXML. Revisa el campo fx:controller.");
         }
+        // Inicializar GameState
+        IGameState gameState = new GameState();
+        this.controller.setGameView(this);
+        this.controller.setGameState(gameState);
+        // Inicializar el controlador con la vista
+        this.controller.initializeUI(this);
+        // Configurar la escena y el título de la ventana
+        this.setTitle("Battleship Game");
+        this.setScene(scene);
+        // Crear el panel de previsualización (se agregará más tarde)
+        this.dragPreviewPane = new Pane();
+        this.dragPreviewPane.setMouseTransparent(true); // Para que no intercepte clics
+
         // Inicializar la fábrica de formas de barcos
         this.shipShapeFactory = new HashMap<>();
         this.shipShapeFactory.put(ShipType.AIR_CRAFT_CARRIER, new AircraftShape());
@@ -91,25 +112,8 @@ public class GameView extends Stage {
         this.markerShapeFactory.put(CellState.HIT_SHIP, new TouchedMarkerShape());
         this.markerShapeFactory.put(CellState.SUNK_SHIP_PART, new SunkenMarkerShape());
 
-        // Inicializar GameState sin auto-inicializar el juego
-        IGameState gameState = new GameState();
-        this.controller.setGameView(this);
-        this.controller.setGameState(gameState);
-        this.controller.initializeUI(this);
-
-        // No auto-inicializar el juego aquí - lo controlará WelcomeController
-        // gameState.startNewGame(new HumanPlayer("Capitán")); // Removido
-        // this.showShipPlacementPhase(
-        //         gameState.getHumanPlayerPositionBoard(),
-        //         gameState.getPendingShipsToPlace()
-        // ); // Removido
-
-        this.setTitle("Battleship Game");
-        this.setScene(scene);
-
-        // Crear el panel de previsualización (se agregará más tarde)
-        this.dragPreviewPane = new Pane();
-        this.dragPreviewPane.setMouseTransparent(true); // Para que no intercepte clics
+        // Inicializar los efectos de los botones
+        this.initializeButtonEffects();
     }
 
 
@@ -527,7 +531,6 @@ public class GameView extends Stage {
         });
     }
 
-
     /**
      * Muestra u oculta el panel de control de orientación.
      * @param show True para mostrar, false para ocultar.
@@ -549,8 +552,9 @@ public class GameView extends Stage {
         this.controller.finalizePlacementButton.setVisible(false);
         this.controller.placeRandomlyButton.setVisible(false);
 
-        // Habilitar el botón para ver el tablero del oponente
-        this.controller.toggleOpponentBoardButton.setDisable(false);
+        // Mostrar los botones de la fase de batalla
+        this.controller.restartGameButton.setVisible(true);
+        this.controller.toggleOpponentBoardButton.setVisible(true);
 
         // Deshabilitar clics en el tablero propio y habilitarlos en el del enemigo
         this.controller.humanPlayerBoardGrid.setDisable(true);
@@ -570,9 +574,9 @@ public class GameView extends Stage {
      */
     public void updateOrientationButtons(Orientation activeOrientation) {
         // Estilo base para los botones
-        String baseStyle = "-fx-background-color: lightgray; -fx-border-color: gray;";
+        String baseStyle = "-fx-background-color: #6c757d; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 8; fx-border-width: 2;";
         // Estilo para el botón activo
-        String activeStyle = "-fx-background-color: lightblue; -fx-border-color: darkblue; -fx-font-weight: bold;";
+        String activeStyle = "-fx-background-color: lightblue; -fx-text-fill: black; -fx-font-weight: bold; -fx-background-radius: 8; -fx-border-width: 2;";
 
         if (activeOrientation == Orientation.HORIZONTAL) {
             this.controller.horizontalButton.setStyle(activeStyle);
@@ -583,7 +587,6 @@ public class GameView extends Stage {
         }
     }
 
-
     /**
      * Habilita o deshabilita la interacción con un tablero específico.
      * @param gridPane El tablero (GridPane) a modificar.
@@ -592,7 +595,6 @@ public class GameView extends Stage {
     public void setBoardInteraction(GridPane gridPane, boolean enabled) {
         gridPane.setDisable(!enabled);
     }
-
 
     /**
      * Actualiza el texto del botón para ver/ocultar el tablero del oponente.
@@ -660,6 +662,37 @@ public class GameView extends Stage {
             default:
                 break;
         }
+    }
+
+
+    /**
+     * Restaura la interfaz de usuario al estado inicial de la fase de colocación.
+     * Es invocado por el controlador cuando se reinicia el juego.
+     */
+    public void resetToPlacementPhase() {
+        // Limpiar ambos tableros visualmente
+        this.drawBoard(this.controller.humanPlayerBoardGrid, this.controller.getGameState().getHumanPlayerPositionBoard(), true);
+        this.drawBoard(this.controller.machinePlayerBoardGrid, this.controller.getGameState().getMachinePlayerTerritoryBoard(), false);
+
+        // Restaurar la visibilidad de los componentes de la fase de colocación
+        this.controller.shipPlacementPane.setVisible(true);
+        this.controller.placeRandomlyButton.setVisible(true);
+        this.controller.finalizePlacementButton.setVisible(true);
+        this.controller.finalizePlacementButton.setDisable(true); // Deshabilitado hasta que se coloquen los barcos
+
+        // Ocultar componentes de la fase de batalla
+        this.controller.toggleOpponentBoardButton.setVisible(false);
+        this.controller.restartGameButton.setVisible(false);
+
+        // Habilitar y deshabilitar los tableros correspondientes
+        this.controller.humanPlayerBoardGrid.setDisable(false);
+        this.controller.machinePlayerBoardGrid.setDisable(true);
+
+        // Actualizar la lista de barcos para colocar
+        this.showShipPlacementPhase(
+                this.controller.getGameState().getHumanPlayerPositionBoard(),
+                this.controller.getGameState().getPendingShipsToPlace()
+        );
     }
 
     // ------------ Métodos auxiliares
@@ -859,20 +892,6 @@ public class GameView extends Stage {
         return this.controller;
     }
 
-    // --- Singleton Holder Pattern ---
-    private static class GameViewHolder {
-        private static GameView INSTANCE;
-    }
-
-    public static GameView getInstance() throws IOException {
-        if (GameViewHolder.INSTANCE == null) {
-            GameViewHolder.INSTANCE = new GameView();
-            return GameViewHolder.INSTANCE;
-        } else {
-            return GameViewHolder.INSTANCE;
-        }
-    }
-
     /**
      * Resetea la instancia Singleton de GameView.
      * Útil para limpiar estado entre diferentes juegos.
@@ -928,5 +947,20 @@ public class GameView extends Stage {
             System.err.println("ERROR al refrescar visualización: " + e.getMessage());
             e.printStackTrace();
         }
+    }
+
+    /**
+     * Orquesta la aplicación de efectos visuales a los botones de esta vista,
+     * utilizando la clase de utilidad ViewUtils.
+     */
+    private void initializeButtonEffects() {
+        ViewUtils.applyHoverScaleEffect(this.controller.saveGameButton);
+        ViewUtils.applyHoverScaleEffect(this.controller.placeRandomlyButton);
+        ViewUtils.applyHoverScaleEffect(this.controller.instructionsButton);
+        ViewUtils.applyHoverScaleEffect(this.controller.finalizePlacementButton);
+        ViewUtils.applyHoverScaleEffect(this.controller.toggleOpponentBoardButton);
+        ViewUtils.applyHoverScaleEffect(this.controller.horizontalButton);
+        ViewUtils.applyHoverScaleEffect(this.controller.verticalButton);
+        ViewUtils.applyHoverScaleEffect(this.controller.restartGameButton);
     }
 }

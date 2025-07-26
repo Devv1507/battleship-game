@@ -4,6 +4,7 @@
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.TextField?>
+<?import javafx.scene.control.ScrollPane?>
 <?import javafx.scene.effect.DropShadow?>
 <?import javafx.scene.image.Image?>
 <?import javafx.scene.image.ImageView?>
@@ -44,7 +45,7 @@
             
             <Label text="Nueva Partida" textFill="white">
                 <font>
-                    <Font name="Arial Bold" size="16.0"/>
+                    <Font name="Arial Bold" size="18.0"/>
                 </font>
             </Label>
             
@@ -65,33 +66,7 @@
                         <DropShadow/>
                     </effect>
                 </Button>
-            </HBox>
-        </VBox>
-
-        <!-- Sección: Cargar Partida -->
-        <VBox alignment="CENTER" spacing="10.0"
-              style="-fx-background-color: rgba(255, 255, 255, 0.08); -fx-background-radius: 15; -fx-border-color: rgba(255, 255, 255, 0.15); -fx-border-radius: 15; -fx-border-width: 2;">
-            <padding>
-                <Insets bottom="15.0" left="25.0" right="25.0" top="15.0"/>
-            </padding>
-            
-            <Label text="Buscar Partidas Guardadas" textFill="white">
-                <font>
-                    <Font name="Arial Bold" size="16.0"/>
-                </font>
-            </Label>
-            
-            <HBox alignment="CENTER" spacing="15.0">
-                <Label text="Jugador:" textFill="white">
-                    <font>
-                        <Font name="Arial Bold" size="14.0"/>
-                    </font>
-                </Label>
-                <TextField fx:id="searchTextField" promptText="Nombre del jugador"
-                           style="-fx-font-size: 14px; -fx-background-radius: 8; -fx-border-radius: 8; -fx-background-color: rgba(0,0,0,0.3); -fx-text-fill: white; -fx-border-color: #f39c12; -fx-border-width: 2;">
-                </TextField>
-
-                <Button fx:id="searchGameButton" onAction="#onSearchGameClick"
+                <Button fx:id="showSavedGamesButton" onAction="#onShowSavedGamesClick"
                         style="-fx-background-color: #f39c12; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 14px; -fx-background-radius: 8; -fx-padding: 8 20;"
                         text="Buscar Partidas">
                     <effect>
@@ -99,28 +74,16 @@
                     </effect>
                 </Button>
             </HBox>
-            
-            <!-- Área de resultados de búsqueda -->
-            <VBox fx:id="gameResultArea" alignment="CENTER" spacing="8.0" visible="false">
-                <VBox.margin>
-                    <Insets top="10.0"/>
-                </VBox.margin>
-                
-                <Label fx:id="gameResultLabel" textFill="white" textAlignment="CENTER" wrapText="true">
-                    <font>
-                        <Font name="Arial" size="13.0"/>
-                    </font>
-                </Label>
-                
-                <Button fx:id="loadGameButton" onAction="#onLoadGameClick" visible="false"
-                        style="-fx-background-color: #27ae60; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 13px; -fx-background-radius: 8; -fx-padding: 6 18;"
-                        text="Cargar Partida">
-                    <effect>
-                        <DropShadow/>
-                    </effect>
-                </Button>
-            </VBox>
         </VBox>
+
+        <!-- Aréa dinámica para resultados de partidas guardadas -->
+        <ScrollPane fx:id="savedGamesScrollPane" fitToWidth="true" hbarPolicy="NEVER" vbarPolicy="AS_NEEDED" managed="false" visible="false" style="-fx-background: transparent; -fx-background-color: transparent;" prefHeight="250.0">
+            <content>
+                <VBox fx:id="savedGamesContainer" alignment="TOP_CENTER" spacing="10.0"
+                      style="-fx-background-color: rgba(0, 0, 0, 0.2); -fx-background-radius: 10; -fx-padding: 10;">
+                </VBox>
+            </content>
+        </ScrollPane>
 
         <!-- Botones de navegación -->
         <HBox alignment="CENTER" spacing="20.0">

@@ -1,8 +1,8 @@
 package univalle.tedesoft.battleship.controllers;
 
-import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
+import javafx.scene.control.ButtonType;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.StackPane;
@@ -21,33 +21,51 @@ import univalle.tedesoft.battleship.models.state.IGameState;
 import univalle.tedesoft.battleship.threads.MachineTurnRunnable;
 import univalle.tedesoft.battleship.views.GameView;
 import univalle.tedesoft.battleship.views.InstructionsView;
+import univalle.tedesoft.battleship.views.ViewUtils;
 
 import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public class GameController {
-
     // --- Componentes FXML ---
+    /** Botón para confirmar la colocación de todos los barcos y pasar a la fase de disparos. */
     @FXML public Button finalizePlacementButton;
+    /** Botón para mostrar/ocultar el tablero real del oponente. */
     @FXML public Button toggleOpponentBoardButton;
+    /** Botón para seleccionar la orientación horizontal al colocar un barco. */
     @FXML public Button horizontalButton;
+    /** Botón para seleccionar la orientación vertical al colocar un barco. */
     @FXML public Button verticalButton;
+    /** Botón para guardar el estado actual de la partida. */
     @FXML public Button saveGameButton;
+    /** Botón para que el sistema coloque los barcos del jugador de forma aleatoria. */
     @FXML public Button placeRandomlyButton;
+    /** Botón para mostrar la ventana de instrucciones del juego. */
     @FXML public Button instructionsButton;
-
+    /** Botón para reiniciar la partida actual al estado inicial de colocación. */
+    @FXML public Button restartGameButton;
+    /** Tablero donde el jugador coloca sus barcos y recibe disparos. */
     @FXML public GridPane humanPlayerBoardGrid;
+    /** Tablero de la máquina, donde el jugador dispara al oponente. */
     @FXML public GridPane machinePlayerBoardGrid;
+    /** Panel lateral izquierdo que muestra los barcos disponibles para colocar. */
     @FXML public VBox shipPlacementPane;
-    @FXML public VBox orientationControlPane; // Contenedor de los botones
+    /** Contenedor para los botones de control de orientación (Horizontal/Vertical). */
+    @FXML public VBox orientationControlPane;
+    /** Capa de dibujo sobre el tablero humano, usada para renderizar las formas de los barcos. */
     @FXML public Pane humanPlayerDrawingPane;
+    /** Capa de dibujo sobre el tablero de la máquina, usada para renderizar barcos hundidos y efectos. */
     @FXML public Pane machinePlayerDrawingPane;
+    /** Contenedor que agrupa el tablero humano y su capa de dibujo. */
     @FXML public StackPane humanPlayerBoardContainer;
+    /** Contenedor que agrupa el tablero de la máquina y su capa de dibujo. */
     @FXML public StackPane machinePlayerBoardContainer;
+    /** Contenedor superior para mostrar mensajes de estado al jugador. */
     @FXML public VBox messageContainer;
 
     // --- Referencias principales ---
@@ -87,7 +105,7 @@ public class GameController {
         gameView.initializeUI(this);
     }
 
-    // --------- Setters y getters
+    // ----- Setters y getters -----
 
     /**
      * Establece la referencia a la GameView y arranca la configuración inicial de la UI.
@@ -126,7 +144,30 @@ public class GameController {
     }
 
 
-    // --------- Event handlers con FXML
+    // ----- Handlers o Manejadores de Eventos con FXML -----
+
+
+    /**
+     * Maneja el clic en el botón "Reiniciar Juego".
+     * Muestra una alerta de confirmación y, si el usuario acepta, reinicia el estado del juego.
+     */
+    @FXML
+    void onRestartGameClick() {
+        if (this.gameState == null || this.gameView == null) {
+            return;
+        }
+        // Llamar a ViewUtils para mostrar el diálogo de confirmación.
+        Optional<ButtonType> result = ViewUtils.showConfirmationDialog(
+                "Confirmar Reinicio",
+                "¿Está seguro de reiniciar?",
+                "Si no ha guardado, perderá todo el avance del juego."
+        );
+
+        // Si el usuario confirma, reiniciamos el juego.
+        if (result.isPresent() && result.get() == ButtonType.OK) {
+            this.restartGame();
+        }
+    }
 
     /**
      * Se activa cuando el jugador hace clic en el botón "Finalizar Colocación".
@@ -147,7 +188,6 @@ public class GameController {
             this.gameView.showFiringPhase();
         }
     }
-
 
     /**
      * Se activa cuando el jugador hace clic en el botón "Horizontal".
@@ -239,7 +279,6 @@ public class GameController {
     /**
      * Maneja el clic en el botón "Instrucciones".
      * Muestra la ventana con las reglas del juego.
-     * Este método puede ser llamado en cualquier momento de la partida.
      */
     @FXML
     void onInstructionsClick() {
@@ -251,7 +290,7 @@ public class GameController {
         }
     }
 
-    // ------------ Métodos con lógica central del juego
+    // ----- Métodos con lógica central del juego -----
 
     private void scheduleMachineTurn() {
         if (this.gameState.isGameOver()) return;
@@ -494,7 +533,27 @@ public class GameController {
         }
     }
 
-    // ------------ Métodos auxiliares
+    /**
+     * Lógica centralizada para reiniciar el juego.
+     * Restablece el modelo y actualiza la vista al estado inicial.
+     */
+    private void restartGame() {
+        // Guardamos el jugador actual para no perder su nombre.
+        Player currentPlayer = new HumanPlayer(this.getGameState().getHumanPlayerNickname());
+
+        // Reiniciar el modelo.
+        this.getGameState().startNewGame(currentPlayer);
+
+        // Reiniciar el estado interno del controlador.
+        this.isOpponentBoardVisible = false;
+
+        // Actualizar la vista.
+        this.gameView.resetToPlacementPhase();
+        this.gameView.updateToggleButtonText("Ver Tablero Oponente (Profesor)");
+        this.gameView.displayMessage("Juego reiniciado. Coloca tus barcos.", false);
+    }
+
+    // ----- Métodos auxiliares -----
 
     /**
      * Registra el tipo de barco que el jugador ha seleccionado del panel de colocación.
