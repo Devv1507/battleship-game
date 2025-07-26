@@ -569,9 +569,9 @@ public class GameView extends Stage {
      */
     public void updateOrientationButtons(Orientation activeOrientation) {
         // Estilo base para los botones
-        String baseStyle = "-fx-background-color: lightgray; -fx-border-color: gray;";
+        String baseStyle = "-fx-background-color: #6c757d; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 8; fx-border-width: 2;";
         // Estilo para el botón activo
-        String activeStyle = "-fx-background-color: lightblue; -fx-border-color: darkblue; -fx-font-weight: bold;";
+        String activeStyle = "-fx-background-color: lightblue; -fx-text-fill: black; -fx-font-weight: bold; -fx-background-radius: 8; -fx-border-width: 2;";
 
         if (activeOrientation == Orientation.HORIZONTAL) {
             this.controller.horizontalButton.setStyle(activeStyle);
