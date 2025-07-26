@@ -2,8 +2,9 @@ package univalle.tedesoft.battleship.views;
 
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
+import javafx.scene.control.ButtonType;
 import javafx.scene.effect.DropShadow;
-import javafx.scene.paint.Color;
+import java.util.Optional;
 
 /**
  * Clase de utilidad que proporciona métodos estáticos comunes para la interfaz de usuario.
@@ -29,6 +30,22 @@ public final class ViewUtils {
         alert.setHeaderText(null);
         alert.setContentText(content);
         alert.showAndWait();
+    }
+
+
+    /**
+     * Muestra un diálogo de confirmación con botones OK y Cancelar.
+     * @param title El título de la ventana de diálogo.
+     * @param headerText El mensaje principal (cabecera) del diálogo.
+     * @param contentText El mensaje de contenido detallado.
+     * @return Un Optional que contiene el ButtonType presionado por el usuario.
+     */
+    public static Optional<ButtonType> showConfirmationDialog(String title, String headerText, String contentText) {
+        Alert confirmationDialog = new Alert(Alert.AlertType.CONFIRMATION);
+        confirmationDialog.setTitle(title);
+        confirmationDialog.setHeaderText(headerText);
+        confirmationDialog.setContentText(contentText);
+        return confirmationDialog.showAndWait();
     }
 
     /**
