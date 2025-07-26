@@ -30,24 +30,38 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public class GameController {
-
     // --- Componentes FXML ---
+    /** Botón para confirmar la colocación de todos los barcos y pasar a la fase de disparos. */
     @FXML public Button finalizePlacementButton;
+    /** Botón para mostrar/ocultar el tablero real del oponente. */
     @FXML public Button toggleOpponentBoardButton;
+    /** Botón para seleccionar la orientación horizontal al colocar un barco. */
     @FXML public Button horizontalButton;
+    /** Botón para seleccionar la orientación vertical al colocar un barco. */
     @FXML public Button verticalButton;
+    /** Botón para guardar el estado actual de la partida. */
     @FXML public Button saveGameButton;
+    /** Botón para que el sistema coloque los barcos del jugador de forma aleatoria. */
     @FXML public Button placeRandomlyButton;
+    /** Botón para mostrar la ventana de instrucciones del juego. */
     @FXML public Button instructionsButton;
-
+    /** Tablero donde el jugador coloca sus barcos y recibe disparos. */
     @FXML public GridPane humanPlayerBoardGrid;
+    /** Tablero de la máquina, donde el jugador dispara al oponente. */
     @FXML public GridPane machinePlayerBoardGrid;
+    /** Panel lateral izquierdo que muestra los barcos disponibles para colocar. */
     @FXML public VBox shipPlacementPane;
-    @FXML public VBox orientationControlPane; // Contenedor de los botones
+    /** Contenedor para los botones de control de orientación (Horizontal/Vertical). */
+    @FXML public VBox orientationControlPane;
+    /** Capa de dibujo sobre el tablero humano, usada para renderizar las formas de los barcos. */
     @FXML public Pane humanPlayerDrawingPane;
+    /** Capa de dibujo sobre el tablero de la máquina, usada para renderizar barcos hundidos y efectos. */
     @FXML public Pane machinePlayerDrawingPane;
+    /** Contenedor que agrupa el tablero humano y su capa de dibujo. */
     @FXML public StackPane humanPlayerBoardContainer;
+    /** Contenedor que agrupa el tablero de la máquina y su capa de dibujo. */
     @FXML public StackPane machinePlayerBoardContainer;
+    /** Contenedor superior para mostrar mensajes de estado al jugador. */
     @FXML public VBox messageContainer;
 
     // --- Referencias principales ---
@@ -239,7 +253,6 @@ public class GameController {
     /**
      * Maneja el clic en el botón "Instrucciones".
      * Muestra la ventana con las reglas del juego.
-     * Este método puede ser llamado en cualquier momento de la partida.
      */
     @FXML
     void onInstructionsClick() {
