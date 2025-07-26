@@ -7,6 +7,7 @@ import javafx.scene.layout.VBox;
 import univalle.tedesoft.battleship.models.State.SavedGameManager;
 import univalle.tedesoft.battleship.views.GameView;
 import univalle.tedesoft.battleship.views.InstructionsView;
+import univalle.tedesoft.battleship.views.ViewUtils;
 import univalle.tedesoft.battleship.views.WelcomeView;
 
 import java.io.IOException;
@@ -50,7 +51,7 @@ public class WelcomeController {
         String playerName = this.nameTextField.getText().trim();
 
         if (playerName.isEmpty()) {
-            this.welcomeView.showAlert(Alert.AlertType.WARNING, "Nombre Requerido", "Por favor, ingrese un nombre de capitán para comenzar la batalla.");
+            ViewUtils.showAlert(Alert.AlertType.WARNING, "Nombre Requerido", "Por favor, ingrese un nombre de capitán para comenzar la batalla.");
             return;
         }
 
@@ -61,14 +62,12 @@ public class WelcomeController {
             gameView.show();
         } catch (IOException e) {
             System.err.println("ERROR IOException al cargar GameView: " + e.getMessage());
-            e.printStackTrace();
             this.welcomeView.show();
-            this.welcomeView.showAlert(Alert.AlertType.ERROR, "Error de Carga", "No se pudo cargar la vista del juego: " + e.getMessage());
+            ViewUtils.showAlert(Alert.AlertType.ERROR, "Error de Carga", "No se pudo cargar la vista del juego: " + e.getMessage());
         } catch (Exception e) {
             System.err.println("ERROR general al iniciar juego: " + e.getMessage());
-            e.printStackTrace();
             this.welcomeView.show();
-            this.welcomeView.showAlert(Alert.AlertType.ERROR, "Error al Iniciar", "Ocurrió un error inesperado al iniciar el juego: " + e.getMessage());
+            ViewUtils.showAlert(Alert.AlertType.ERROR, "Error al Iniciar", "Ocurrió un error inesperado al iniciar el juego: " + e.getMessage());
         }
     }
 
@@ -82,7 +81,7 @@ public class WelcomeController {
         String nicknameFilter = this.nameTextField.getText().trim();
 
         if (nicknameFilter.isEmpty()) {
-            this.welcomeView.showAlert(Alert.AlertType.WARNING, "Nombre Requerido", "Por favor, ingrese un nombre de capitán para buscar sus partidas guardadas.");
+            ViewUtils.showAlert(Alert.AlertType.WARNING, "Nombre Requerido", "Por favor, ingrese un nombre de capitán para buscar sus partidas guardadas.");
             return;
         }
 
@@ -104,8 +103,7 @@ public class WelcomeController {
             InstructionsView.getInstance().show();
         } catch (IOException e) {
             System.err.println("ERROR IOException al cargar InstructionsView: " + e.getMessage());
-            e.printStackTrace();
-            this.welcomeView.showAlert(Alert.AlertType.ERROR, "Error de Carga", "No se pudieron cargar las instrucciones: " + e.getMessage());
+            ViewUtils.showAlert(Alert.AlertType.ERROR, "Error de Carga", "No se pudieron cargar las instrucciones: " + e.getMessage());
         }
     }
 
@@ -126,7 +124,7 @@ public class WelcomeController {
      */
     public void handleLoadGame(SavedGameManager.SavedGameInfo gameToLoad) {
         if (gameToLoad == null) {
-            this.welcomeView.showAlert(Alert.AlertType.ERROR, "Error", "No hay partida para cargar.");
+            ViewUtils.showAlert(Alert.AlertType.ERROR, "Error", "No hay partida para cargar.");
             return;
         }
 
@@ -142,19 +140,17 @@ public class WelcomeController {
                 gameView.show();
                 // Usamos Platform.runLater para asegurar que la alerta se muestre después de que la ventana del juego esté visible.
                 Platform.runLater(() ->
-                        this.welcomeView.showAlert(Alert.AlertType.INFORMATION, "Partida Cargada", "La partida de " + gameToLoad.getNickname() + " se ha cargado correctamente.")
+                        ViewUtils.showAlert(Alert.AlertType.INFORMATION, "Partida Cargada", "La partida de " + gameToLoad.getNickname() + " se ha cargado correctamente.")
                 );
             } else {
                 this.welcomeView.show();
-                this.welcomeView.showAlert(Alert.AlertType.ERROR, "Error al Cargar", "No se pudo cargar la partida. Los archivos pueden estar corruptos.");
+                ViewUtils.showAlert(Alert.AlertType.ERROR, "Error al Cargar", "No se pudo cargar la partida. Los archivos pueden estar corruptos.");
             }
         } catch (IOException e) {
-            e.printStackTrace();
-            this.welcomeView.showAlert(Alert.AlertType.ERROR, "Error Crítico", "No se pudo iniciar el juego: " + e.getMessage());
+            ViewUtils.showAlert(Alert.AlertType.ERROR, "Error Crítico", "No se pudo iniciar el juego: " + e.getMessage());
         } catch (Exception e) {
-            e.printStackTrace();
             this.welcomeView.show();
-            this.welcomeView.showAlert(Alert.AlertType.ERROR, "Error al Cargar", "Ocurrió un error inesperado al cargar la partida: " + e.getMessage());
+            ViewUtils.showAlert(Alert.AlertType.ERROR, "Error al Cargar", "Ocurrió un error inesperado al cargar la partida: " + e.getMessage());
         }
     }
 
@@ -162,9 +158,9 @@ public class WelcomeController {
      * Orquesta la aplicación de efectos visuales a los botones, delegando la lógica a la vista.
      */
     private void initializeButtonEffects() {
-        this.welcomeView.applyHoverScaleEffect(this.startGameButton);
-        this.welcomeView.applyHoverScaleEffect(this.showSavedGamesButton);
-        this.welcomeView.applyHoverScaleEffect(this.instructionsButton);
-        this.welcomeView.applyHoverScaleEffect(this.exitButton);
+        ViewUtils.applyHoverScaleEffect(this.startGameButton);
+        ViewUtils.applyHoverScaleEffect(this.showSavedGamesButton);
+        ViewUtils.applyHoverScaleEffect(this.instructionsButton);
+        ViewUtils.applyHoverScaleEffect(this.exitButton);
     }
 }
