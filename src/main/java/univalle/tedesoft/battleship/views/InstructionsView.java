@@ -1,4 +1,3 @@
-// ./src/main/java/univalle/tedesoft/battleship/views/InstructionsView.java
 package univalle.tedesoft.battleship.views;
 
 import javafx.fxml.FXMLLoader;
