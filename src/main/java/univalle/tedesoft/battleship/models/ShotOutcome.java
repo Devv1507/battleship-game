@@ -1,7 +1,7 @@
 package univalle.tedesoft.battleship.models;
 
-import univalle.tedesoft.battleship.models.Enums.ShotResult;
-import univalle.tedesoft.battleship.models.Ships.Ship;
+import univalle.tedesoft.battleship.models.enums.ShotResult;
+import univalle.tedesoft.battleship.models.ships.Ship;
 
 /**
  * Representa el resultado completo de un disparo, incluyendo la coordenada

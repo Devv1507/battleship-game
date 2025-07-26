@@ -1,4 +1,4 @@
-package univalle.tedesoft.battleship.models.Players;
+package univalle.tedesoft.battleship.models.players;
 /**
  * Clase que representa al jugador.
  * @author David Esteban Valencia

@@ -1,25 +1,23 @@
-package univalle.tedesoft.battleship.models.State;
+package univalle.tedesoft.battleship.models.state;
 
 import univalle.tedesoft.battleship.exceptions.InvalidShipPlacementException;
 import univalle.tedesoft.battleship.exceptions.OutOfBoundsException;
 import univalle.tedesoft.battleship.exceptions.OverlapException;
 import univalle.tedesoft.battleship.models.Board;
 import univalle.tedesoft.battleship.models.Coordinate;
-import univalle.tedesoft.battleship.models.Enums.*;
-import univalle.tedesoft.battleship.models.Players.HumanPlayer;
-import univalle.tedesoft.battleship.models.Players.MachinePlayer;
-import univalle.tedesoft.battleship.models.Players.Player;
-import univalle.tedesoft.battleship.models.Ships.*;
+import univalle.tedesoft.battleship.models.players.Player;
+import univalle.tedesoft.battleship.models.enums.*;
+import univalle.tedesoft.battleship.models.players.MachinePlayer;
+import univalle.tedesoft.battleship.models.ships.*;
 import univalle.tedesoft.battleship.models.ShotOutcome;
-
+import univalle.tedesoft.battleship.models.ships.ShipFactory;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
 // Imports para el patrón Memento
-import univalle.tedesoft.battleship.models.State.GameCaretaker;
-import univalle.tedesoft.battleship.models.State.GameMemento;
+
 
 /**
  * Clase que representa la instancia del juego.
@@ -97,7 +95,8 @@ public class GameState implements IGameState {
         }
 
         // 2. Crear los objetos de dominio necesarios.
-        Ship newShip = createShipFromType(shipType);
+        //Ship newShip = createShipFromType(shipType);
+        Ship newShip = ShipFactory.createShip(shipType);
         newShip.setOrientation(orientation);
         Coordinate coordinate = new Coordinate(col, row); // Recordar que Coordinate(x, y) -> (col, row)
 
@@ -111,6 +110,7 @@ public class GameState implements IGameState {
         }
     };
 
+    // Candidato a eliminar.
     /**
      * Metodo de fábrica privado para crear una instancia de Ship a partir de su tipo.
      * Esto centraliza la lógica de creación de barcos.
@@ -397,12 +397,12 @@ public class GameState implements IGameState {
     private void ensurePlayersInitialized(String humanPlayerNickname) {
         // Inicializar jugador humano si no existe o si el nickname es diferente
         if (this.humanPlayer == null || !humanPlayerNickname.equals(this.humanPlayer.getName())) {
-            this.humanPlayer = new univalle.tedesoft.battleship.models.Players.HumanPlayer(humanPlayerNickname);
+            this.humanPlayer = new univalle.tedesoft.battleship.models.players.HumanPlayer(humanPlayerNickname);
         }
         
         // Inicializar jugador máquina si no existe
         if (this.machinePlayer == null) {
-            this.machinePlayer = new univalle.tedesoft.battleship.models.Players.MachinePlayer();
+            this.machinePlayer = new univalle.tedesoft.battleship.models.players.MachinePlayer();
         }
     }
 

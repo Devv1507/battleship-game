@@ -1,7 +1,6 @@
-package univalle.tedesoft.battleship.models.State;
+package univalle.tedesoft.battleship.models.state;
 
-import univalle.tedesoft.battleship.models.Enums.GamePhase;
-import univalle.tedesoft.battleship.models.Players.Player;
+import univalle.tedesoft.battleship.models.enums.GamePhase;
 
 import java.time.LocalDateTime;
 
@@ -27,8 +26,8 @@ public class GameMemento {
      * @param computerPlayerSunkShips Cantidad de barcos hundidos por la computadora
      * @param currentPhase Fase actual del juego
      */
-    public GameMemento(String humanPlayerNickname, int humanPlayerSunkShips, 
-                      int computerPlayerSunkShips, GamePhase currentPhase) {
+    public GameMemento(String humanPlayerNickname, int humanPlayerSunkShips,
+                       int computerPlayerSunkShips, GamePhase currentPhase) {
         this.humanPlayerNickname = humanPlayerNickname;
         this.humanPlayerSunkShips = humanPlayerSunkShips;
         this.computerPlayerSunkShips = computerPlayerSunkShips;

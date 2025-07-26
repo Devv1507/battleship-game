@@ -7,7 +7,8 @@ import javafx.scene.control.Button;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.VBox;
-import univalle.tedesoft.battleship.models.State.SavedGameManager;
+import univalle.tedesoft.battleship.models.players.HumanPlayer;
+import univalle.tedesoft.battleship.models.state.SavedGameManager;
 import univalle.tedesoft.battleship.views.GameView;
 import univalle.tedesoft.battleship.views.InstructionsView;
 import univalle.tedesoft.battleship.views.ViewUtils;
@@ -68,7 +69,7 @@ public class WelcomeController {
         try {
             this.welcomeView.hide();
             GameView gameView = GameView.getInstance();
-            gameView.initializeNewGame(new univalle.tedesoft.battleship.models.Players.HumanPlayer(playerName));
+            gameView.initializeNewGame(new HumanPlayer(playerName));
             gameView.show();
         } catch (IOException e) {
             this.welcomeView.show();

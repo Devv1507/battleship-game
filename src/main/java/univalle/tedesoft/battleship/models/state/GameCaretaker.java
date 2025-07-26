@@ -1,6 +1,7 @@
-package univalle.tedesoft.battleship.models.State;
+package univalle.tedesoft.battleship.models.state;
 
-import univalle.tedesoft.battleship.models.Enums.GamePhase;
+import univalle.tedesoft.battleship.models.enums.GamePhase;
+
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;

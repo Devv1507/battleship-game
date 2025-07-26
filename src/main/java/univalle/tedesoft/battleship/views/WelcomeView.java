@@ -15,7 +15,7 @@ import javafx.scene.text.Font;
 import javafx.stage.Stage;
 import univalle.tedesoft.battleship.Main;
 import univalle.tedesoft.battleship.controllers.WelcomeController;
-import univalle.tedesoft.battleship.models.State.SavedGameManager;
+import univalle.tedesoft.battleship.models.state.SavedGameManager;
 
 import java.io.IOException;
 import java.time.format.DateTimeFormatter;
